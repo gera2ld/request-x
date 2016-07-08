@@ -34,6 +34,7 @@ List.prototype.load = function (data) {
     this.name = data.name || 'No name';
     this.subscribeUrl = data.subscribeUrl;
     this.lastUpdated = data.lastUpdated;
+    this.enabled = data.enabled;
     if (data.rules) this.rules = data.rules.map(rule => new Rule(rule));
   });
 };
@@ -46,6 +47,7 @@ List.prototype.meta = function () {
   return {
     id: this.id,
     name: this.name,
+    enabled: this.enabled,
     subscribeUrl: this.subscribeUrl,
     lastUpdated: this.lastUpdated,
   };
@@ -68,7 +70,7 @@ List.prototype.fetch = function () {
   }));
 };
 List.prototype.test = function (details) {
-  return this.rules.some(rule => rule.test(details));
+  return this.enabled && this.rules.some(rule => rule.test(details));
 };
 List.key = function (id) {
   return `list:${id}`;
@@ -84,6 +86,7 @@ List.create = function (data) {
     const list = new List(id);
     List.all.push(list);
     data.rules = data.rules || [];
+    data.enabled = data.enabled == null ? true : data.enabled;
     return list.update(data)
     .then(() => list);
   });

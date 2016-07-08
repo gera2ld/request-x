@@ -82,6 +82,27 @@ a {
   color: dodgerblue;
 }
 
+label {
+  margin-right: .5em;
+}
+
+label > input[type=checkbox] {
+  display: none;
+}
+
+.item-status {
+  display: inline-block;
+  width: .7em;
+  height: .7em;
+  border-radius: 50%;
+  background: red;
+}
+
+label > input:checked + .item-status,
+.list-enabled > .item-status {
+  background: green;
+}
+
 footer {
   height: 4em;
 }

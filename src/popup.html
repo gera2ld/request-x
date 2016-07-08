@@ -16,11 +16,12 @@
       <div class="list-header-prev" :class="{disabled:offset<=minOffset}" @click="offsetDec"></div>
       <div class="list-header-next" :class="{disabled:offset>=maxOffset}" @click="offsetInc"></div>
       <div class="list-header-items">
-        <div class="list-header-item" :class="{active:list.id===currentList.id}"
+        <div class="list-header-item" :class="{active:list.id===currentList.id,'list-enabled':list.enabled}"
           v-for="list in lists" track-by="$index" v-show="$index>=offset"
           @click="select(list)" @dblclick="editList($index)"
           :title="list.name">
           {{list.name}}
+          <span class="item-status"></span>
         </div>
       </div>
     </div>
@@ -54,6 +55,10 @@
       </form>
       <form v-if="editData.list" @submit.prevent="saveList">
         <div class="flex-row">
+          <label>
+            <input type="checkbox" v-model="editData.list.enabled">
+            <span class="item-status"></span>
+          </label>
           <input class="flex-auto" :class="statusClass('name')" v-model="editData.list.name" placeholder="Name">
         </div>
         <div>

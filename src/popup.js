@@ -52,6 +52,7 @@
         this.editData = {
           list: {
             index: -1,
+            enabled: true,
           },
         };
       },
@@ -61,6 +62,7 @@
         const list = {
           id: item.id,
           name: item.name,
+          enabled: item.enabled,
         };
         const index = item.index;
         this.editData = null;
@@ -87,6 +89,7 @@
           list: {
             index,
             id: this.currentList.id,
+            enabled: this.currentList.enabled,
             name: this.currentList.name,
           },
         };
