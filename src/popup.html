@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Request Blocker</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="vue.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Request Blocker</h1>
+    &copy; <a href="https://gerald.top" target=_blank>Gerald</a> 2016
+  </header>
+  <div id="app">
+    <fieldset>
+      <legend>Rules</legend>
+      <div class="rules">
+        <div class="item" v-for="item in items">
+          <div class="flex-row">
+            <span class="item-method">{{item.method}}</span>
+            <span class="item-url flex-auto">{{item.url}}</span>
+          </div>
+          <div>
+            <button class="item-btn" @click="edit($index)">Edit</button>
+            <button class="item-btn" @click="remove($index)">Remove</button>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+    <footer>
+      <button v-if="!item" @click="create">New</button>
+      <form class="item" v-if="item" @submit.prevent="save">
+        <div class="flex-row">
+          <input class="item-method" :class="classMethod" v-model="item.method" placeholder="Method">
+          <input class="item-url flex-auto" :class="classURL" v-model="item.url" placeholder="URL">
+          <a href="https://developer.chrome.com/extensions/match_patterns" target=_blank>(?)</a>
+        </div>
+        <div>
+          <button type="submit" class="item-btn">Save</button>
+          <button type="button" class="item-btn" @click="cancel">Cancel</button>
+        </div>
+      </form>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

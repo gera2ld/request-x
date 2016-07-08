@@ -1,0 +1,71 @@
+body {
+  width: 400px;
+  font-size: 14px;
+  background: #eee;
+  color: #333;
+}
+
+h1 {
+  display: inline-block;
+}
+
+fieldset {
+  border: 1px solid #999;
+  border-radius: .3em;
+}
+
+a {
+  color: dodgerblue;
+}
+
+footer {
+  height: 4em;
+}
+
+input {
+  outline: none;
+  outline-offset: 0;
+}
+
+input.item-err {
+  outline: 1px solid red;
+}
+
+#app > * {
+  margin-top: .5em;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-auto {
+  flex: auto;
+  width: 0;
+}
+
+.rules {
+  height: 300px;
+  overflow: auto;
+}
+
+.item {
+  padding: .5em 0;
+}
+
+.item:not(:first-child) {
+  border-top: 1px solid silver;
+}
+
+.item-method {
+  margin-right: 1em;
+}
+
+input.item-method {
+  width: 5em;
+}
+
+.item-url {
+  word-break: break-all;
+}

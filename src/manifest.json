@@ -1,0 +1,35 @@
+{
+  "name": "Request blocker",
+  "version": "0.0.0",
+  "manifest_version": 2,
+  "description": "Block unwanted requests based on methods and URLs.",
+  "author": {
+    "name": "Gerald",
+    "url": "http://gerald.top"
+  },
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+  "default_locale": "en",
+  "browser_action": {
+    "default_icon": {
+      "19": "images/icon19.png",
+      "38": "images/icon38.png"
+    },
+    "default_title": "Request blocker",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["blocker.js"]
+  },
+  "permissions": [
+    "tabs",
+    "<all_urls>",
+    "webRequest",
+    "webRequestBlocking",
+    "notifications"
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+}
