@@ -9,35 +9,57 @@
 <body>
   <header>
     <h1>Request Blocker</h1>
-    &copy; <a href="https://gerald.top" target=_blank>Gerald</a> 2016
+    &copy; <a href="https://gerald.top" target=_blank tabindex=-1>Gerald</a> 2016
   </header>
   <div id="app">
-    <fieldset>
-      <legend>Rules</legend>
-      <div class="rules">
-        <div class="item" v-for="item in items">
-          <div class="flex-row">
-            <span class="item-method">{{item.method}}</span>
-            <span class="item-url flex-auto">{{item.url}}</span>
-          </div>
-          <div>
-            <button class="item-btn" @click="edit($index)">Edit</button>
-            <button class="item-btn" @click="remove($index)">Remove</button>
-          </div>
+    <div class="list-header">
+      <div class="list-header-prev" :class="{disabled:offset<=minOffset}" @click="offsetDec"></div>
+      <div class="list-header-next" :class="{disabled:offset>=maxOffset}" @click="offsetInc"></div>
+      <div class="list-header-items">
+        <div class="list-header-item" :class="{active:list.id===currentList.id}"
+          v-for="list in lists" track-by="$index" v-show="$index>=offset"
+          @click="select(list)" @dblclick="editList($index)"
+          :title="list.name">
+          {{list.name}}
         </div>
       </div>
-    </fieldset>
-    <footer>
-      <button v-if="!item" @click="create">New</button>
-      <form class="item" v-if="item" @submit.prevent="save">
+    </div>
+    <div class="list-body">
+      <div class="item" v-for="rule in currentList.rules">
         <div class="flex-row">
-          <input class="item-method" :class="classMethod" v-model="item.method" placeholder="Method">
-          <input class="item-url flex-auto" :class="classURL" v-model="item.url" placeholder="URL">
+          <span class="item-method">{{rule.method}}</span>
+          <span class="item-url flex-auto">{{rule.url}}</span>
+        </div>
+        <div v-if="!currentList.subscribeUrl">
+          <button class="item-btn" @click="editRule($index)">Edit</button>
+          <button class="item-btn" @click="removeRule($index)">Remove</button>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <div v-show="!editData">
+        <button @click="createList">New List</button>
+        <button @click="createRule">New Rule</button>
+      </div>
+      <form v-if="editData.rule" @submit.prevent="saveRule">
+        <div class="flex-row">
+          <input class="item-method" :class="statusClass('method')" v-model="editData.rule.method" placeholder="Method">
+          <input class="item-url flex-auto" :class="statusClass('url')" v-model="editData.rule.url" placeholder="URL">
           <a href="https://developer.chrome.com/extensions/match_patterns" target=_blank>(?)</a>
         </div>
         <div>
           <button type="submit" class="item-btn">Save</button>
           <button type="button" class="item-btn" @click="cancel">Cancel</button>
+        </div>
+      </form>
+      <form v-if="editData.list" @submit.prevent="saveList">
+        <div class="flex-row">
+          <input class="flex-auto" :class="statusClass('name')" v-model="editData.list.name" placeholder="Name">
+        </div>
+        <div>
+          <button type="submit" class="item-btn">Save</button>
+          <button type="button" class="item-btn" @click="cancel">Cancel</button>
+          <button type="button" class="item-btn" v-if="editData.list.id&&lists.length>1" @click="removeList">Delete</button>
         </div>
       </form>
     </footer>

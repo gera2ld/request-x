@@ -25,11 +25,10 @@
     "scripts": ["blocker.js"]
   },
   "permissions": [
-    "tabs",
     "<all_urls>",
     "webRequest",
     "webRequestBlocking",
-    "notifications"
+    "storage"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }
