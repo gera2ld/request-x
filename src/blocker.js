@@ -22,6 +22,7 @@ function removeData(keys) {
 
 function List(id) {
   this.id = id;
+  this.fetching = null;
 }
 List.prototype.key = function () {
   return List.key(this.id);
@@ -41,6 +42,7 @@ List.prototype.load = function (data) {
 List.prototype.dump = function () {
   const data = {};
   data[this.key()] = this.json();
+  this.fetch();
   return dumpData(data);
 };
 List.prototype.meta = function () {
@@ -62,12 +64,16 @@ List.prototype.update = function (data) {
 };
 List.prototype.fetch = function () {
   if (!this.subscribeUrl) return Promise.resolve();
-  return fetch(this.subscribeUrl)
-  .then(res => res.json())
-  .then(data => this.update({
-    rules: data,
-    lastUpdated: Date.now(),
-  }));
+  if (!this.fetching) {
+    this.fetching = fetch(this.subscribeUrl)
+    .then(res => res.json())
+    .then(data => this.update({
+      rules: data,
+      lastUpdated: Date.now(),
+    }));
+    this.fetching.catch(() => {}).then(() => this.fetching = null);
+  }
+  return this.fetching;
 };
 List.prototype.test = function (details) {
   return this.enabled && this.rules.some(rule => rule.test(details));

@@ -39,8 +39,17 @@
     </div>
     <footer>
       <div v-show="!editData">
-        <button @click="createList">New List</button>
-        <button @click="createRule">New Rule</button>
+        <div>
+          List:
+          <button @click="createList">New</button>
+          <button @click="subscribeList">Subscribe</button>
+          <button @click="importList">Import</button>
+          <button @click="exportList">Export</button>
+        </div>
+        <div>
+          Rule:
+          <button @click="createRule">New</button>
+        </div>
       </div>
       <form v-if="editData.rule" @submit.prevent="saveRule">
         <div class="flex-row">
@@ -60,6 +69,10 @@
             <span class="item-status"></span>
           </label>
           <input class="flex-auto" :class="statusClass('name')" v-model="editData.list.name" placeholder="Name">
+        </div>
+        <div class="flex-row" v-if="editData.subscribe">
+          <input class="flex-auto" :class="statusClass('subscribeUrl')"
+          :readonly="!!editData.list.id" v-model="editData.list.subscribeUrl" placeholder="Subscribe URL">
         </div>
         <div>
           <button type="submit" class="item-btn">Save</button>
