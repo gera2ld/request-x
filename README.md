@@ -5,6 +5,16 @@ Request Blocker
 
 This is a Chrome extension to block undesired requests.
 
+Installation
+---
+* [Chrome web store](https://chrome.google.com/webstore/detail/request-blocker/cblonkdlnemhdeefhmaoiijjaedcphbf)
+
+Features
+---
+* Block requests by methods and URL patterns
+* Maintainable lists
+* Easy to share your lists with others
+
 What's different?
 ---
 There are blockers such as ABP, blocking requests by URLs.

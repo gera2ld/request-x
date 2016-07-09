@@ -10,8 +10,27 @@
       'PATCH',
     ].indexOf(method.toUpperCase());
   }
-  function isValidURL(url) {
+  function isValidURLPattern(url) {
     return /^[^:\/]+:\/\/[^\/]+\//.test(url);
+  }
+  function isValidURL(url) {
+    return /^[\w-]+:\/\/.*?\//.test(url);
+  }
+  function loadFile(callback) {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('Accept', 'application/json');
+    input.addEventListener('change', e => {
+      input.files && input.files.length && callback(input.files[0]);
+    }, false);
+    input.click();
+  }
+  function blob2Text(blob, callback) {
+    const reader = new FileReader;
+    reader.onload = () => {
+      callback(reader.result);
+    };
+    reader.readAsText(blob);
   }
 
   new Vue({
@@ -56,6 +75,24 @@
           },
         };
       },
+      subscribeList() {
+        this.editData = {
+          list: {
+            index: -1,
+            enabled: true,
+          },
+          subscribe: true,
+        };
+      },
+      doSaveList(list, index) {
+        this.dump(list).then(data => {
+          if (index < 0) {
+            this.lists.push(data);
+          } else {
+            this.lists.$set(index, data);
+          }
+        });
+      },
       saveList() {
         if (!this.statusOk()) return;
         const item = this.editData.list;
@@ -64,15 +101,33 @@
           name: item.name,
           enabled: item.enabled,
         };
-        const index = item.index;
+        if (this.editData.subscribe) list.subscribeUrl = item.subscribeUrl;
         this.editData = null;
-        this.dump(list).then(data => {
-          if (index < 0) {
-            this.lists.push(data);
-          } else {
-            this.lists.$set(index, data);
-          }
-        });
+        this.doSaveList(list, item.index);
+      },
+      importList() {
+        const doImport = text => {
+          const data = JSON.parse(text);
+          const list = {
+            name: data.name,
+            rules: data.rules,
+          };
+          this.doSaveList(list, -1);
+        };
+        loadFile(file => blob2Text(file, doImport));
+      },
+      exportList() {
+        const list = {
+          name: this.currentList.name,
+          rules: this.currentList.rules,
+        };
+        const blob = new Blob([JSON.stringify(list)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.download = `${name}.json`;
+        a.href = url;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url));
       },
       cancel() {
         this.editData = null;
@@ -92,6 +147,7 @@
             enabled: this.currentList.enabled,
             name: this.currentList.name,
           },
+          subscribe: !!this.currentList.subscribeUrl,
         };
       },
       removeRule(index) {
@@ -146,8 +202,9 @@
         const list = this.editData.list;
         return {
           method: !rule || isValidMethod(rule.method),
-          url: !rule || isValidURL(rule.url),
+          url: !rule || isValidURLPattern(rule.url),
           name: !list || !!list.name,
+          subscribeUrl: !this.editData.subscribe || isValidURL(list.subscribeUrl),
         };
       },
     },
