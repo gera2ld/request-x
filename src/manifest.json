@@ -1,6 +1,6 @@
 {
   "name": "Request blocker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "manifest_version": 2,
   "description": "Block unwanted requests based on methods and URLs.",
   "author": {
@@ -25,11 +25,10 @@
     "scripts": ["blocker.js"]
   },
   "permissions": [
-    "tabs",
     "<all_urls>",
     "webRequest",
     "webRequestBlocking",
-    "notifications"
+    "storage"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }
