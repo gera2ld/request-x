@@ -19,8 +19,8 @@
         <div class="list-header-item" :class="{active:list.id===currentList.id,'list-enabled':list.enabled}"
           v-for="list in lists" track-by="$index" v-show="$index>=offset"
           @click="select(list)" @dblclick="editList($index)"
-          :title="list.name">
-          {{list.name}}
+          :title="getTitle(list)">
+          {{getTitle(list)}}
           <span class="item-status"></span>
         </div>
       </div>
@@ -68,7 +68,7 @@
             <input type="checkbox" v-model="editData.list.enabled">
             <span class="item-status"></span>
           </label>
-          <input class="flex-auto" :class="statusClass('name')" v-model="editData.list.name" placeholder="Name">
+          <input class="flex-auto" :class="statusClass('title')" v-model="editData.list.title" :placeholder="editData.list.name||'Name'">
         </div>
         <div class="flex-row" v-if="editData.subscribe">
           <input class="flex-auto" :class="statusClass('subscribeUrl')"
