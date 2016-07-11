@@ -32,10 +32,16 @@ List.prototype.load = function (data) {
   return (data ? Promise.resolve(data) : getData(key).then(res => res && res[key]))
   .then(data => {
     data = data || {};
-    this.name = data.name || 'No name';
-    this.subscribeUrl = data.subscribeUrl;
-    this.lastUpdated = data.lastUpdated;
-    this.enabled = data.enabled;
+    [
+      'name',
+      'title',
+      'subscribeUrl',
+      'lastUpdated',
+      'enabled',
+    ].forEach(key => {
+      if (data[key] != null) this[key] = data[key];
+    });
+    this.name = this.name || 'No name';
     if (data.rules) this.rules = data.rules.map(rule => new Rule(rule));
   });
 };
@@ -49,6 +55,7 @@ List.prototype.meta = function () {
   return {
     id: this.id,
     name: this.name,
+    title: this.title,
     enabled: this.enabled,
     subscribeUrl: this.subscribeUrl,
     lastUpdated: this.lastUpdated,
@@ -67,10 +74,9 @@ List.prototype.fetch = function () {
   if (!this.fetching) {
     this.fetching = fetch(this.subscribeUrl)
     .then(res => res.json())
-    .then(data => this.update({
-      rules: data,
+    .then(data => this.update(Object.assign(data, {
       lastUpdated: Date.now(),
-    }));
+    })));
     this.fetching.catch(() => {}).then(() => this.fetching = null);
   }
   return this.fetching;

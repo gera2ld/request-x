@@ -32,6 +32,12 @@
     };
     reader.readAsText(blob);
   }
+  function pickData(obj, keys) {
+    return keys.reduce((picked, key) => {
+      if (obj[key] != null) picked[key] = obj[key];
+      return picked;
+    }, {});
+  }
 
   new Vue({
     el: '#app',
@@ -96,11 +102,11 @@
       saveList() {
         if (!this.statusOk()) return;
         const item = this.editData.list;
-        const list = {
-          id: item.id,
-          name: item.name,
-          enabled: item.enabled,
-        };
+        const list = pickData(item, [
+          'id',
+          'title',
+          'enabled',
+        ]);
         if (this.editData.subscribe) list.subscribeUrl = item.subscribeUrl;
         this.editData = null;
         this.doSaveList(list, item.index);
@@ -108,17 +114,14 @@
       importList() {
         const doImport = text => {
           const data = JSON.parse(text);
-          const list = {
-            name: data.name,
-            rules: data.rules,
-          };
+          const list = pickData(data, ['name', 'rules']);
           this.doSaveList(list, -1);
         };
         loadFile(file => blob2Text(file, doImport));
       },
       exportList() {
         const list = {
-          name: this.currentList.name,
+          name: this.currentList.title,
           rules: this.currentList.rules,
         };
         const blob = new Blob([JSON.stringify(list)], {type: 'application/json'});
@@ -141,12 +144,15 @@
       },
       editList(index) {
         this.editData = {
-          list: {
+          list: Object.assign({
             index,
-            id: this.currentList.id,
-            enabled: this.currentList.enabled,
-            name: this.currentList.name,
-          },
+          }, pickData(this.currentList, [
+            'id',
+            'enabled',
+            'name',
+            'title',
+            'subscribeUrl',
+          ])),
           subscribe: !!this.currentList.subscribeUrl,
         };
       },
@@ -195,6 +201,9 @@
       statusOk() {
         return Object.keys(this.status).every(key => this.status[key]);
       },
+      getTitle(list) {
+        return list.title || list.name || 'No name';
+      },
     },
     computed: {
       status() {
@@ -203,7 +212,6 @@
         return {
           method: !rule || isValidMethod(rule.method),
           url: !rule || isValidURLPattern(rule.url),
-          name: !list || !!list.name,
           subscribeUrl: !this.editData.subscribe || isValidURL(list.subscribeUrl),
         };
       },
