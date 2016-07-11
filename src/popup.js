@@ -38,6 +38,23 @@
       return picked;
     }, {});
   }
+  function debounce(func, delay) {
+    function run(ctx, args) {
+      timer = null;
+      func.apply(ctx, args);
+    }
+    var timer;
+    return function () {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      const ctx = this;
+      const args = arguments;
+      timer = setTimeout(() => {
+        run(ctx, args);
+      }, delay);
+    };
+  }
 
   new Vue({
     el: '#app',
@@ -96,6 +113,7 @@
           } else {
             this.lists.$set(index, data);
           }
+          this.recalcTabs();
         });
       },
       saveList() {
@@ -167,6 +185,7 @@
             this.lists.splice(list.index, 1);
             const index = Math.min(list.index, this.lists.length - 1);
             this.select(this.lists[index]);
+            this.recalcTabs();
           }
         });
       },
@@ -188,12 +207,6 @@
           });
         });
       },
-      offsetDec() {
-        if (this.offset > this.minOffset) this.offset --;
-      },
-      offsetInc() {
-        if (this.offset < this.maxOffset) this.offset ++;
-      },
       statusClass(key) {
         return this.status[key] ? 'item-ok' : 'item-err';
       },
@@ -203,25 +216,41 @@
       getTitle(list) {
         return list.title || list.name || 'No name';
       },
+      offsetDec() {
+        if (this.offset > this.minOffset) this.offset -= 60;
+      },
+      offsetInc() {
+        if (this.offset < this.maxOffset) this.offset += 60;
+      },
+      recalcTabs() {
+        const elItems = this.$els.items;
+        this.$set('maxOffset', Math.max(0, elItems.scrollWidth - elItems.offsetWidth));
+        this.offset = Math.min(this.offset, this.maxOffset);
+      },
     },
     computed: {
       status() {
         const rule = this.editData.rule;
         const list = this.editData.list;
         return {
+          title: true,
           method: !rule || isValidMethod(rule.method),
           url: !rule || isValidURLPattern(rule.url),
           subscribeUrl: !this.editData.subscribe || isValidURL(list.subscribeUrl),
         };
       },
-      maxOffset() {
-        return Math.max(0, this.lists.length - 2);
+    },
+    watch: {
+      offset(offset) {
+        this.$els.items.scrollLeft = offset;
       },
     },
     ready() {
+      this.recalcTabs = debounce(this.recalcTabs);
       chrome.runtime.sendMessage({cmd: 'GetLists'}, res => {
         this.lists = res.data;
         this.select();
+        this.recalcTabs();
       });
     },
   });
