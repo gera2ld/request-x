@@ -45,7 +45,6 @@
       lists: [],
       offset: 0,
       minOffset: 0,
-      maxOffset: 0,
       currentList: null,
       editData: null,
     },
@@ -215,12 +214,13 @@
           subscribeUrl: !this.editData.subscribe || isValidURL(list.subscribeUrl),
         };
       },
+      maxOffset() {
+        return Math.max(0, this.lists.length - 2);
+      },
     },
     ready() {
       chrome.runtime.sendMessage({cmd: 'GetLists'}, res => {
         this.lists = res.data;
-        this.minOffset = 0;
-        this.maxOffset = Math.max(0, this.lists.length - 2);
         this.select();
       });
     },
