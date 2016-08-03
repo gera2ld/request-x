@@ -1,6 +1,6 @@
 {
   "name": "Request blocker",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "manifest_version": 2,
   "description": "Block unwanted requests based on methods and URLs.",
   "author": {

@@ -13,15 +13,15 @@
   </header>
   <div id="app">
     <div class="list-header">
-      <div class="list-header-prev" :class="{disabled:offset<=minOffset}" @click="offsetDec"></div>
-      <div class="list-header-next" :class="{disabled:offset>=maxOffset}" @click="offsetInc"></div>
-      <div class="list-header-items">
+      <div class="list-header-prev" :class="{disabled:offset<=minOffset}" @mousedown="offsetDec"></div>
+      <div class="list-header-next" :class="{disabled:offset>=maxOffset}" @mousedown="offsetInc"></div>
+      <div class="list-header-items" v-el:items>
         <div class="list-header-item" :class="{active:list.id===currentList.id,'list-enabled':list.enabled}"
-          v-for="list in lists" track-by="$index" v-show="$index>=offset"
+          v-for="list in lists" track-by="$index"
           @click="select(list)" @dblclick="editList($index)"
           :title="getTitle(list)">
           {{getTitle(list)}}
-          <span class="item-status"></span>
+          <span class="item-status" @click.prevent.stop="switchStatus($index)"></span>
         </div>
       </div>
     </div>
@@ -64,10 +64,6 @@
       </form>
       <form v-if="editData.list" @submit.prevent="saveList">
         <div class="flex-row">
-          <label>
-            <input type="checkbox" v-model="editData.list.enabled">
-            <span class="item-status"></span>
-          </label>
           <input class="flex-auto" :class="statusClass('title')" v-model="editData.list.title" :placeholder="editData.list.name||'Name'">
         </div>
         <div class="flex-row" v-if="editData.subscribe">
