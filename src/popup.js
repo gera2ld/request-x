@@ -122,7 +122,6 @@
         const list = pickData(item, [
           'id',
           'title',
-          'enabled',
         ]);
         if (this.editData.subscribe) list.subscribeUrl = item.subscribeUrl;
         this.editData = null;
@@ -198,6 +197,11 @@
         chrome.runtime.sendMessage({cmd: 'GetList', data: list.id}, res => {
           this.currentList.rules = res.data.rules;
         });
+      },
+      switchStatus(index) {
+        const list = this.lists[index];
+        list.enabled = !list.enabled;
+        this.doSaveList(list, index);
       },
       dump(list) {
         list = list || this.currentList;

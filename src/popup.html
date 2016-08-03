@@ -21,7 +21,7 @@
           @click="select(list)" @dblclick="editList($index)"
           :title="getTitle(list)">
           {{getTitle(list)}}
-          <span class="item-status"></span>
+          <span class="item-status" @click.prevent.stop="switchStatus($index)"></span>
         </div>
       </div>
     </div>
@@ -64,10 +64,6 @@
       </form>
       <form v-if="editData.list" @submit.prevent="saveList">
         <div class="flex-row">
-          <label>
-            <input type="checkbox" v-model="editData.list.enabled">
-            <span class="item-status"></span>
-          </label>
           <input class="flex-auto" :class="statusClass('title')" v-model="editData.list.title" :placeholder="editData.list.name||'Name'">
         </div>
         <div class="flex-row" v-if="editData.subscribe">
