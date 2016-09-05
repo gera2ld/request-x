@@ -74,9 +74,11 @@ List.prototype.fetch = function () {
   if (!this.fetching) {
     this.fetching = fetch(this.subscribeUrl)
     .then(res => res.json())
-    .then(data => this.update(Object.assign(data, {
+    .then(data => this.update({
+      name: data.name || '',
+      rules: data.rules,
       lastUpdated: Date.now(),
-    })));
+    }));
     this.fetching.catch(() => {}).then(() => this.fetching = null);
   }
   return this.fetching;

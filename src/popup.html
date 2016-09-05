@@ -68,7 +68,7 @@
         </div>
         <div class="flex-row" v-if="editData.subscribe">
           <input class="flex-auto" :class="statusClass('subscribeUrl')"
-          :readonly="!!editData.list.id" v-model="editData.list.subscribeUrl" placeholder="Subscribe URL">
+          v-model="editData.list.subscribeUrl" placeholder="Subscribe URL">
         </div>
         <div>
           <button type="submit" class="item-btn">Save</button>
