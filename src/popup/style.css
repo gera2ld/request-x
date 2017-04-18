@@ -112,7 +112,7 @@ input {
   outline-offset: 0;
 }
 
-input.item-err {
+input.error {
   outline: 1px solid red;
 }
 
