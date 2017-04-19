@@ -1,11 +1,11 @@
 {
   "name": "Request blocker",
-  "version": "0.3.2",
+  "version": "",
   "manifest_version": 2,
-  "description": "Block unwanted requests based on methods and URLs.",
+  "description": "Block unexpected requests based on methods and URLs.",
   "author": {
     "name": "Gerald",
-    "url": "http://gerald.top"
+    "url": "https://gerald.top"
   },
   "icons": {
     "16": "images/icon16.png",
@@ -29,6 +29,5 @@
     "webRequest",
     "webRequestBlocking",
     "storage"
-  ],
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  ]
 }
