@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import { edit, loadFile, blob2Text, pickData, dump } from '../utils';
+import { store, edit, loadFile, blob2Text, pickData, dump } from '../utils';
 
 export default {
   methods: {
@@ -40,13 +40,13 @@ export default {
     },
     exportList() {
       const list = {
-        name: this.current.title,
-        rules: this.currentRules,
+        name: store.current.title || store.current.name || 'noname',
+        rules: store.currentRules,
       };
       const blob = new Blob([JSON.stringify(list)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.download = `${this.current.title}.json`;
+      a.download = `${list.name}.json`;
       a.href = url;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url));
