@@ -2,7 +2,7 @@ const webpack = require('webpack');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const BabiliPlugin = require('babili-webpack-plugin');
 const base = require('./webpack.base.conf');
 const IS_DEV = process.env.NODE_ENV === 'development';
 
@@ -27,7 +27,9 @@ targets.push(Object.assign({}, base, {
     ] : [
       // extract css into its own file
       new ExtractTextPlugin('[name].css'),
-      new UglifyJsPlugin(),
+      new BabiliPlugin({
+        builtIns: false,
+      }),
     ],
   ],
 }));
