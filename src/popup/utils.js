@@ -32,6 +32,17 @@ export function dump(list) {
   });
 }
 
+export function remove(id) {
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage({
+      cmd: 'RemoveList',
+      data: id,
+    }, ({ data }) => {
+      resolve(data);
+    });
+  });
+}
+
 export function isValidMethod(method) {
   return !method || [
     '*',

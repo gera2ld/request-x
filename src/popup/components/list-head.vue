@@ -7,7 +7,7 @@
         v-for="(list, index) in store.lists"
         @click="onSelect(list)" @dblclick="onEdit(list, index)"
         :title="getTitle(list)">
-        {{getTitle(list)}}
+        <span class="list-header-title" v-text="getTitle(list)"></span>
         <span class="item-status" @click.prevent.stop="switchStatus(list, index)"></span>
       </div>
     </div>
@@ -30,6 +30,7 @@ export default {
   },
   watch: {
     'store.lists': 'recalcTabs',
+    'store.current': 'ensureVisible',
     offset(offset) {
       this.$refs.items.scrollLeft = offset;
     },
@@ -46,6 +47,20 @@ export default {
         const elItems = this.$refs.items;
         this.maxOffset = Math.max(0, elItems.scrollWidth - elItems.offsetWidth);
         this.offset = Math.min(this.offset, this.maxOffset);
+      });
+    },
+    ensureVisible() {
+      this.$nextTick(() => {
+        const i = this.store.lists.findIndex(item => item === this.store.current);
+        const { items } = this.$refs;
+        const el = items.children[i];
+        if (!el) return;
+        if (el.offsetLeft + el.offsetWidth > items.scrollLeft + items.clientWidth) {
+          items.scrollLeft = el.offsetLeft + el.offsetWidth - items.clientWidth;
+        } else if (el.offsetLeft < items.scrollLeft) {
+          items.scrollLeft = el.offsetLeft;
+        } else return;
+        this.recalcTabs();
       });
     },
     getTitle(list) {
@@ -76,3 +91,82 @@ export default {
   },
 };
 </script>
+
+<style>
+.list-header {
+  position: relative;
+  padding: 0 1em;
+
+  > .disabled {
+    color: lightgray;
+    cursor: not-allowed;
+  }
+
+  &-prev,
+  &-next {
+    position: absolute;
+    top: 50%;
+    margin-top: -.5em;
+    border: 0;
+    border-top: .5em solid transparent;
+    border-bottom: .5em solid transparent;
+    color: gray;
+    cursor: pointer;
+  }
+  &-prev {
+    left: 0;
+    border-right: .5em solid currentColor;
+  }
+  &-next {
+    right: 0;
+    border-left: .5em solid currentColor;
+  }
+
+  &-items {
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  &-title {
+    display: inline-block;
+    max-width: 8em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &-item {
+    display: inline-block;
+    padding: .5em 1em;
+    margin-right: -1px;
+    vertical-align: bottom;
+    background: white;
+    border-radius: .3em .3em 0 0;
+    border: 1px solid #ccc;
+    border-bottom: 0;
+    cursor: pointer;
+    > * {
+      vertical-align: middle;
+    }
+    &:not(.active) {
+      background: #ddd;
+      color: gray;
+      &:hover {
+        background: #eee;
+      }
+    }
+  }
+}
+
+.item-status {
+  display: inline-block;
+  width: .7em;
+  height: .7em;
+  border-radius: 50%;
+  background: red;
+  .list-enabled > & {
+    background: green;
+  }
+}
+</style>

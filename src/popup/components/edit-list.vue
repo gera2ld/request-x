@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import { store, dump, pickData, edit } from '../utils';
+import { store, dump, remove, pickData, edit } from '../utils';
 
 export default {
   data() {
@@ -37,6 +37,8 @@ export default {
       edit();
     },
     onDelete() {
+      remove(this.editing.data.id);
+      edit();
     },
   },
 };

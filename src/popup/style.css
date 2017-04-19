@@ -9,66 +9,6 @@ h1 {
   display: inline-block;
 }
 
-.list-header {
-  position: relative;
-  padding: 0 1em;
-}
-
-.list-header-items {
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.list-header > .disabled {
-  color: lightgray;
-  cursor: not-allowed;
-}
-
-.list-header-prev,
-.list-header-next {
-  position: absolute;
-  top: 50%;
-  margin-top: -.5em;
-  border: 0;
-  border-top: .5em solid transparent;
-  border-bottom: .5em solid transparent;
-  color: gray;
-  cursor: pointer;
-}
-.list-header-prev {
-  left: 0;
-  border-right: .5em solid currentColor;
-}
-.list-header-next {
-  right: 0;
-  border-left: .5em solid currentColor;
-}
-
-.list-header-item {
-  display: inline-block;
-  max-width: 10em;
-  padding: .5em 1em;
-  margin-right: -1px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  vertical-align: bottom;
-  background: white;
-  border-radius: .3em .3em 0 0;
-  border: 1px solid #ccc;
-  border-bottom: 0;
-  cursor: pointer;
-}
-
-.list-header-item:not(.active) {
-  background: #ddd;
-  color: gray;
-}
-
-.list-header-item:not(.active):hover {
-  background: #eee;
-}
-
 .list-body {
   height: 300px;
   padding: .5em;
@@ -88,19 +28,6 @@ label {
 
 label > input[type=checkbox] {
   display: none;
-}
-
-.item-status {
-  display: inline-block;
-  width: .7em;
-  height: .7em;
-  border-radius: 50%;
-  background: red;
-}
-
-label > input:checked + .item-status,
-.list-enabled > .item-status {
-  background: green;
 }
 
 footer {
