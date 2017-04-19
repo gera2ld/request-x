@@ -1,6 +1,6 @@
 {
   "name": "request-blocker",
-  "version": "0.3.2",
+  "version": "1.0.0",
   "description": "Request Blocker",
   "scripts": {
     "analyze": "webpack --profile --json --config scripts/webpack.conf.js | webpack-bundle-size-analyzer",
