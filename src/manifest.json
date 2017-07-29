@@ -26,8 +26,7 @@
     "scripts": ["blocker.js"]
   },
   "options_ui": {
-    "page": "options/index.html",
-    "open_in_tab": true
+    "page": "options/index.html"
   },
   "permissions": [
     "<all_urls>",
