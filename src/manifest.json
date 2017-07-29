@@ -1,6 +1,7 @@
 {
   "name": "Request blocker",
-  "version": "",
+  "version": "__VERSION__",
+  "minimum_chrome_version": "50",
   "manifest_version": 2,
   "description": "Block unexpected requests based on methods and URLs.",
   "author": {
@@ -8,21 +9,24 @@
     "url": "https://gerald.top"
   },
   "icons": {
-    "16": "images/icon16.png",
-    "48": "images/icon48.png",
-    "128": "images/icon128.png"
+    "16": "public/images/icon16.png",
+    "48": "public/images/icon48.png",
+    "128": "public/images/icon128.png"
   },
   "default_locale": "en",
   "browser_action": {
     "default_icon": {
-      "19": "images/icon19.png",
-      "38": "images/icon38.png"
+      "19": "public/images/icon19.png",
+      "38": "public/images/icon38.png"
     },
-    "default_title": "Request blocker",
-    "default_popup": "popup.html"
+    "default_title": "Request blocker"
   },
   "background": {
     "scripts": ["blocker.js"]
+  },
+  "options_ui": {
+    "page": "options/index.html",
+    "open_in_tab": true
   },
   "permissions": [
     "<all_urls>",

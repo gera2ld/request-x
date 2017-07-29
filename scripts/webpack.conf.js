@@ -4,32 +4,23 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const BabiliPlugin = require('babili-webpack-plugin');
 const base = require('./webpack.base.conf');
-const { IS_DEV } = require('./utils');
+const { IS_DEV, merge } = require('./utils');
 
-const targets = module.exports = [];
+const targets = [];
+module.exports = targets;
 
-targets.push(Object.assign({}, base, {
+targets.push(merge(base, {
   entry: {
-    popup: 'src/popup/index.js',
+    'options/app': 'src/options/index.js',
     blocker: 'src/blocker.js',
   },
   plugins: [
-    ... base.plugins,
     new HtmlWebpackPlugin({
-      filename: 'popup.html',
-      template: 'src/popup/index.html',
-      inject: true,
-      chunks: ['popup'],
-      chunksSortMode: 'dependency'
+      filename: 'options/index.html',
+      template: 'src/public/index.html',
+      chunks: ['options/app'],
     }),
     // new FriendlyErrorsPlugin(),
-    ... IS_DEV ? [
-    ] : [
-      // extract css into its own file
-      new ExtractTextPlugin('[name].css'),
-      new BabiliPlugin({
-        builtIns: false,
-      }),
-    ],
-  ],
+    !IS_DEV && new ExtractTextPlugin('[name].css'),
+  ].filter(Boolean),
 }));

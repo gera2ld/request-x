@@ -1,13 +1,13 @@
 const fs = require('fs');
-const promisify = require('es6-promisify');
+const util = require('util');
 const gulp = require('gulp');
 const del = require('del');
 const webpack = require('webpack');
-const gutil = require('gutil');
+const gutil = require('gulp-util');
 const json = require('./scripts/json');
 const webpackConfig = require('./scripts/webpack.conf');
 const pkg = require('./package.json');
-const readFile = promisify(fs.readFile);
+const readFile = util.promisify(fs.readFile);
 
 function webpackCallback(err, stats) {
   if (err) {
@@ -35,7 +35,7 @@ const paths = {
   ],
   copy: [
     'src/_locales/**',
-    'src/images/**',
+    'src/public/images/**',
   ],
 };
 const buildTasks = ['manifest', 'copy'];

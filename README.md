@@ -15,7 +15,7 @@ Features
 * Maintainable lists
 * Easy to share your lists with others
 
-What's different?
+What makes it different?
 ---
 There are blockers such as ABP, blocking requests by URLs.
 

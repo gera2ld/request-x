@@ -71,12 +71,12 @@ class List {
 
   dump() {
     const data = {};
-    data[this.key()] = this.json();
+    data[this.key()] = this.get();
     this.fetch();
     return dumpData(data).then(() => this.fireChange());
   }
 
-  meta() {
+  get() {
     return {
       id: this.id,
       name: this.name,
@@ -84,13 +84,8 @@ class List {
       enabled: this.enabled,
       subscribeUrl: this.subscribeUrl,
       lastUpdated: this.lastUpdated,
-    };
-  }
-
-  json() {
-    return Object.assign(this.meta(), {
       rules: this.rules.map(rule => rule.dump()),
-    });
+    };
   }
 
   update(data) {
@@ -117,7 +112,7 @@ class List {
   }
 
   fireChange() {
-    chrome.runtime.sendMessage({ cmd: 'UpdatedList', data: this.json() });
+    chrome.runtime.sendMessage({ cmd: 'UpdatedList', data: this.get() });
   }
 
   static key(id) {
@@ -174,8 +169,8 @@ class List {
     });
   }
 
-  static meta() {
-    return List.all.map(list => list.meta());
+  static get() {
+    return List.all.map(list => list.get());
   }
 
   static fetch() {
@@ -245,8 +240,8 @@ chrome.webRequest.onBeforeRequest.addListener(details => {
 }, ['blocking']);
 
 const commands = {
-  GetLists: () => List.meta(),
-  GetList: id => List.find(id).json(),
+  GetLists: () => List.get(),
+  GetList: id => List.find(id).get(),
   RemoveList: id => List.remove(id),
   UpdateList: data => (data.id ? List.find(data.id).update(data) : List.create(data)),
 };

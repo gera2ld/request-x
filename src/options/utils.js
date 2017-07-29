@@ -1,25 +1,7 @@
 export const store = {
-  editing: {},
   lists: [],
   current: {},
-  currentRules: [],
 };
-
-const dataKeys = {
-  list: ['title', 'subscribeUrl'],
-  rule: ['method', 'url'],
-};
-export function edit(type, data, extra) {
-  (dataKeys[type] || []).forEach(key => {
-    data[key] = data[key] || null;
-  });
-  store.editing = {
-    type,
-    data,
-    extra,
-    status: {},
-  };
-}
 
 export function dump(list) {
   return new Promise(resolve => {
@@ -44,7 +26,7 @@ export function remove(id) {
 }
 
 export function isValidMethod(method) {
-  return !method || [
+  return [
     '*',
     'HEAD',
     'GET',
@@ -52,7 +34,7 @@ export function isValidMethod(method) {
     'PUT',
     'DELETE',
     'PATCH',
-  ].indexOf(method.toUpperCase()) >= 0;
+  ].includes(method);
 }
 
 export function isValidURLPattern(url) {
@@ -63,14 +45,16 @@ export function isValidURL(url) {
   return /^[\w-]+:\/\/.*?\//.test(url);
 }
 
-export function loadFile(callback) {
-  const input = document.createElement('input');
-  input.setAttribute('type', 'file');
-  input.setAttribute('Accept', 'application/json');
-  input.addEventListener('change', () => {
-    if (input.files && input.files.length) callback(input.files[0]);
-  }, false);
-  input.click();
+export function loadFile() {
+  return new Promise(resolve => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('Accept', 'application/json');
+    input.addEventListener('change', () => {
+      if (input.files && input.files.length) resolve(input.files[0]);
+    }, false);
+    input.click();
+  });
 }
 
 export function blob2Text(blob) {
@@ -91,4 +75,21 @@ export function pickData(obj, keys) {
     if (obj[key] != null) picked[key] = obj[key];
     return picked;
   }, {});
+}
+
+export function debounce(func, time) {
+  let timer;
+  let thisObj;
+  return function debouncedFunction() {
+    thisObj = this;
+    update();
+  };
+  function invoke() {
+    timer = null;
+    func.call(thisObj);
+  }
+  function update() {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(invoke, time);
+  }
 }
