@@ -19,7 +19,8 @@
       "19": "public/images/icon19.png",
       "38": "public/images/icon38.png"
     },
-    "default_title": "Request blocker"
+    "default_title": "Request blocker",
+    "default_popup": "popup/index.html"
   },
   "background": {
     "scripts": ["blocker.js"]

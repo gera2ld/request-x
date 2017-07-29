@@ -12,6 +12,7 @@ module.exports = targets;
 targets.push(merge(base, {
   entry: {
     'options/app': 'src/options/index.js',
+    'popup/app': 'src/popup/index.js',
     blocker: 'src/blocker.js',
   },
   plugins: [
@@ -19,6 +20,11 @@ targets.push(merge(base, {
       filename: 'options/index.html',
       template: 'src/public/index.html',
       chunks: ['options/app'],
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'popup/index.html',
+      template: 'src/public/index.html',
+      chunks: ['popup/app'],
     }),
     // new FriendlyErrorsPlugin(),
     !IS_DEV && new ExtractTextPlugin('[name].css'),
