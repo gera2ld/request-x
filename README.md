@@ -26,4 +26,4 @@ the POST ones and keep the GET ones.
 
 Screenshots
 ---
-![Snapshot](resources/snapshot.png)
+![Snapshot](https://user-images.githubusercontent.com/3139113/28746920-7d147ff2-74c6-11e7-8c5f-0a35ac54eeb8.png)
