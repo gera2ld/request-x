@@ -9,7 +9,7 @@
 export default {
   methods: {
     openDashboard() {
-      chrome.runtime.openOptionsPage();
+      browser.runtime.openOptionsPage();
     },
   },
 };

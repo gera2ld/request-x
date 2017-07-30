@@ -4,24 +4,16 @@ export const store = {
 };
 
 export function dump(list) {
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage({
-      cmd: 'UpdateList',
-      data: list,
-    }, ({ data }) => {
-      resolve(data);
-    });
+  return browser.runtime.sendMessage({
+    cmd: 'UpdateList',
+    data: list,
   });
 }
 
 export function remove(id) {
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage({
-      cmd: 'RemoveList',
-      data: id,
-    }, ({ data }) => {
-      resolve(data);
-    });
+  return browser.runtime.sendMessage({
+    cmd: 'RemoveList',
+    data: id,
   });
 }
 

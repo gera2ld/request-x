@@ -47,6 +47,6 @@ module.exports = {
     indent: 0,
   },
   globals: {
-    chrome: true,
+    browser: true,
   },
 }

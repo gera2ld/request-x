@@ -1,9 +1,11 @@
 import Vue from 'vue';
+import 'src/common/browser';
 import { store } from './utils';
 import App from './components/app';
 import './style.css';
 
-chrome.runtime.sendMessage({ cmd: 'GetLists' }, ({ data }) => {
+browser.runtime.sendMessage({ cmd: 'GetLists' })
+.then(data => {
   store.lists = data;
   store.current = data[0];
 });
@@ -29,13 +31,10 @@ const commands = {
     }
   },
 };
-chrome.runtime.onMessage.addListener((req, src, callback) => {
+browser.runtime.onMessage.addListener((req, src) => {
   const func = commands[req.cmd];
   if (!func) return;
-  const res = func(req.data, src);
-  Promise.resolve(res)
-  .then(data => callback({ data }), error => callback({ error }));
-  return true;
+  return func(req.data, src);
 });
 
 new Vue({

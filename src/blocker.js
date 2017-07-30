@@ -1,24 +1,8 @@
-function getData(keys) {
-  return new Promise(resolve => {
-    chrome.storage.local.get(keys, res => {
-      resolve(res);
-    });
-  });
-}
-function dumpData(data) {
-  return new Promise(resolve => {
-    chrome.storage.local.set(data, () => {
-      resolve();
-    });
-  });
-}
-function removeData(keys) {
-  return new Promise(resolve => {
-    chrome.storage.local.remove(keys, () => {
-      resolve();
-    });
-  });
-}
+import 'src/common/browser';
+
+const getData = browser.storage.local.get;
+const dumpData = browser.storage.local.set;
+const removeData = browser.storage.local.remove;
 
 class Rule {
   constructor(rule) {
@@ -112,7 +96,7 @@ class List {
   }
 
   fireChange() {
-    chrome.runtime.sendMessage({ cmd: 'UpdatedList', data: this.get() });
+    browser.runtime.sendMessage({ cmd: 'UpdatedList', data: this.get() });
   }
 
   static key(id) {
@@ -146,7 +130,7 @@ class List {
     return removeData(list.key())
     .then(() => {
       const ids = List.all.map(item => item.id);
-      chrome.runtime.sendMessage({ cmd: 'RemovedList', data: id });
+      browser.runtime.sendMessage({ cmd: 'RemovedList', data: id });
       return dumpData({ lists: ids });
     });
   }
@@ -230,7 +214,7 @@ function matchTester(rule) {
   return { test };
 }
 
-chrome.webRequest.onBeforeRequest.addListener(details => {
+browser.webRequest.onBeforeRequest.addListener(details => {
   if (List.test(details)) {
     console.warn(`blocked: ${details.method} ${details.url}`);
     return { cancel: true };
@@ -245,22 +229,19 @@ const commands = {
   RemoveList: id => List.remove(id),
   UpdateList: data => (data.id ? List.find(data.id).update(data) : List.create(data)),
 };
-chrome.runtime.onMessage.addListener((req, src, callback) => {
+browser.runtime.onMessage.addListener((req, src) => {
   const func = commands[req.cmd];
   if (!func) return;
-  const res = func(req.data, src);
-  Promise.resolve(res)
-  .then(data => callback({ data }), error => callback({ error }));
-  return true;
+  return func(req.data, src);
 });
 
 List.load();
 
-chrome.alarms.create({
+browser.alarms.create({
   delayInMinutes: 1,
   periodInMinutes: 120,
 });
-chrome.alarms.onAlarm.addListener(() => {
+browser.alarms.onAlarm.addListener(() => {
   console.info(new Date().toISOString(), 'Fetching lists...');
   List.fetch();
 });

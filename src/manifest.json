@@ -23,7 +23,7 @@
     "default_popup": "popup/index.html"
   },
   "background": {
-    "scripts": ["blocker.js"]
+    "scripts": ["browser.js", "blocker.js"]
   },
   "options_ui": {
     "page": "options/index.html"

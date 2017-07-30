@@ -16,15 +16,18 @@ targets.push(merge(base, {
     blocker: 'src/blocker.js',
   },
   plugins: [
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'browser',
+    }),
     new HtmlWebpackPlugin({
       filename: 'options/index.html',
       template: 'src/public/index.html',
-      chunks: ['options/app'],
+      chunks: ['browser', 'options/app'],
     }),
     new HtmlWebpackPlugin({
       filename: 'popup/index.html',
       template: 'src/public/index.html',
-      chunks: ['popup/app'],
+      chunks: ['browser', 'popup/app'],
     }),
     // new FriendlyErrorsPlugin(),
     !IS_DEV && new ExtractTextPlugin('[name].css'),
