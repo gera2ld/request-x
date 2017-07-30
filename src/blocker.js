@@ -254,11 +254,13 @@ chrome.runtime.onMessage.addListener((req, src, callback) => {
   return true;
 });
 
-List.load()
-.then(() => {
-  function doFetch() {
-    List.fetch()
-    .then(() => setTimeout(doFetch, 2 * 60 * 60 * 1000));
-  }
-  setTimeout(doFetch, 20 * 1000);
+List.load();
+
+chrome.alarms.create({
+  delayInMinutes: 1,
+  periodInMinutes: 120,
+});
+chrome.alarms.onAlarm.addListener(() => {
+  console.info(new Date().toISOString(), 'Fetching lists...');
+  List.fetch();
 });
