@@ -59,6 +59,9 @@ export default {
       newRule: null,
     };
   },
+  watch: {
+    'store.current': 'onCancel',
+  },
   computed: {
     editable() {
       return !this.store.current.subscribeUrl;

@@ -56,7 +56,6 @@ class List {
   dump() {
     const data = {};
     data[this.key()] = this.get();
-    this.fetch();
     return dumpData(data).then(() => this.fireChange());
   }
 
