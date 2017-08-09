@@ -18,15 +18,7 @@ export function remove(id) {
 }
 
 export function isValidMethod(method) {
-  return [
-    '*',
-    'HEAD',
-    'GET',
-    'POST',
-    'PUT',
-    'DELETE',
-    'PATCH',
-  ].includes(method);
+  return method === '*' || /^[A-Z]*$/.test(method);
 }
 
 export function isValidURLPattern(url) {

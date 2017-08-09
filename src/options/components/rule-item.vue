@@ -9,6 +9,7 @@
           <div>POST</div>
           <div>HEAD</div>
           <div>PUT</div>
+          <div>PATCH</div>
           <div>DELETE</div>
         </div>
       </div>
