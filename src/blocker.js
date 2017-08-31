@@ -114,7 +114,7 @@ class List {
       List.all.push(list);
       data.rules = data.rules || [];
       data.enabled = data.enabled == null ? true : data.enabled;
-      return list.update(data);
+      return list.update(data).then(() => list.fetch());
     });
   }
 
@@ -227,6 +227,8 @@ const commands = {
   GetList: id => List.find(id).get(),
   RemoveList: id => List.remove(id),
   UpdateList: data => (data.id ? List.find(data.id).update(data) : List.create(data)),
+  FetchLists: () => List.fetch(),
+  FetchList: id => List.find(id).fetch(),
 };
 browser.runtime.onMessage.addListener((req, src) => {
   const func = commands[req.cmd];

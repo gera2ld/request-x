@@ -66,6 +66,9 @@ export default {
     editable() {
       return !this.store.current.subscribeUrl;
     },
+    labelToggle() {
+      return this.store.current.enabled ? 'Disable' : 'Enable';
+    },
   },
   methods: {
     onNew() {
@@ -168,6 +171,9 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  button {
+    margin-right: .5rem;
   }
 }
 </style>

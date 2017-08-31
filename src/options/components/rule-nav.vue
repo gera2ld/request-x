@@ -7,12 +7,14 @@
         :class="{ active: item.id === store.current.id, enabled: item.enabled }"
         @click="onSelect(item)"
         :title="getName(item)">
-        <span class="nav-item-status" @click.prevent.stop="switchStatus(item, index)"></span>
+        <span class="nav-item-status" @click.prevent.stop="switchStatus(item)"></span>
         <span class="nav-item-text" v-text="getName(item)"></span>
         <div class="nav-item-manage" @click.stop>
           <dropdown :closeAfterClick="true" align="right">
             <div class="nav-item-btn" slot="toggle"><div></div></div>
+            <a href="#" @click.prevent="switchStatus(item)" v-text="getLabelSwitch(item)"></a>
             <a href="#" @click.prevent="onListEdit(item)">Edit</a>
+            <a href="#" @click.prevent="onListFetch(item)" v-if="item.subscribeUrl">Fetch now</a>
             <a href="#" @click.prevent="onListExport(item)">Export</a>
             <a href="#" v-if="canRemoveList" @click.prevent="onListRemove(item)">Remove</a>
           </dropdown>
@@ -23,6 +25,7 @@
       <button @click.prevent="onListNew">Add new list</button>
       <button @click.prevent="onListImport">Import list</button>
       <button @click.prevent="onListSubscribe">Subscribe list</button>
+      <button @click.prevent="onListFetchAll">Fetch all</button>
     </div>
     <modal :visible="!!listMeta" @close="onListCancel">
       <form class="nav-modal" v-if="listMeta" @submit.prevent="onListSave">
@@ -77,6 +80,9 @@ export default {
         this.updateErrors();
       },
     },
+  },
+  created() {
+    this.updateErrors = debounce(this.checkErrors, 200);
   },
   methods: {
     checkErrors() {
@@ -147,9 +153,18 @@ export default {
     onListCancel() {
       this.listMeta = null;
     },
-  },
-  created() {
-    this.updateErrors = debounce(this.checkErrors, 200);
+    onListFetch(item) {
+      browser.runtime.sendMessage({
+        cmd: 'FetchList',
+        data: item.id,
+      });
+    },
+    onListFetchAll() {
+      browser.runtime.sendMessage({ cmd: 'FetchLists' });
+    },
+    getLabelSwitch(item) {
+      return item.enabled ? 'Disable' : 'Enable';
+    },
   },
 };
 </script>
@@ -234,6 +249,8 @@ export default {
   .vl-dropdown {
     white-space: nowrap;
     &-menu {
+      background: white;
+      border: 1px solid #bbb;
       padding: 0;
       a {
         display: block;
@@ -257,6 +274,7 @@ export default {
     }
   }
   &-group {
+    text-align: left;
     > input {
       width: 100%;
       height: 2rem;
