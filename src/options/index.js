@@ -1,11 +1,11 @@
+import '#/common/browser';
 import Vue from 'vue';
-import 'src/common/browser';
 import { store } from './utils';
 import App from './components/app';
 import './style.css';
 
 browser.runtime.sendMessage({ cmd: 'GetLists' })
-.then(data => {
+.then((data) => {
   store.lists = data;
   store.current = data[0];
 });
@@ -37,7 +37,8 @@ browser.runtime.onMessage.addListener((req, src) => {
   return func(req.data, src);
 });
 
-new Vue({
+const vm = new Vue({
   render: h => h(App),
 })
-.$mount('#app');
+.$mount();
+document.body.append(vm.$el);

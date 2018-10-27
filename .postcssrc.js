@@ -1,6 +1,1 @@
-module.exports = {
-  parser: require('postcss-scss'),
-  plugins: [
-    require('precss'),
-  ],
-};
+module.exports = require('webpack-util/postcss');

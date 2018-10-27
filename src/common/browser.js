@@ -4,7 +4,7 @@ const global = window;
 function wrapAsync(func, thisObj) {
   return (...args) => {
     const promise = new Promise((resolve, reject) => {
-      args.push(res => {
+      args.push((res) => {
         const err = chrome.runtime.lastError;
         if (err) {
           reject(err);
@@ -14,7 +14,7 @@ function wrapAsync(func, thisObj) {
       });
       func.apply(thisObj, args);
     });
-    promise.catch(err => {
+    promise.catch((err) => {
       if (process.env.DEBUG) console.warn(args, err);
     });
     return promise;
@@ -22,7 +22,7 @@ function wrapAsync(func, thisObj) {
 }
 function wrapAPIs(source, meta) {
   const target = {};
-  Object.keys(source).forEach(key => {
+  Object.keys(source).forEach((key) => {
     const metaVal = meta && meta[key];
     if (metaVal) {
       const value = source[key];
@@ -50,14 +50,15 @@ const meta = {
         return function onChromeMessage(message, sender, sendResponse) {
           const result = listener(message, sender);
           if (result && typeof result.then === 'function') {
-            result.then(data => {
+            result.then((data) => {
               sendResponse({ data });
-            }, error => {
+            }, (error) => {
               if (process.env.DEBUG) console.warn(error);
               sendResponse({ error });
             });
             return true;
-          } else if (typeof result !== 'undefined') {
+          }
+          if (typeof result !== 'undefined') {
             // In some browsers (e.g Chrome 56, Vivaldi), the listener in
             // popup pages are not properly cleared after closed.
             // They may send `undefined` before the real response is sent.
@@ -73,13 +74,13 @@ const meta = {
     },
     sendMessage(sendMessage) {
       const promisifiedSendMessage = wrapAsync(sendMessage);
-      return data => {
+      return (data) => {
         const promise = promisifiedSendMessage(data)
-        .then(res => {
+        .then((res) => {
           if (res && res.error) throw res.error;
           return res && res.data;
         });
-        promise.catch(err => {
+        promise.catch((err) => {
           if (process.env.DEBUG) console.warn(err);
         });
         return promise;

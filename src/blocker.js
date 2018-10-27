@@ -1,4 +1,4 @@
-import 'src/common/browser';
+import '#/common/browser';
 
 const getData = browser.storage.local.get;
 const dumpData = browser.storage.local.set;
@@ -37,7 +37,7 @@ class List {
   load(data) {
     const key = this.key();
     return (data ? Promise.resolve(data) : getData(key).then(res => res && res[key]))
-    .then(value => {
+    .then((value) => {
       const item = value || {};
       [
         'name',
@@ -45,7 +45,7 @@ class List {
         'subscribeUrl',
         'lastUpdated',
         'enabled',
-      ].forEach(ikey => {
+      ].forEach((ikey) => {
         if (item[ikey] != null) this[ikey] = item[ikey];
       });
       this.name = this.name || 'No name';
@@ -104,12 +104,12 @@ class List {
 
   static create(data) {
     return getData('lists').then(res => res.lists || [])
-    .then(ids => {
+    .then((ids) => {
       const newId = (ids[ids.length - 1] || 0) + 1;
       ids.push(newId);
       return dumpData({ lists: ids }).then(() => newId);
     })
-    .then(id => {
+    .then((id) => {
       const list = new List(id);
       List.all.push(list);
       data.rules = data.rules || [];
@@ -139,8 +139,8 @@ class List {
     .then(res => res.lists)
     .then(ids => (
       ids && getData(ids.map(List.key))
-      .then(data => {
-        List.all = ids.map(id => {
+      .then((data) => {
+        List.all = ids.map((id) => {
           const list = new List(id);
           list.load(data[List.key(id)]);
           return list;
@@ -202,7 +202,7 @@ function matchTester(rule) {
   else {
     const RE = /(.*?):\/\/([^/]*)\/(.*)/;
     const ruleParts = rule.match(RE);
-    test = url => {
+    test = (url) => {
       const parts = url.match(RE);
       return !!ruleParts && !!parts
       && matchScheme(ruleParts[1], parts[1])
@@ -213,7 +213,7 @@ function matchTester(rule) {
   return { test };
 }
 
-browser.webRequest.onBeforeRequest.addListener(details => {
+browser.webRequest.onBeforeRequest.addListener((details) => {
   if (List.test(details)) {
     console.warn(`blocked: ${details.method} ${details.url}`);
     return { cancel: true };

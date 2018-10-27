@@ -4,6 +4,7 @@
       <div
         class="nav-item"
         v-for="(item, index) in store.lists"
+        :key="index"
         :class="{ active: item.id === store.current.id, enabled: item.enabled }"
         @click="onSelect(item)"
         :title="getName(item)">
@@ -27,9 +28,9 @@
       <button @click.prevent="onListSubscribe">Subscribe list</button>
       <button @click.prevent="onListFetchAll">Fetch all</button>
     </div>
-    <modal :visible="!!listMeta" @close="onListCancel">
+    <modal :visible="!!listMeta" @close="onListCancel" transition="fade">
       <form class="nav-modal" v-if="listMeta" @submit.prevent="onListSave">
-        <h3 v-text="listMeta.isEdit ? 'Edit list' : listMeta.isSubscribed ? 'Subscribe list' : 'Create list'"></h3>
+        <h3 v-text="modalTitle" />
         <div class="nav-group">
           <div>Name:</div>
           <input v-model="listMeta.name" :placeholder="listMeta.defaultName">
@@ -53,7 +54,9 @@
 </template>
 
 <script>
-import { store, dump, remove, pickData, debounce, isValidURL, loadFile, blob2Text } from '../utils';
+import {
+  store, dump, remove, pickData, debounce, isValidURL, loadFile, blob2Text,
+} from '../utils';
 import { Dropdown, Modal } from './vueleton';
 
 export default {
@@ -71,6 +74,13 @@ export default {
   computed: {
     canRemoveList() {
       return this.store.lists.length > 1;
+    },
+    modalTitle() {
+      const { listMeta } = this;
+      if (!listMeta) return null;
+      if (listMeta.isEdit) return 'Edit list';
+      if (listMeta.isSubscribed) return 'Subscribe list';
+      return 'Create list';
     },
   },
   watch: {
@@ -109,7 +119,7 @@ export default {
     onListImport() {
       loadFile()
       .then(blob2Text)
-      .then(text => {
+      .then((text) => {
         const data = JSON.parse(text);
         dump(pickData(data, ['name', 'rules']));
       });
@@ -263,6 +273,7 @@ export default {
   }
   &-modal {
     width: 30rem;
+    margin: 0 auto;
     padding: 1rem;
     background: white;
     &-buttons {

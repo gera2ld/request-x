@@ -1,7 +1,7 @@
 Request Blocker
 ===
 
-![Request Blocker](resources/wall.png)
+![Request Blocker](https://user-images.githubusercontent.com/3139113/47605468-5e024c00-da39-11e8-9762-2ba6c4a4f7cc.png)
 
 This is a Chrome extension to block undesired requests.
 

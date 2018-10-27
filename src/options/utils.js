@@ -30,7 +30,7 @@ export function isValidURL(url) {
 }
 
 export function loadFile() {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('Accept', 'application/json');
@@ -47,7 +47,7 @@ export function blob2Text(blob) {
     reader.onload = () => {
       resolve(reader.result);
     };
-    reader.onerror = err => {
+    reader.onerror = (err) => {
       reject(err);
     };
     reader.readAsText(blob);

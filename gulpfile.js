@@ -1,67 +1,81 @@
-const fs = require('fs');
-const util = require('util');
 const gulp = require('gulp');
-const del = require('del');
+const fs = require('fs-extra');
+const log = require('fancy-log');
 const webpack = require('webpack');
-const gutil = require('gulp-util');
-const json = require('./scripts/json');
-const webpackConfig = require('./scripts/webpack.conf');
+const yaml = require('js-yaml');
+const { loadWebpackConfig } = require('webpack-util/util');
+const string = require('./scripts/string');
 const pkg = require('./package.json');
-const readFile = util.promisify(fs.readFile);
-
-function webpackCallback(err, stats) {
-  if (err) {
-    gutil.log('[FATAL]', err);
-    return;
-  }
-  if (stats.hasErrors()) {
-    gutil.log('[ERROR] webpack compilation failed\n', stats.toJson().errors.join('\n'));
-    return;
-  }
-  if (stats.hasWarnings()) {
-    gutil.log('[WARNING] webpack compilation has warnings\n', stats.toJson().warnings.join('\n'));
-  }
-  stats.stats.forEach(stat => {
-    const timeCost = (stat.endTime - stat.startTime) / 1000;
-    const chunks = Object.keys(stat.compilation.namedChunks).join(' ');
-    gutil.log(`Webpack built: [${timeCost.toFixed(3)}s] ${chunks}`);
-  });
-}
 
 const DIST = 'dist';
 const paths = {
   manifest: [
-    'src/manifest.json',
+    'src/manifest.yml',
   ],
   copy: [
     'src/_locales/**',
     'src/public/images/**',
   ],
 };
-const buildTasks = ['manifest', 'copy'];
 
-gulp.task('clean', () => del('dist'));
+function webpackCallback(done) {
+  let firstTime = true;
+  return (err, stats) => {
+    if (err) {
+      log('[FATAL]', err);
+      return;
+    }
+    if (stats.hasErrors()) {
+      log('[ERROR] webpack compilation failed\n', stats.toJson().errors.join('\n'));
+      return;
+    }
+    if (stats.hasWarnings()) {
+      log('[WARNING] webpack compilation has warnings\n', stats.toJson().warnings.join('\n'));
+    }
+    (Array.isArray(stats.stats) ? stats.stats : [stats])
+    .forEach(stat => {
+      const timeCost = (stat.endTime - stat.startTime) / 1000;
+      const chunks = Object.keys(stat.compilation.namedChunks).join(' ');
+      log(`Webpack built: [${timeCost.toFixed(3)}s] ${chunks}`);
+    });
+    if (firstTime) {
+      firstTime = false;
+      done(err);
+    }
+  }
+}
 
-gulp.task('manifest', () =>
-  gulp.src(paths.manifest, {base: 'src'})
-  .pipe(json(data => {
+function clean() {
+  return fs.emptyDir(DIST);
+}
+
+function copyFiles() {
+  return gulp.src(paths.copy, { base: 'src' })
+  .pipe(gulp.dest(DIST));
+}
+
+function manifest() {
+  return gulp.src(paths.manifest, { base: 'src' })
+  .pipe(string((input, file) => {
+    const data = yaml.safeLoad(input);
+    // Strip alphabetic suffix
     data.version = pkg.version.replace(/-[^.]*/, '');
-    return data;
+    file.path = file.path.replace(/\.yml$/, '.json');
+    return JSON.stringify(data);
   }))
-  .pipe(gulp.dest('dist'))
-);
+  .pipe(gulp.dest(DIST));
+}
 
-gulp.task('copy', () =>
-  gulp.src(paths.copy, { base: 'src' })
-  .pipe(gulp.dest(DIST))
-);
+async function jsDev(done) {
+  const compiler = webpack(await loadWebpackConfig());
+  compiler.watch({}, webpackCallback(done));
+}
 
-gulp.task('watch', buildTasks.concat(['js-dev']), () => {
-  gulp.watch(paths.copy, ['copy']);
-  gulp.watch(paths.manifest, ['manifest']);
-});
+async function jsProd(done) {
+  const compiler = webpack(await loadWebpackConfig());
+  compiler.run(webpackCallback(done));
+}
 
-gulp.task('build', buildTasks.concat(['js-prd']));
-
-gulp.task('js-dev', () => webpack(webpackConfig).watch({}, webpackCallback));
-gulp.task('js-prd', () => webpack(webpackConfig, webpackCallback));
+exports.clean = clean;
+exports.dev = gulp.parallel(manifest, copyFiles, jsDev);
+exports.build = gulp.series(clean, gulp.parallel(manifest, copyFiles, jsProd));

@@ -17,6 +17,7 @@
         v-if="newRule"
         :rule="newRule"
         :editing="true"
+        :extra="-1"
         @submit="onSubmit"
         @cancel="onCancel"
       />
@@ -44,12 +45,10 @@
 <script>
 import Vue from 'vue';
 import { store, dump } from '../utils';
-import { Dropdown } from './vueleton';
 import RuleItem from './rule-item';
 
 export default {
   components: {
-    Dropdown,
     RuleItem,
   },
   data() {
@@ -95,7 +94,7 @@ export default {
         url,
       };
       const { current: { rules } } = this.store;
-      if (isNaN(extra)) {
+      if (extra < 0) {
         rules.push(rule);
       } else {
         Vue.set(rules, extra, rule);

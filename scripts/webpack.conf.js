@@ -1,35 +1,30 @@
-const webpack = require('webpack');
-const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const BabiliPlugin = require('babili-webpack-plugin');
-const base = require('./webpack.base.conf');
-const { IS_DEV, merge } = require('./utils');
+const webpackConfig = require('webpack-util/config/webpack.conf');
+const webpackUtil = require('webpack-util/webpack');
+const { defaultOptions, parseConfig, combineConfig, isProd } = require('webpack-util/util');
 
-const targets = [];
-module.exports = targets;
+defaultOptions.devServer = false;
 
-targets.push(merge(base, {
-  entry: {
-    'options/app': 'src/options/index.js',
-    'popup/app': 'src/popup/index.js',
-    blocker: 'src/blocker.js',
-  },
-  plugins: [
-    new webpack.optimize.CommonsChunkPlugin({
-      name: 'browser',
-    }),
-    new HtmlWebpackPlugin({
-      filename: 'options/index.html',
-      template: 'src/public/index.html',
-      chunks: ['browser', 'options/app'],
-    }),
-    new HtmlWebpackPlugin({
-      filename: 'popup/index.html',
-      template: 'src/public/index.html',
-      chunks: ['browser', 'popup/app'],
-    }),
-    // new FriendlyErrorsPlugin(),
-    !IS_DEV && new ExtractTextPlugin('[name].css'),
-  ].filter(Boolean),
-}));
+module.exports = async () => {
+  const config = await combineConfig(parseConfig(webpackConfig), [
+  ], {
+    ...defaultOptions,
+  });
+  config.devtool = isProd ? false : 'inline-source-map';
+  config.optimization = {
+    splitChunks: {
+      cacheGroups: {
+        browser: {
+          name: 'browser',
+          minChunks: 3,
+          chunks: 'all',
+        },
+        common: {
+          name: 'common',
+          minChunks: 2,
+          chunks: chunk => /^(options|popup)\//.test(chunk.name),
+        },
+      },
+    },
+  };
+  return config;
+};
