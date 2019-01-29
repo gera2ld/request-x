@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const log = require('fancy-log');
 const webpack = require('webpack');
 const yaml = require('js-yaml');
-const { loadWebpackConfig } = require('webpack-util/util');
+const { loadWebpackConfig } = require('@gera2ld/plaid/util');
 const string = require('./scripts/string');
 const pkg = require('./package.json');
 

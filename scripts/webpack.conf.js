@@ -1,16 +1,12 @@
-const webpackConfig = require('webpack-util/config/webpack.conf');
-const webpackUtil = require('webpack-util/webpack');
-const { defaultOptions, parseConfig, combineConfig, isProd } = require('webpack-util/util');
+const { defaultOptions, isProd, modifyWebpackConfig } = require('@gera2ld/plaid/util');
 
 defaultOptions.devServer = false;
 
-module.exports = async () => {
-  const config = await combineConfig(parseConfig(webpackConfig), [
-  ], {
-    ...defaultOptions,
-  });
+module.exports = modifyWebpackConfig(async (config) => {
   config.devtool = isProd ? false : 'inline-source-map';
   config.optimization = {
+    ...config.optimization,
+    runtimeChunk: false,
     splitChunks: {
       cacheGroups: {
         browser: {
@@ -27,4 +23,4 @@ module.exports = async () => {
     },
   };
   return config;
-};
+});
