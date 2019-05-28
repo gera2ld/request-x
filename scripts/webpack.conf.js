@@ -1,9 +1,6 @@
-const { defaultOptions, isProd, modifyWebpackConfig } = require('@gera2ld/plaid/util');
-
-defaultOptions.devServer = false;
+const { modifyWebpackConfig } = require('@gera2ld/plaid');
 
 module.exports = modifyWebpackConfig(async (config) => {
-  config.devtool = isProd ? false : 'inline-source-map';
   config.optimization = {
     ...config.optimization,
     runtimeChunk: false,

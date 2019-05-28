@@ -1,11 +1,17 @@
 module.exports = {
+  root: true,
   extends: [
     require.resolve('@gera2ld/plaid/eslint'),
     require.resolve('@gera2ld/plaid-vue/eslint/vue'),
   ],
-  rules: {
+  parserOptions: {
+    ecmaFeatures: {
+      legacyDecorators: true,
+    },
   },
   globals: {
     browser: true,
+  },
+  rules: {
   },
 };
