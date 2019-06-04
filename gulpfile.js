@@ -36,9 +36,7 @@ function manifest() {
 }
 
 async function jsDev() {
-  require('@gera2ld/plaid-webpack/bin/develop')({
-    server: true,
-  });
+  require('@gera2ld/plaid-webpack/bin/develop')();
 }
 
 async function jsProd() {

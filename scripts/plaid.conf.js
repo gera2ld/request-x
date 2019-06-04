@@ -7,19 +7,19 @@ const { isProd } = require('@gera2ld/plaid/util');
  * - value.html.inlineSource: if true, JS and CSS files will be inlined in HTML.
  */
 exports.pages = {
-  blocker: {
-    entry: './src/blocker',
+  handler: {
+    entry: './src/handler',
   },
   'options/index': {
     entry: './src/options/index',
     html: {
-      title: 'Request Blocker',
+      title: 'Request X',
     },
   },
   'popup/index': {
     entry: './src/popup/index',
     html: {
-      title: 'Request Blocker',
+      title: 'Request X',
     },
   },
 };

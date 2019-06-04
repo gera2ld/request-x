@@ -8,9 +8,9 @@
       <div class="flex-auto">&copy; Gerald</div>
       <div>
         Links:
-        <a href="https://github.com/gera2ld/request-blocker" target="_blank">GitHub</a>
+        <a href="https://github.com/gera2ld/request-x" target="_blank">GitHub</a>
         |
-        <a href="https://github.com/gera2ld/request-blocker/issues" target="_blank">Feedback</a>
+        <a href="https://github.com/gera2ld/request-x/issues" target="_blank">Feedback</a>
       </div>
     </footer>
   </div>

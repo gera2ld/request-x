@@ -1,8 +1,8 @@
-name: Request blocker
+name: Request X
 version: __VERSION__
 minimum_chrome_version: '50'
 manifest_version: 2
-description: Block unexpected requests based on methods and URLs.
+description: Block or redirect unexpected requests based on methods and URLs.
 author:
   name: Gerald
   url: 'https://gerald.top'
@@ -15,12 +15,12 @@ browser_action:
   default_icon:
     '19': public/images/icon19.png
     '38': public/images/icon38.png
-  default_title: Request blocker
+  default_title: Request X
   default_popup: popup/index.html
 background:
   scripts:
     - browser.js
-    - blocker.js
+    - handler.js
 options_ui:
   page: options/index.html
 permissions:

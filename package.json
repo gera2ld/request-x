@@ -1,8 +1,8 @@
 {
-  "name": "request-blocker",
+  "name": "request-x",
   "version": "1.1.2",
   "private": true,
-  "description": "Request Blocker",
+  "description": "Request X",
   "author": "Gerald <i@gerald.top>",
   "license": "ISC",
   "scripts": {
@@ -23,16 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gera2ld/request-blocker.git"
+    "url": "git+https://github.com/gera2ld/request-x.git"
   },
-  "keywords": [
-    "request",
-    "blocker"
-  ],
   "bugs": {
-    "url": "https://github.com/gera2ld/request-blocker/issues"
+    "url": "https://github.com/gera2ld/request-x/issues"
   },
-  "homepage": "https://github.com/gera2ld/request-blocker#readme",
+  "homepage": "https://github.com/gera2ld/request-x#readme",
   "devDependencies": {
     "@gera2ld/plaid": "~1.4.0",
     "@gera2ld/plaid-vue": "~1.4.0",
