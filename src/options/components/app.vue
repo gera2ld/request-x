@@ -30,7 +30,6 @@ export default {
 
 <style>
 #app {
-  max-width: 60rem;
   max-height: 50rem;
   margin: 0 auto;
   > header {

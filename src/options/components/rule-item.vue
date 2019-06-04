@@ -13,10 +13,18 @@
           <div>DELETE</div>
         </div>
       </div>
-      <div class="rule-item-url flex-auto" :class="{error: errors.url}">
-        <input type="text" v-model="input.url" placeholder="URL">
-        <div class="rule-item-hint">
-          A <a target="_blank" href="https://developer.chrome.com/extensions/match_patterns">match pattern</a>.
+      <div class="rule-item-url flex-auto">
+        <div :class="{error: errors.url}">
+          <input type="text" v-model="input.url" placeholder="URL">
+          <div class="rule-item-hint">
+            A <a target="_blank" href="https://developer.chrome.com/extensions/match_patterns">match pattern</a>.
+          </div>
+        </div>
+        <div class="mt-1" :class="{error: errors.target}">
+          <input type="text" v-model="input.target" placeholder="Target">
+          <div class="rule-item-hint">
+            Leave empty to block the request, or redirect to a new URL.
+          </div>
         </div>
       </div>
       <div class="rule-item-buttons">
@@ -27,6 +35,7 @@
     <div class="flex" v-else>
       <div class="rule-item-method" v-text="rule.method"></div>
       <div class="rule-item-url flex-auto" v-text="rule.url"></div>
+      <div class="rule-item-target" v-text="getTargetBadge(rule)"></div>
       <div class="rule-item-buttons" v-if="editable">
         <button class="item-btn" @click="onEdit">Edit</button>
         <button class="item-btn" @click="onRemove">Remove</button>
@@ -50,6 +59,7 @@ export default {
       input: {
         method: null,
         url: null,
+        target: null,
       },
       errors: {},
     };
@@ -74,6 +84,7 @@ export default {
         this.input = {
           method: this.rule.method,
           url: this.rule.url,
+          target: this.rule.target,
         };
         this.$nextTick(() => {
           const { method } = this.$refs;
@@ -85,7 +96,11 @@ export default {
       this.errors = {
         method: !isValidMethod(this.input.method),
         url: !isValidURLPattern(this.input.url),
+        target: this.input.target && !isValidURLPattern(this.input.target),
       };
+    },
+    getTargetBadge(rule) {
+      return rule.target ? 'redirect' : 'block';
     },
     onEdit() {
       this.$emit('edit');
@@ -128,6 +143,12 @@ export default {
   }
   &-url {
     word-wrap: break-word;
+  }
+  &-target {
+    padding: .2rem;
+    font-size: .8rem;
+    color: #888;
+    text-transform: uppercase;
   }
   &-buttons {
     margin-left: .5rem;

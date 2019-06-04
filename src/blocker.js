@@ -6,21 +6,29 @@ const removeData = browser.storage.local.remove;
 
 class Rule {
   constructor(rule) {
-    this.rule = rule;
-    this.method = rule.method || '*';
-    this.testURL = matchTester(rule.url).test;
+    this.data = rule;
   }
 
   testMethod(method) {
-    return ['*', method].indexOf(this.method) >= 0;
+    return ['*', method].includes(this.data.method);
   }
 
   test(details) {
-    return this.testMethod(details.method) && this.testURL(details.url);
+    return this.testMethod(details.method) && matchTester(this.data.url).test(details.url);
+  }
+
+  target() {
+    const { target } = this.data;
+    return target ? { redirectUrl: target } : { cancel: true };
   }
 
   dump() {
-    return this.rule;
+    return {
+      method: '*',
+      url: '*://*/*',
+      target: '',
+      ...this.data,
+    };
   }
 }
 
@@ -90,8 +98,8 @@ class List {
     return this.fetching;
   }
 
-  test(details) {
-    return this.enabled && this.rules.some(rule => rule.test(details));
+  match(details) {
+    return this.enabled && this.rules.find(rule => rule.test(details));
   }
 
   fireChange() {
@@ -160,8 +168,11 @@ class List {
     return Promise.all(List.all.map(list => list.fetch().catch(() => {})));
   }
 
-  static test(details) {
-    return List.all.some(list => list.test(details));
+  static match(details) {
+    for (const list of List.all) {
+      const rule = list.match(details);
+      if (rule) return rule;
+    }
   }
 }
 
@@ -214,9 +225,10 @@ function matchTester(rule) {
 }
 
 browser.webRequest.onBeforeRequest.addListener((details) => {
-  if (List.test(details)) {
-    console.warn(`blocked: ${details.method} ${details.url}`);
-    return { cancel: true };
+  const rule = List.match(details);
+  if (rule) {
+    console.info(`matched: ${details.method} ${details.url}`);
+    return rule.target();
   }
 }, {
   urls: ['<all_urls>'],

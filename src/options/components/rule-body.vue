@@ -88,10 +88,11 @@ export default {
       rules.splice(index, 1);
       this.save();
     },
-    onSubmit({ extra, input: { method, url } }) {
+    onSubmit({ extra, input: { method, url, target } }) {
       const rule = {
         method,
         url,
+        target,
       };
       const { current: { rules } } = this.store;
       if (extra < 0) {
