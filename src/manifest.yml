@@ -7,14 +7,14 @@ author:
   name: Gerald
   url: 'https://gerald.top'
 icons:
-  '16': public/images/icon16.png
-  '48': public/images/icon48.png
-  '128': public/images/icon128.png
+  '16': public/images/icon_16.png
+  '48': public/images/icon_48.png
+  '128': public/images/icon_128.png
 default_locale: en
 browser_action:
   default_icon:
-    '19': public/images/icon19.png
-    '38': public/images/icon38.png
+    '19': public/images/icon_19.png
+    '38': public/images/icon_38.png
   default_title: Request X
   default_popup: popup/index.html
 background:

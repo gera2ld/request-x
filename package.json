@@ -35,6 +35,7 @@
     "@gera2ld/plaid-webpack": "~1.4.6",
     "gulp": "^4.0.2",
     "husky": "^2.3.0",
+    "jimp": "^0.6.4",
     "plugin-error": "^1.0.1",
     "svgo": "^1.2.2"
   },

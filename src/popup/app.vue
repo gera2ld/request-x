@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <img src="/public/images/icon48.png">
+    <img src="/public/images/icon_48.png">
     <div class="button" @click="openDashboard">Open Dashboard</div>
   </div>
 </template>

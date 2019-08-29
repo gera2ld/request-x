@@ -1,6 +1,7 @@
 const gulp = require('gulp');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
+const Jimp = require('jimp');
 const string = require('./scripts/string');
 const pkg = require('./package.json');
 
@@ -11,7 +12,6 @@ const paths = {
   ],
   copy: [
     'src/_locales/**',
-    'src/public/images/**',
   ],
 };
 function clean() {
@@ -21,6 +21,15 @@ function clean() {
 function copyFiles() {
   return gulp.src(paths.copy, { base: 'src' })
   .pipe(gulp.dest(DIST));
+}
+
+function createIcons() {
+  const dist = `${DIST}/public/images`;
+  return fs.mkdirp(dist)
+  .then(() => Jimp.read('src/resources/wall.png'))
+  .then(icon => Promise.all([
+    16, 19, 38, 48, 128,
+  ].map(size => icon.clone().resize(size, size).write(`${dist}/icon_${size}.png`))));
 }
 
 function manifest() {
@@ -45,5 +54,5 @@ async function jsProd() {
   });
 }
 
-exports.dev = gulp.parallel(manifest, copyFiles, jsDev);
-exports.build = gulp.series(clean, gulp.parallel(manifest, copyFiles, jsProd));
+exports.dev = gulp.parallel(manifest, createIcons, copyFiles, jsDev);
+exports.build = gulp.series(clean, gulp.parallel(manifest, createIcons, copyFiles, jsProd));
