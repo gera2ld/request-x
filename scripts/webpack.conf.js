@@ -1,4 +1,5 @@
 const { modifyWebpackConfig } = require('@gera2ld/plaid');
+const webpack = require('webpack');
 
 module.exports = modifyWebpackConfig(async (config) => {
   config.optimization = {
@@ -6,18 +7,23 @@ module.exports = modifyWebpackConfig(async (config) => {
     runtimeChunk: false,
     splitChunks: {
       cacheGroups: {
-        browser: {
-          name: 'browser',
-          minChunks: 3,
-          chunks: 'all',
-        },
         common: {
           name: 'common',
           minChunks: 2,
-          chunks: chunk => /^(options|popup)\//.test(chunk.name),
+          chunks(chunk) {
+            return ![
+              'browser',
+              'handler',
+            ].includes(chunk.name);
+          },
         },
       },
     },
   };
+  config.plugins.push(
+    new webpack.DefinePlugin({
+      'process.env.DEBUG': JSON.stringify(process.env.DEBUG || false),
+    }),
+  );
   return config;
 });

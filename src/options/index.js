@@ -1,4 +1,3 @@
-import '#/common/browser';
 import Vue from 'vue';
 import { store } from './utils';
 import App from './components/app';

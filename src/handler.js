@@ -1,5 +1,3 @@
-import '#/common/browser';
-
 const getData = browser.storage.local.get;
 const dumpData = browser.storage.local.set;
 const removeData = browser.storage.local.remove;
