@@ -13,5 +13,10 @@ module.exports = {
     browser: true,
   },
   rules: {
+    'import/extensions': ['error', 'ignorePackages', {
+      js: 'never',
+      vue: 'never',
+    }],
+    'max-classes-per-file': 'off',
   },
 };
