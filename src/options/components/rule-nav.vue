@@ -1,25 +1,23 @@
 <template>
   <div class="nav flex flex-col">
     <div class="nav-body flex-auto">
+      <div class="nav-group-title">Settings</div>
+      <div
+        class="nav-item"
+        :class="{ active: store.route.value === 'settings/interface'}"
+        @click="onSelectSetting('interface')">
+        Interface
+      </div>
+      <div class="nav-group-title">Lists</div>
       <div
         class="nav-item"
         v-for="(item, index) in store.lists"
         :key="index"
-        :class="{ active: item.id === store.current.id, enabled: item.enabled }"
+        :class="{ active: store.route.value === `rules/${item.id}`, enabled: item.enabled }"
         @click="onSelect(item)"
         :title="getName(item)">
         <span class="nav-item-status" @click.prevent.stop="switchStatus(item)"></span>
         <span class="nav-item-text" v-text="getName(item)"></span>
-        <div class="nav-item-manage" @click.stop>
-          <dropdown :closeAfterClick="true" align="right">
-            <div class="nav-item-btn" slot="toggle"><div></div></div>
-            <a href="#" @click.prevent="switchStatus(item)" v-text="getLabelSwitch(item)"></a>
-            <a href="#" @click.prevent="onListEdit(item)">Edit</a>
-            <a href="#" @click.prevent="onListFetch(item)" v-if="item.subscribeUrl">Fetch now</a>
-            <a href="#" @click.prevent="onListExport(item)">Export</a>
-            <a href="#" v-if="canRemoveList" @click.prevent="onListRemove(item)">Remove</a>
-          </dropdown>
-        </div>
       </div>
     </div>
     <div class="nav-footer">
@@ -28,91 +26,39 @@
       <button @click.prevent="onListSubscribe">Subscribe list</button>
       <button @click.prevent="onListFetchAll">Fetch all</button>
     </div>
-    <modal :visible="!!listMeta" @close="onListCancel" transition="fade">
-      <form class="nav-modal" v-if="listMeta" @submit.prevent="onListSave">
-        <h3 v-text="modalTitle" />
-        <div class="nav-group">
-          <div>Name:</div>
-          <input v-model="listMeta.name" :placeholder="listMeta.defaultName">
-        </div>
-        <div class="nav-group" v-if="listMeta.isSubscribed">
-          <div>Subscribe URL:</div>
-          <input
-            :class="{ error: errors.subscribeUrl }"
-            :value="listMeta.subscribeUrl"
-            :readonly="listMeta.isEdit"
-            @input="listMeta.isEdit || (listMeta.subscribeUrl = $event.target.value)"
-          />
-        </div>
-        <div class="nav-modal-buttons">
-          <button type="submit">OK</button>
-          <button @click.prevent="onListCancel">Cancel</button>
-        </div>
-      </form>
-    </modal>
   </div>
 </template>
 
 <script>
 import {
-  store, dump, remove, pickData, debounce, isValidURL, loadFile, blob2Text,
+  store, dump, remove, pickData, debounce, isValidURL, loadFile, blob2Text, setRoute,
 } from '../utils';
-import { Dropdown, Modal } from './vueleton';
 
 export default {
-  components: {
-    Dropdown,
-    Modal,
-  },
   data() {
     return {
       store,
-      listMeta: null,
       errors: {},
     };
   },
-  computed: {
-    canRemoveList() {
-      return this.store.lists.length > 1;
-    },
-    modalTitle() {
-      const { listMeta } = this;
-      if (!listMeta) return null;
-      if (listMeta.isEdit) return 'Edit list';
-      if (listMeta.isSubscribed) return 'Subscribe list';
-      return 'Create list';
-    },
-  },
-  watch: {
-    listMeta: {
-      deep: true,
-      handler() {
-        this.updateErrors();
-      },
-    },
-  },
-  created() {
-    this.updateErrors = debounce(this.checkErrors, 200);
-  },
   methods: {
-    checkErrors() {
-      const listMeta = this.listMeta || {};
-      this.errors = {
-        subscribeUrl: listMeta.isSubscribed && !isValidURL(listMeta.subscribeUrl),
-      };
-    },
     getName(item) {
       return item.name || item.defaultName || 'No name';
-    },
-    onSelect(item) {
-      store.current = item;
     },
     switchStatus(item) {
       item.enabled = !item.enabled;
       dump(pickData(item, ['id', 'enabled']));
     },
+    onSelectSetting(id) {
+      setRoute(`settings/${id}`);
+      this.store.current = null;
+    },
+    onSelect(item) {
+      setRoute(`rules/${item.id}`);
+      this.store.current = item;
+    },
     onListNew() {
-      this.listMeta = {
+      this.store.editList = {
         name: '',
       };
     },
@@ -125,14 +71,14 @@ export default {
       });
     },
     onListSubscribe() {
-      this.listMeta = {
+      this.store.editList = {
         name: '',
         subscribeUrl: '',
         isSubscribed: true,
       };
     },
     onListEdit(list) {
-      this.listMeta = Object.assign({}, list, {
+      this.store.editList = Object.assign({}, list, {
         isSubscribed: !!list.subscribeUrl,
         isEdit: true,
       });
@@ -157,11 +103,11 @@ export default {
     onListSave() {
       this.checkErrors();
       if (Object.keys(this.errors).some(key => this.errors[key])) return;
-      dump(pickData(this.listMeta, ['id', 'name', 'subscribeUrl']));
+      dump(pickData(this.editList, ['id', 'name', 'subscribeUrl']));
       this.onListCancel();
     },
     onListCancel() {
-      this.listMeta = null;
+      this.editList = null;
     },
     onListFetch(item) {
       browser.runtime.sendMessage({
@@ -182,9 +128,10 @@ export default {
 <style>
 .nav {
   width: 15rem;
+  margin-right: 16px;
   &-body {
     margin-top: 1rem;
-    margin-left: -1px;
+    margin-right: -1px;
     overflow-y: auto;
     z-index: 1;
   }
@@ -201,10 +148,7 @@ export default {
     display: block;
     margin-left: 1px;
     padding: .6rem 1rem;
-    border: 1px solid #eee;
-    border-left: 0;
-    border-top-right-radius: .5rem;
-    border-bottom-right-radius: .5rem;
+    border-radius: 4px;
     cursor: pointer;
     color: #888;
     &-text {
@@ -212,22 +156,20 @@ export default {
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    &:hover {
+      background: #f8f8f8;
+    }
     &.active {
       margin-left: 0;
-      border-color: #888;
-      background: white;
-    }
-    &.enabled {
+      background: #eef;
       color: inherit;
-    }
-    &:hover {
-      background: #f0f0f0;
     }
     &-status {
       display: inline-block;
-      width: .8rem;
-      height: .8rem;
-      border-radius: .3rem;
+      width: 12px;
+      height: 12px;
+      margin-right: 6px;
+      border-radius: 4px;
       background: gray;
       .enabled > & {
         background: green;
@@ -256,43 +198,11 @@ export default {
       }
     }
   }
-  .vl-dropdown {
-    white-space: nowrap;
-    &-menu {
-      background: white;
-      border: 1px solid #bbb;
-      padding: 0;
-      a {
-        display: block;
-        padding: .5rem 1rem;
-        &:hover {
-          background: #f0f0f0;
-        }
-      }
-    }
-  }
-  &-modal {
-    width: 30rem;
-    margin: 0 auto;
-    padding: 1rem;
-    background: white;
-    &-buttons {
-      margin-top: .5rem;
-      text-align: right;
-    }
-    h3 {
-      margin-bottom: 1rem;
-    }
-  }
-  &-group {
-    text-align: left;
-    > input {
-      width: 100%;
-      height: 2rem;
-    }
-    ~ .nav-group {
-      margin-top: .5rem;
-    }
+  &-group-title {
+    margin: 12px 0 6px;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: #999;
   }
 }
 </style>

@@ -129,7 +129,12 @@ export default {
 
 <style>
 .rule-item {
-  padding: .5rem;
+  padding: 8px 32px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  &:hover {
+    border-color: #eef;
+  }
   input {
     width: 100%;
     height: 2rem;

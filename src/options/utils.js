@@ -1,7 +1,19 @@
 export const store = {
   lists: [],
   current: {},
+  editList: null,
+  route: {},
 };
+setRoute('settings/interface');
+
+export function setRoute(value) {
+  const [group, id] = value.split('/');
+  store.route = {
+    value,
+    group,
+    id,
+  };
+}
 
 export function dump(list) {
   return browser.runtime.sendMessage({

@@ -29,6 +29,10 @@
       </div>
       <div>
         <button v-if="!store.current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
+        <button @click.prevent="onListEdit">Edit list</button>
+        <button @click.prevent="onListFetch" v-if="store.current.subscribeUrl">Fetch now</button>
+        <button @click.prevent="onListExport">Export list</button>
+        <button @click.prevent="onListRemove">Remove list</button>
       </div>
       <div class="mt-1 nowrap" v-if="store.current.subscribeUrl">
         Subscribed from:
@@ -112,13 +116,11 @@ export default {
     },
     onListEdit() {
       const { current } = this.store;
-      this.listEditing = {
-        title: current.title,
-        subscribeUrl: current.subscribeUrl,
+      this.store.editList = {
+        ...current,
+        editing: true,
       };
-    },
-    onListCancel() {
-      this.listEditing = null;
+      console.log(this.store);
     },
     onListSubmit({ title, subscribeUrl }) {
       const { current } = this.store;
@@ -139,9 +141,6 @@ export default {
 
 <style>
 .rule {
-  padding: 8px;
-  border: 1px solid #888;
-  border-radius: .3rem;
   > .flex-auto {
     overflow-y: auto;
   }
