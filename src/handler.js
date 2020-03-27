@@ -222,15 +222,61 @@ function matchTester(rule) {
   return { test };
 }
 
+const logs = {};
+
+function pushLog(details, result) {
+  const { tabId, url } = details;
+  let log = logs[tabId];
+  if (!log) {
+    log = {
+      cancel: [],
+      redirect: [],
+    };
+    logs[tabId] = log;
+  }
+  (result.cancel ? log.cancel : log.redirect).push(url);
+  updateBadge(tabId);
+}
+
+function updateBadge(tabId) {
+  const log = logs[tabId];
+  browser.browserAction.setBadgeBackgroundColor({
+    color: '#808',
+    tabId,
+  });
+  let count = log && (log.cancel.length + log.redirect.length);
+  if (count > 99) count = '99+';
+  else count = `${count || ''}`;
+  browser.browserAction.setBadgeText({
+    text: count,
+    tabId,
+  });
+}
+
 browser.webRequest.onBeforeRequest.addListener((details) => {
   const rule = List.match(details);
   if (rule) {
     console.info(`matched: ${details.method} ${details.url}`);
-    return rule.target();
+    const result = rule.target();
+    pushLog(details, result);
+    return result;
   }
 }, {
   urls: ['<all_urls>'],
 }, ['blocking']);
+
+browser.tabs.onRemoved.addListener((tabId) => {
+  delete logs[tabId];
+});
+browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status === 'loading') {
+    delete logs[tabId];
+  }
+});
+browser.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
+  logs[addedTabId] = logs[removedTabId];
+  delete logs[removedTabId];
+});
 
 const commands = {
   GetLists: () => List.get(),

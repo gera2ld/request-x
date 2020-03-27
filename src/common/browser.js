@@ -94,6 +94,11 @@ const meta = {
       remove: wrapAsync,
     },
   },
+  tabs: {
+    onUpdated: true,
+    onRemoved: true,
+    onReplaced: true,
+  },
   webRequest: true,
 };
 if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
