@@ -33,12 +33,16 @@ export function isValidMethod(method) {
   return method === '*' || /^[A-Z]*$/.test(method);
 }
 
-export function isValidURLPattern(url) {
-  return /^[^:/]+:\/\/[^/]+\//.test(url);
+export function isValidPattern(url) {
+  return url.startsWith('/') && url.endsWith('/') || /^[^:/]+:\/\/[^/]+\//.test(url);
 }
 
 export function isValidURL(url) {
   return /^[\w-]+:\/\/.*?\//.test(url);
+}
+
+export function isValidTarget(url) {
+  return url.includes('$') || isValidURL(url);
 }
 
 export function loadFile() {

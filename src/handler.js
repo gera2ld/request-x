@@ -2,6 +2,8 @@ const getData = browser.storage.local.get;
 const dumpData = browser.storage.local.set;
 const removeData = browser.storage.local.remove;
 
+const NEVER_MATCH = /^:NEVER_MATCH/;
+
 class Rule {
   constructor(rule) {
     this.data = rule;
@@ -11,13 +13,18 @@ class Rule {
     return ['*', method].includes(this.data.method);
   }
 
-  test(details) {
-    return this.testMethod(details.method) && matchTester(this.data.url).test(details.url);
-  }
-
-  target() {
-    const { target } = this.data;
-    return target ? { redirectUrl: target } : { cancel: true };
+  check(details) {
+    if (!this.testMethod(details.method)) return;
+    const matches = details.url.match(tester(this.data.url));
+    if (!matches) return;
+    let { target } = this.data;
+    if (!target) return { cancel: true };
+    matches.method = details.method;
+    target = target.replace(/\\(.)|\$(\w+)|\$\{([^}]+)\}/g, (m, g1, g2, g3) => {
+      if (g1) return g1;
+      return matches[g2 || g3] || '';
+    });
+    return { redirectUrl: target };
   }
 
   dump() {
@@ -97,7 +104,11 @@ class List {
   }
 
   match(details) {
-    return this.enabled && this.rules.find(rule => rule.test(details));
+    if (!this.enabled) return;
+    for (const rule of this.rules) {
+      const target = rule.check(details);
+      if (target) return target;
+    }
   }
 
   fireChange() {
@@ -168,58 +179,38 @@ class List {
 
   static match(details) {
     for (const list of List.all) {
-      const rule = list.match(details);
-      if (rule) return rule;
+      const target = list.match(details);
+      if (target) return target;
     }
   }
 }
 
 List.all = [];
 
-function str2RE(str) {
-  const re = str.replace(/([.?/])/g, '\\$1').replace(/\*/g, '.*?');
-  return RegExp(`^${re}$`);
+function str2re(str) {
+  return str.replace(/([.?/])/g, '\\$1').replace(/\*/g, '.*?');
 }
 
-function matchScheme(rule, data) {
-  // exact match
-  if (rule === data) return 1;
-  // * = http | https
-  if (rule === '*' && /^https?$/i.test(data)) return 1;
-  return 0;
-}
-function matchHost(rule, data) {
-  // * matches all
-  if (rule === '*') return 1;
-  // exact match
-  if (rule === data) return 1;
-  // *.example.com
-  if (/^\*\.[^*]*$/.test(rule)) {
-    // matches the specified domain
-    if (rule.slice(2) === data) return 1;
-    // matches subdomains
-    if (str2RE(rule).test(data)) return 1;
+function tester(rule) {
+  if (rule === '<all_urls>') {
+    return /.*/;
   }
-  return 0;
-}
-function matchPath(rule, data) {
-  return str2RE(rule).test(data);
-}
-function matchTester(rule) {
-  let test;
-  if (rule === '<all_urls>') test = () => true;
-  else {
-    const RE = /(.*?):\/\/([^/]*)\/(.*)/;
-    const ruleParts = rule.match(RE);
-    test = (url) => {
-      const parts = url.match(RE);
-      return !!ruleParts && !!parts
-      && matchScheme(ruleParts[1], parts[1])
-      && matchHost(ruleParts[2], parts[2])
-      && matchPath(ruleParts[3], parts[3]);
-    };
+  if (rule.startsWith('/') && rule.endsWith('/')) {
+    try {
+      return new RegExp(rule.slice(1, -1));
+    } catch {
+      return NEVER_MATCH;
+    }
   }
-  return { test };
+  const RE = /^([^:]+):\/\/([^/]*)(\/.*)$/;
+  let [, scheme, host, path] = rule.match(RE) || {};
+  if (!scheme) return NEVER_MATCH;
+  if (scheme === '*') scheme = '[^:]+';
+  if (host === '*') host = '[^/]+';
+  else if (host.startsWith('*.')) host = `(?:[^/]*?\\.)?${str2re(host.slice(2))}`;
+  else host = str2re(host);
+  path = str2re(path);
+  return new RegExp(`^${scheme}:\\/\\/${host}${path}$`);
 }
 
 const logs = {};
@@ -254,12 +245,11 @@ function updateBadge(tabId) {
 }
 
 browser.webRequest.onBeforeRequest.addListener((details) => {
-  const rule = List.match(details);
-  if (rule) {
-    console.info(`matched: ${details.method} ${details.url}`);
-    const result = rule.target();
-    pushLog(details, result);
-    return result;
+  const target = List.match(details);
+  if (target) {
+    console.info(`matched: ${details.method} ${details.url}`, target);
+    pushLog(details, target);
+    return target;
   }
 }, {
   urls: ['<all_urls>'],

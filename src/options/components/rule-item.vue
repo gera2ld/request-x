@@ -17,7 +17,7 @@
         <div :class="{error: errors.url}">
           <input type="text" v-model="input.url" placeholder="URL">
           <div class="rule-item-hint">
-            A <a target="_blank" href="https://developer.chrome.com/extensions/match_patterns">match pattern</a>.
+            A <a target="_blank" href="https://developer.chrome.com/extensions/match_patterns">match pattern</a> or a RegExp (e.g. <code>/^https:/</code>).
           </div>
         </div>
         <div class="mt-1" :class="{error: errors.target}">
@@ -45,7 +45,9 @@
 </template>
 
 <script>
-import { isValidMethod, isValidURLPattern, debounce } from '../utils';
+import {
+  isValidMethod, isValidPattern, isValidTarget, debounce,
+} from '../utils';
 
 export default {
   props: [
@@ -95,8 +97,8 @@ export default {
     checkErrors() {
       this.errors = {
         method: !isValidMethod(this.input.method),
-        url: !isValidURLPattern(this.input.url),
-        target: this.input.target && !isValidURLPattern(this.input.target),
+        url: !isValidPattern(this.input.url),
+        target: this.input.target && !isValidTarget(this.input.target),
       };
     },
     getTargetBadge(rule) {
