@@ -31,7 +31,7 @@
 
 <script>
 import {
-  store, dump, remove, pickData, debounce, isValidURL, loadFile, blob2Text, setRoute,
+  store, dump, remove, pickData, loadFile, blob2Text, setRoute,
 } from '../utils';
 
 export default {

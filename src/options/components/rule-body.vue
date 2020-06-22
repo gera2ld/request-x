@@ -49,7 +49,7 @@
 <script>
 import Vue from 'vue';
 import { store, dump } from '../utils';
-import RuleItem from './rule-item';
+import RuleItem from './rule-item.vue';
 
 export default {
   components: {
@@ -120,7 +120,6 @@ export default {
         ...current,
         editing: true,
       };
-      console.log(this.store);
     },
     onListSubmit({ title, subscribeUrl }) {
       const { current } = this.store;

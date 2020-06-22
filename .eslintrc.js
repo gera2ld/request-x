@@ -2,21 +2,19 @@ module.exports = {
   root: true,
   extends: [
     require.resolve('@gera2ld/plaid/eslint'),
-    require.resolve('@gera2ld/plaid-vue/eslint/vue'),
+    require.resolve('@gera2ld/plaid-common-vue/eslint'),
   ],
   parserOptions: {
     ecmaFeatures: {
       legacyDecorators: true,
     },
   },
+  settings: {
+    'import/resolver': {
+      'babel-module': {},
+    },
+  },
   globals: {
     browser: true,
-  },
-  rules: {
-    'import/extensions': ['error', 'ignorePackages', {
-      js: 'never',
-      vue: 'never',
-    }],
-    'max-classes-per-file': 'off',
   },
 };

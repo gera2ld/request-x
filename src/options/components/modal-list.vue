@@ -1,7 +1,7 @@
 <template>
   <modal :visible="!!store.editList" @close="onListCancel" transition="fade">
-    <form class="nav-modal" v-if="store.editList" @submit.prevent="onListSave">
-      <h3 v-text="modalTitle" />
+    <form class="w-1/2 mx-auto p-2 bg-white" v-if="store.editList" @submit.prevent="onListSave">
+      <h3 class="font-bold mb-2" v-text="modalTitle" />
       <div class="nav-modal-group">
         <div>Name:</div>
         <input v-model="store.editList.name" :placeholder="store.editList.defaultName">
@@ -15,7 +15,7 @@
           @input="store.editList.isEdit || (store.editList.subscribeUrl = $event.target.value)"
         />
       </div>
-      <div class="nav-modal-buttons">
+      <div class="mt-1 text-right">
         <button type="submit">OK</button>
         <button @click.prevent="onListCancel">Cancel</button>
       </div>
@@ -69,29 +69,3 @@ export default {
   },
 };
 </script>
-
-<style>
-.nav-modal {
-  width: 30rem;
-  margin: 0 auto;
-  padding: 1rem;
-  background: white;
-  &-buttons {
-    margin-top: .5rem;
-    text-align: right;
-  }
-  h3 {
-    margin-bottom: 1rem;
-  }
-}
-.nav-modal-group {
-  text-align: left;
-  > input {
-    width: 100%;
-    height: 2rem;
-  }
-  ~ .nav-modal-group {
-    margin-top: .5rem;
-  }
-}
-</style>

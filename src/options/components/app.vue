@@ -1,12 +1,15 @@
 <template>
-  <div id="app" class="flex flex-col">
-    <div class="flex flex-auto">
+  <div class="flex flex-col h-screen px-4">
+    <div class="flex flex-1">
       <rule-nav></rule-nav>
       <rule-body v-if="store.route.group === 'rules'" class="flex-auto"></rule-body>
-      <settings-interface v-if="store.route.value === 'settings/interface'" class="flex-auto"></settings-interface>
+      <settings-interface
+        v-if="store.route.value === 'settings/interface'"
+        class="flex-1">
+      </settings-interface>
     </div>
-    <footer class="flex mt-2">
-      <div class="flex-auto">&copy; Gerald</div>
+    <footer class="flex py-2">
+      <div class="flex-1">&copy; Gerald</div>
       <div>
         Links:
         <a href="https://github.com/gera2ld/request-x" target="_blank">GitHub</a>
@@ -20,10 +23,10 @@
 
 <script>
 import { store } from '../utils';
-import RuleNav from './rule-nav';
-import RuleBody from './rule-body';
-import ModalList from './modal-list';
-import SettingsInterface from './settings-interface';
+import RuleNav from './rule-nav.vue';
+import RuleBody from './rule-body.vue';
+import ModalList from './modal-list.vue';
+import SettingsInterface from './settings-interface.vue';
 
 export default {
   components: {
@@ -39,15 +42,3 @@ export default {
   },
 };
 </script>
-
-<style>
-#app {
-  height: 100vh;
-  padding: 16px;
-  > header {
-    > img {
-      margin-right: 1rem;
-    }
-  }
-}
-</style>

@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { store } from './utils';
-import App from './components/app';
+import App from './components/app.vue';
 import './style.css';
 
 browser.runtime.sendMessage({ cmd: 'GetLists' })

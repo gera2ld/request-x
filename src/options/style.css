@@ -1,8 +1,6 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 html {
   font-size: 14px;
@@ -11,65 +9,35 @@ html {
 body {
   width: 960px;
   height: 500px;
-  font-size: 16px;
-  color: #333;
-}
-
-button {
-  padding: .3rem;
-  border: 1px solid #ccc;
-  border-radius: .3rem;
-  background-color: #f8f8f8;
-  cursor: pointer;
-  &:hover {
-    border-color: #999;
-    background-color: #f0f0f0;
-  }
-  &:focus {
-    outline: none;
-  }
+  @apply text-gray-800;
 }
 
 a {
-  color: dodgerblue;
+  @apply text-blue-400;
+  &:hover {
+    @apply text-blue-700;
+  }
+}
+
+button {
+  @apply p-1 rounded border border-gray-400 bg-gray-100 cursor-pointer text-sm text-gray-700;
+  &:hover {
+    @apply border-gray-500 bg-gray-200;
+  }
 }
 
 input {
-  outline: none;
-  outline-offset: 0;
+  @apply outline-none border border-gray-400 p-2;
+  &:focus {
+    @apply border-gray-500;
+  }
   &[readonly] {
-    color: #888;
+    color: text-gray-600;
   }
   &.error,
   .error > & {
     outline: 1px solid #e3000e;
   }
-}
-
-.flex {
-  display: flex;
-  &-col {
-    flex-direction: column;
-  }
-  &-auto {
-    flex: auto;
-    .flex-col > & {
-      height: 0;
-    }
-    :not(.flex-col) > & {
-      width: 0;
-    }
-  }
-  &-center {
-    align-items: center;
-  }
-}
-
-.mt-1 {
-  margin-top: 8px;
-}
-.mt-2 {
-  margin-top: 16px;
 }
 
 .fade-enter-active,
@@ -79,4 +47,14 @@ input {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+.nav-modal-group {
+  @apply text-left;
+  > input {
+    @apply w-full;
+  }
+  ~ .nav-modal-group {
+    @apply mt-1;
+  }
 }

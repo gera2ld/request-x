@@ -1,5 +1,6 @@
 const gulp = require('gulp');
-const fs = require('fs-extra');
+const fs = require('fs').promises;
+const del = require('del');
 const yaml = require('js-yaml');
 const Jimp = require('jimp');
 const string = require('./scripts/string');
@@ -15,7 +16,7 @@ const paths = {
   ],
 };
 function clean() {
-  return fs.emptyDir(DIST);
+  return del(DIST);
 }
 
 function copyFiles() {
@@ -23,13 +24,13 @@ function copyFiles() {
   .pipe(gulp.dest(DIST));
 }
 
-function createIcons() {
+async function createIcons() {
   const dist = `${DIST}/public/images`;
-  return fs.mkdirp(dist)
-  .then(() => Jimp.read('src/resources/wall.png'))
-  .then(icon => Promise.all([
+  await fs.mkdir(dist, { recursive: true });
+  const icon = await Jimp.read('src/resources/wall.png');
+  return Promise.all([
     16, 19, 38, 48, 128,
-  ].map(size => icon.clone().resize(size, size).write(`${dist}/icon_${size}.png`))));
+  ].map(size => icon.clone().resize(size, size).write(`${dist}/icon_${size}.png`)));
 }
 
 function manifest() {
