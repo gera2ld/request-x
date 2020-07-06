@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-size: 14px;
+}
+
+body {
+  @apply text-gray-800;
+}
+
+#app {
+  width: 320px;
+}
+
+.link {
+  @apply text-blue-600 cursor-pointer;
+  &:hover {
+    @apply text-blue-400 underline;
+  }
+}
+
+.card {
+  @apply border-t border-b border-gray-400 p-2 bg-gray-200 text-center;
+  &-title {
+    @apply text-xl font-medium mb-1;
+  }
+}
+
+.cell {
+  @apply flex-1 mx-1 rounded border border-gray-400 p-2 bg-white;
+  &-title {
+    @apply text-xl font-medium;
+  }
+  &-desc {
+    @apply text-gray-600;
+  }
+}

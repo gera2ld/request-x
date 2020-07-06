@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { isValidURL, debounce } from '../utils';
+import { isValidURL, debounce } from '../util';
 
 export default {
   props: [

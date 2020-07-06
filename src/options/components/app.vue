@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { store } from '../utils';
+import { store } from '../util';
 import RuleNav from './rule-nav.vue';
 import RuleBody from './rule-body.vue';
 import ModalList from './modal-list.vue';

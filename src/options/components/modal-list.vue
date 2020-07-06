@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { debounce, store, isValidURL } from '../utils';
+import { debounce, store, isValidURL } from '../util';
 import { Modal } from './vueleton';
 
 export default {

@@ -1,8 +1,7 @@
 import { Rule } from './rule';
-
-const getData = browser.storage.local.get;
-const dumpData = browser.storage.local.set;
-const removeData = browser.storage.local.remove;
+import {
+  getExactData, dumpExactData, getData, removeData,
+} from './util';
 
 export class List {
   static all = [];
@@ -16,11 +15,10 @@ export class List {
     return List.key(this.id);
   }
 
-  load(data) {
+  async load(data) {
     const key = this.key();
-    return (data ? Promise.resolve(data) : getData(key).then(res => res && res[key]))
-    .then((value) => {
-      const item = value || {};
+    if (!data) data = await getExactData(key);
+    if (data) {
       [
         'name',
         'title',
@@ -28,17 +26,16 @@ export class List {
         'lastUpdated',
         'enabled',
       ].forEach((ikey) => {
-        if (item[ikey] != null) this[ikey] = item[ikey];
+        if (data[ikey] != null) this[ikey] = data[ikey];
       });
-      this.name = this.name || 'No name';
-      if (data.rules) this.rules = data.rules.map(rule => new Rule(rule));
-    });
+    }
+    this.name = this.name || 'No name';
+    if (data?.rules) this.rules = data.rules.map(rule => new Rule(rule));
   }
 
-  dump() {
-    const data = {};
-    data[this.key()] = this.get();
-    return dumpData(data).then(() => this.fireChange());
+  async dump() {
+    await dumpExactData(this.key(), this.get());
+    this.fireChange();
   }
 
   get() {
@@ -53,22 +50,28 @@ export class List {
     };
   }
 
-  update(data) {
-    return this.load(data).then(() => this.dump());
+  async update(data) {
+    await this.load(data);
+    return this.dump();
   }
 
-  fetch() {
-    if (!this.subscribeUrl) return Promise.resolve();
-    if (!this.fetching) {
-      this.fetching = fetch(this.subscribeUrl)
-      .then(res => res.json())
-      .then(data => this.update({
+  async doFetch() {
+    try {
+      const res = await fetch(this.subscribeUrl);
+      const data = await res.json();
+      this.update({
         name: data.name || '',
         rules: data.rules,
         lastUpdated: Date.now(),
-      }));
-      this.fetching.catch(() => {}).then(() => { this.fetching = null; });
+      });
+    } finally {
+      this.fetching = null;
     }
+  }
+
+  async fetch() {
+    if (!this.subscribeUrl) return;
+    if (!this.fetching) this.fetching = this.doFetch();
     return this.fetching;
   }
 
@@ -88,54 +91,46 @@ export class List {
     return `list:${id}`;
   }
 
-  static create(data) {
-    return getData('lists').then(res => res.lists || [])
-    .then((ids) => {
-      const newId = (ids[ids.length - 1] || 0) + 1;
-      ids.push(newId);
-      return dumpData({ lists: ids }).then(() => newId);
-    })
-    .then((id) => {
-      const list = new List(id);
-      List.all.push(list);
-      data.rules = data.rules || [];
-      data.enabled = data.enabled == null ? true : data.enabled;
-      return list.update(data).then(() => list.fetch());
-    });
+  static async create(data) {
+    const ids = await getExactData('lists') || [];
+    const newId = (ids[ids.length - 1] || 0) + 1;
+    ids.push(newId);
+    await dumpExactData('lists', ids);
+    const list = new List(newId);
+    List.all.push(list);
+    data.rules = data.rules || [];
+    data.enabled = data.enabled == null ? true : data.enabled;
+    await list.update(data);
+    await list.fetch();
   }
 
   static find(id) {
     return List.all.find(list => list.id === id);
   }
 
-  static remove(id) {
+  static async remove(id) {
     const list = List.find(id);
     const i = List.all.indexOf(list);
     List.all.splice(i, 1);
-    return removeData(list.key())
-    .then(() => {
-      const ids = List.all.map(item => item.id);
-      browser.runtime.sendMessage({ cmd: 'RemovedList', data: id });
-      return dumpData({ lists: ids });
-    });
+    await removeData(list.key());
+    const ids = List.all.map(item => item.id);
+    browser.runtime.sendMessage({ cmd: 'RemovedList', data: id });
+    await dumpExactData('lists', ids);
   }
 
-  static load() {
-    return getData('lists')
-    .then(res => res.lists)
-    .then(ids => (
-      ids && getData(ids.map(List.key))
-      .then((data) => {
-        List.all = ids.map((id) => {
-          const list = new List(id);
-          list.load(data[List.key(id)]);
-          return list;
-        });
-      })
-    ))
-    .then(() => {
-      if (!List.all.length) return List.create({ name: 'Default' });
-    });
+  static async load() {
+    const ids = await getExactData('lists');
+    if (ids) {
+      const data = await getData(ids.map(List.key));
+      List.all = ids.map((id) => {
+        const list = new List(id);
+        list.load(data[List.key(id)]);
+        return list;
+      });
+    }
+    if (!List.all.length) {
+      await List.create({ name: 'Default' });
+    }
   }
 
   static get() {

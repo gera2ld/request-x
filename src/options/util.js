@@ -78,18 +78,33 @@ export function pickData(obj, keys) {
 }
 
 export function debounce(func, time) {
+  let startTime;
   let timer;
-  let thisObj;
-  return function debouncedFunction() {
-    thisObj = this;
-    update();
-  };
-  function invoke() {
+  let callback;
+  let result;
+  time = Math.max(0, +time || 0);
+  function checkTime() {
     timer = null;
-    func.call(thisObj);
+    if (performance.now() >= startTime) {
+      callback();
+    } else {
+      checkTimer();
+    }
   }
-  function update() {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(invoke, time);
+  function checkTimer() {
+    if (!timer) {
+      const delta = startTime - performance.now();
+      timer = setTimeout(checkTime, delta);
+    }
   }
+  function debouncedFunction(...args) {
+    startTime = performance.now() + time;
+    callback = () => {
+      callback = null;
+      result = func.apply(this, args);
+    };
+    checkTimer();
+    return result;
+  }
+  return debouncedFunction;
 }

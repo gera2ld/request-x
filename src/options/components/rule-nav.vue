@@ -32,7 +32,7 @@
 <script>
 import {
   store, dump, remove, pickData, loadFile, blob2Text, setRoute,
-} from '../utils';
+} from '../util';
 
 export default {
   data() {

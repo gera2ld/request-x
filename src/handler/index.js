@@ -1,18 +1,41 @@
 import { List } from './list';
+import { getExactData, dumpExactData, getActiveTab } from './util';
 
 const logs = {};
+const MAX_RECORD_NUM = 200;
+let globalData;
+initialize();
+
+async function initialize() {
+  globalData = await getExactData('global') || {};
+}
 
 function pushLog(details, result) {
   const { tabId, url } = details;
   let log = logs[tabId];
   if (!log) {
     log = {
-      cancel: [],
-      redirect: [],
+      count: {
+        page: 0,
+        tab: 0,
+      },
+      records: [],
     };
     logs[tabId] = log;
   }
-  (result.cancel ? log.cancel : log.redirect).push(url);
+  log.count.page += 1;
+  log.count.tab += 1;
+  if (globalData) {
+    globalData.count = (globalData.count || 0) + 1;
+    dumpExactData('global', globalData);
+  }
+  log.records.push({
+    url,
+    result,
+  });
+  while (log.records.length > MAX_RECORD_NUM) {
+    log.records.shift(); // shift is faster than splice
+  }
   updateBadge(tabId);
 }
 
@@ -22,7 +45,7 @@ function updateBadge(tabId) {
     color: '#808',
     tabId,
   });
-  let count = log && (log.cancel.length + log.redirect.length);
+  let count = (log?.count?.cancel || 0) + (log?.count?.redirect || 0);
   if (count > 99) count = '99+';
   else count = `${count || ''}`;
   browser.browserAction.setBadgeText({
@@ -47,7 +70,9 @@ browser.tabs.onRemoved.addListener((tabId) => {
 });
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === 'loading') {
-    delete logs[tabId];
+    const count = logs[tabId]?.count;
+    if (count) count.page = 0;
+    updateBadge(tabId);
   }
 });
 browser.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
@@ -62,6 +87,13 @@ const commands = {
   UpdateList: data => (data.id ? List.find(data.id).update(data) : List.create(data)),
   FetchLists: () => List.fetch(),
   FetchList: id => List.find(id).fetch(),
+  GetCount: async () => {
+    const tab = await getActiveTab();
+    return {
+      ...logs[tab.id]?.count,
+      global: globalData.count,
+    };
+  },
 };
 browser.runtime.onMessage.addListener((req, src) => {
   const func = commands[req.cmd];

@@ -1,12 +1,39 @@
 <template>
   <div id="app">
-    <img src="/public/images/icon_48.png">
-    <div class="button" @click="openDashboard">Open Dashboard</div>
+    <div class="flex p-4 items-center text-lg">
+      <img class="w-8 mr-4" src="/public/images/icon_48.png">
+      <div class="flex-1">Request X</div>
+      <div class="link text-xs" @click="openDashboard">Dashboard</div>
+    </div>
+    <div class="card" v-if="store.count">
+      <div class="card-title">Number of requests handled</div>
+      <div class="flex">
+        <div class="cell">
+          <div class="cell-title" v-text="store.count.page || 0"></div>
+          <div class="cell-desc">on this page</div>
+        </div>
+        <div class="cell">
+          <div class="cell-title" v-text="store.count.tab || 0"></div>
+          <div class="cell-desc">in this tab</div>
+        </div>
+        <div class="cell">
+          <div class="cell-title" v-text="store.count.global || 0"></div>
+          <div class="cell-desc">in total</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import { store } from './util';
+
 export default {
+  data() {
+    return {
+      store,
+    };
+  },
   methods: {
     openDashboard() {
       browser.runtime.openOptionsPage();
@@ -14,21 +41,3 @@ export default {
   },
 };
 </script>
-
-<style>
-html {
-  font-size: 14px;
-}
-#app {
-  text-align: center;
-  .button {
-    width: 15rem;
-    height: 2rem;
-    line-height: 2rem;
-    cursor: pointer;
-    &:hover {
-      background: #f0f0f0;
-    }
-  }
-}
-</style>

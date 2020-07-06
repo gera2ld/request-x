@@ -98,6 +98,7 @@ const meta = {
     onUpdated: true,
     onRemoved: true,
     onReplaced: true,
+    query: wrapAsync,
   },
   webRequest: true,
 };

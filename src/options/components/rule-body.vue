@@ -48,7 +48,7 @@
 
 <script>
 import Vue from 'vue';
-import { store, dump } from '../utils';
+import { store, dump } from '../util';
 import RuleItem from './rule-item.vue';
 
 export default {

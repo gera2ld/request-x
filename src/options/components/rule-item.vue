@@ -47,7 +47,7 @@
 <script>
 import {
   isValidMethod, isValidPattern, isValidTarget, debounce,
-} from '../utils';
+} from '../util';
 
 export default {
   props: [
