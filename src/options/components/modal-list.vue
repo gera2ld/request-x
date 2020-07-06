@@ -40,7 +40,7 @@ export default {
   computed: {
     modalTitle() {
       if (!store.editList) return null;
-      if (store.editList.isEdit) return 'Edit list';
+      if (store.editList.editing) return 'Edit list';
       if (store.editList.isSubscribed) return 'Subscribe list';
       return 'Create list';
     },

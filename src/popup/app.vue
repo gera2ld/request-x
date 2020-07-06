@@ -3,7 +3,7 @@
     <div class="flex p-4 items-center text-lg">
       <img class="w-8 mr-4" src="/public/images/icon_48.png">
       <div class="flex-1">Request X</div>
-      <div class="link text-xs" @click="openDashboard">Dashboard</div>
+      <a class="text-xs" @click.prevent="openDashboard">Dashboard</a>
     </div>
     <div class="card" v-if="store.count">
       <div class="card-title">Number of requests handled</div>

@@ -14,7 +14,7 @@ body {
   width: 320px;
 }
 
-.link {
+a {
   @apply text-blue-600 cursor-pointer;
   &:hover {
     @apply text-blue-400 underline;

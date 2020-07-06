@@ -13,9 +13,9 @@ body {
 }
 
 a {
-  @apply text-blue-400;
+  @apply text-blue-600 cursor-pointer;
   &:hover {
-    @apply text-blue-700;
+    @apply text-blue-400 underline;
   }
 }
 
@@ -27,7 +27,7 @@ button {
 }
 
 input {
-  @apply outline-none border border-gray-400 p-2;
+  @apply w-full outline-none border border-gray-400 p-2;
   &:focus {
     @apply border-gray-500;
   }
@@ -60,5 +60,16 @@ select {
   }
   ~ .nav-modal-group {
     @apply mt-1;
+  }
+}
+
+.form-hint {
+  @apply p-1 bg-gray-200;
+}
+
+.rule-item {
+  @apply px-3 py-2 rounded border border-transparent;
+  &:hover {
+    @apply border-gray-300;
   }
 }

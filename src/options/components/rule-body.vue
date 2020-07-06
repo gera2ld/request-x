@@ -1,6 +1,6 @@
 <template>
   <div class="rule flex flex-col">
-    <div class="flex-auto">
+    <div class="flex-1 pt-1 overflow-y-auto">
       <rule-item
         v-for="(rule, index) in store.current.rules"
         :key="index"
@@ -28,13 +28,13 @@
         <div class="rule-label rule-label-disabled" v-if="!store.current.enabled">Disabled</div>
       </div>
       <div>
-        <button v-if="!store.current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
-        <button @click.prevent="onListEdit">Edit list</button>
-        <button @click.prevent="onListFetch" v-if="store.current.subscribeUrl">Fetch now</button>
-        <button @click.prevent="onListExport">Export list</button>
-        <button @click.prevent="onListRemove">Remove list</button>
+        <button class="mr-1" v-if="!store.current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
+        <button class="mr-1" @click.prevent="onListEdit">Edit list</button>
+        <button class="mr-1" @click.prevent="onListFetch" v-if="store.current.subscribeUrl">Fetch now</button>
+        <button class="mr-1" @click.prevent="onListExport">Export list</button>
+        <button class="mr-1" @click.prevent="onListRemove">Remove list</button>
       </div>
-      <div class="mt-1 nowrap" v-if="store.current.subscribeUrl">
+      <div class="mt-1 truncate" v-if="store.current.subscribeUrl">
         Subscribed from:
         <em v-text="store.current.subscribeUrl"></em>
       </div>
@@ -48,7 +48,9 @@
 
 <script>
 import Vue from 'vue';
-import { store, dump } from '../util';
+import {
+  store, dump, remove, getName,
+} from '../util';
 import RuleItem from './rule-item.vue';
 
 export default {
@@ -134,19 +136,38 @@ export default {
       });
       this.onListCancel();
     },
+    onListFetch() {
+      const { current } = this.store;
+      browser.runtime.sendMessage({
+        cmd: 'FetchList',
+        data: current.id,
+      });
+    },
+    onListRemove() {
+      const { current } = this.store;
+      remove(current.id);
+    },
+    onListExport() {
+      const { current } = this.store;
+      const data = {
+        name: getName(current) || 'No name',
+        rules: current.rules,
+      };
+      const basename = data.name.replace(/\s+/g, '-').toLowerCase();
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = `${basename}.json`;
+      a.href = url;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url));
+    },
   },
 };
 </script>
 
 <style>
 .rule {
-  > .flex-auto {
-    overflow-y: auto;
-  }
-  > footer {
-    color: #888;
-    padding: .5rem;
-  }
   em {
     color: #333;
     font-style: normal;
@@ -164,14 +185,6 @@ export default {
     &-disabled {
       background-color: #ee543a;
     }
-  }
-  .nowrap {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  button {
-    margin-right: .5rem;
   }
 }
 </style>

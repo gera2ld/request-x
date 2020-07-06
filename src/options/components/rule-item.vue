@@ -1,9 +1,9 @@
 <template>
   <div class="rule-item">
     <form class="flex" v-if="editing" @submit.prevent="onSubmit">
-      <div class="rule-item-method" :class="{error: errors.method}">
+      <div class="w-20 mr-1" :class="{error: errors.method}">
         <input type="text" v-model="input.method" placeholder="Method" ref="method">
-        <div class="rule-item-hint">
+        <div class="form-hint">
           <div>*</div>
           <div>GET</div>
           <div>POST</div>
@@ -13,32 +13,32 @@
           <div>DELETE</div>
         </div>
       </div>
-      <div class="rule-item-url flex-auto">
+      <div class="flex-1">
         <div :class="{error: errors.url}">
           <input type="text" v-model="input.url" placeholder="URL">
-          <div class="rule-item-hint">
+          <div class="form-hint">
             A <a target="_blank" href="https://developer.chrome.com/extensions/match_patterns">match pattern</a> or a RegExp (e.g. <code>/^https:/</code>).
           </div>
         </div>
         <div class="mt-1" :class="{error: errors.target}">
           <input type="text" v-model="input.target" placeholder="Target">
-          <div class="rule-item-hint">
+          <div class="form-hint">
             Leave empty to block the request, or redirect to a new URL.
           </div>
         </div>
       </div>
-      <div class="rule-item-buttons">
-        <button type="submit">Save</button>
+      <div class="ml-1">
+        <button class="mr-1" type="submit">Save</button>
         <button type="reset" @click="onCancel">Cancel</button>
       </div>
     </form>
-    <div class="flex" v-else>
-      <div class="rule-item-method" v-text="rule.method"></div>
-      <div class="rule-item-url flex-auto" v-text="rule.url"></div>
-      <div class="rule-item-target" v-text="getTargetBadge(rule)"></div>
-      <div class="rule-item-buttons" v-if="editable">
-        <button class="item-btn" @click="onEdit">Edit</button>
-        <button class="item-btn" @click="onRemove">Remove</button>
+    <div class="flex items-center" v-else>
+      <div class="w-20 mr-1" v-text="rule.method"></div>
+      <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
+      <div class="p-1 text-xs text-gray-600 uppercase" v-text="getTargetBadge(rule)"></div>
+      <div class="ml-1" v-if="editable">
+        <button class="mr-1" @click="onEdit">Edit</button>
+        <button @click="onRemove">Remove</button>
       </div>
     </div>
   </div>
@@ -128,41 +128,3 @@ export default {
   },
 };
 </script>
-
-<style>
-.rule-item {
-  padding: 8px 32px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  &:hover {
-    border-color: #eef;
-  }
-  input {
-    width: 100%;
-    height: 2rem;
-  }
-  &-buttons {
-    margin-left: .5rem;
-  }
-  &-method {
-    flex: 0 0 5rem;
-    margin-right: .5rem;
-  }
-  &-url {
-    word-wrap: break-word;
-  }
-  &-target {
-    padding: .2rem;
-    font-size: .8rem;
-    color: #888;
-    text-transform: uppercase;
-  }
-  &-buttons {
-    margin-left: .5rem;
-  }
-  &-hint {
-    padding: .5rem;
-    background: #f0f0f0;
-  }
-}
-</style>

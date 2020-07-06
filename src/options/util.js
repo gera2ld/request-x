@@ -109,3 +109,7 @@ export function debounce(func, time) {
   }
   return debouncedFunction;
 }
+
+export function getName(list) {
+  return list.name || list.defaultName || 'No name';
+}

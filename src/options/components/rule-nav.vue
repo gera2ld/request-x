@@ -20,18 +20,18 @@
         <span class="nav-item-text" v-text="getName(item)"></span>
       </div>
     </div>
-    <div class="nav-footer">
-      <button @click.prevent="onListNew">Add new list</button>
-      <button @click.prevent="onListImport">Import list</button>
-      <button @click.prevent="onListSubscribe">Subscribe list</button>
-      <button @click.prevent="onListFetchAll">Fetch all</button>
+    <div class="py-4">
+      <button class="mr-1 mb-1" @click.prevent="onListNew">Add new list</button>
+      <button class="mr-1 mb-1" @click.prevent="onListImport">Import list</button>
+      <button class="mr-1 mb-1" @click.prevent="onListSubscribe">Subscribe list</button>
+      <button class="mr-1 mb-1" @click.prevent="onListFetchAll">Fetch all</button>
     </div>
   </div>
 </template>
 
 <script>
 import {
-  store, dump, remove, pickData, loadFile, blob2Text, setRoute,
+  store, dump, pickData, loadFile, blob2Text, setRoute, getName,
 } from '../util';
 
 export default {
@@ -42,9 +42,7 @@ export default {
     };
   },
   methods: {
-    getName(item) {
-      return item.name || item.defaultName || 'No name';
-    },
+    getName,
     switchStatus(item) {
       item.enabled = !item.enabled;
       dump(pickData(item, ['id', 'enabled']));
@@ -77,29 +75,6 @@ export default {
         isSubscribed: true,
       };
     },
-    onListEdit(list) {
-      this.store.editList = Object.assign({}, list, {
-        isSubscribed: !!list.subscribeUrl,
-        isEdit: true,
-      });
-    },
-    onListExport(list) {
-      const data = {
-        name: this.getName(list) || 'No name',
-        rules: list.rules,
-      };
-      const basename = data.name.replace(/\s+/g, '-').toLowerCase();
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.download = `${basename}.json`;
-      a.href = url;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url));
-    },
-    onListRemove(list) {
-      remove(list.id);
-    },
     onListSave() {
       this.checkErrors();
       if (Object.keys(this.errors).some(key => this.errors[key])) return;
@@ -109,17 +84,8 @@ export default {
     onListCancel() {
       this.editList = null;
     },
-    onListFetch(item) {
-      browser.runtime.sendMessage({
-        cmd: 'FetchList',
-        data: item.id,
-      });
-    },
     onListFetchAll() {
       browser.runtime.sendMessage({ cmd: 'FetchLists' });
-    },
-    getLabelSwitch(item) {
-      return item.enabled ? 'Disable' : 'Enable';
     },
   },
 };
@@ -134,14 +100,6 @@ export default {
     margin-right: -1px;
     overflow-y: auto;
     z-index: 1;
-  }
-  &-footer {
-    height: 10rem;
-    padding: 1rem;
-    > button {
-      margin-right: .5rem;
-      margin-bottom: .5rem;
-    }
   }
   &-item {
     position: relative;

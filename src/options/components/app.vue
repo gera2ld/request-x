@@ -1,8 +1,8 @@
 <template>
   <div class="flex flex-col h-screen px-4">
-    <div class="flex flex-1">
+    <div class="flex flex-1 min-h-0">
       <rule-nav></rule-nav>
-      <rule-body v-if="store.route.group === 'rules'" class="flex-auto"></rule-body>
+      <rule-body v-if="store.route.group === 'rules'" class="flex-1 min-w-0"></rule-body>
       <settings-interface
         v-if="store.route.value === 'settings/interface'"
         class="flex-1">
