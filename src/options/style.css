@@ -40,6 +40,10 @@ input {
   }
 }
 
+select {
+  @apply border border-gray-400 p-2 rounded;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity .3s;

@@ -4,10 +4,14 @@ import App from './components/app.vue';
 import './style.css';
 
 browser.runtime.sendMessage({ cmd: 'GetLists' })
-.then((data) => {
-  store.lists = data;
-  store.current = data[0];
-});
+  .then(data => {
+    store.lists = data;
+    store.current = data[0];
+  });
+browser.runtime.sendMessage({ cmd: 'GetConfig' })
+  .then(data => {
+    store.config = data;
+  });
 
 const commands = {
   UpdatedList(data) {

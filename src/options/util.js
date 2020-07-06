@@ -3,6 +3,7 @@ export const store = {
   current: {},
   editList: null,
   route: {},
+  config: null,
 };
 setRoute('settings/interface');
 

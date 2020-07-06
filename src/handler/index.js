@@ -1,13 +1,17 @@
 import { List } from './list';
-import { getExactData, dumpExactData, getActiveTab } from './util';
+import { getData, dumpExactData, getActiveTab } from './util';
 
 const logs = {};
 const MAX_RECORD_NUM = 200;
 let globalData;
-initialize();
+let config;
+let loading = initialize();
 
 async function initialize() {
-  globalData = await getExactData('global') || {};
+  const data = await getData(['global', 'config']);
+  globalData = data.global || {};
+  config = data.config || {};
+  loading = null;
 }
 
 function pushLog(details, result) {
@@ -45,9 +49,16 @@ function updateBadge(tabId) {
     color: '#808',
     tabId,
   });
-  let count = (log?.count?.cancel || 0) + (log?.count?.redirect || 0);
-  if (count > 99) count = '99+';
-  else count = `${count || ''}`;
+  const configBadge = config.badge;
+  let count;
+  if (configBadge === 'page') {
+    count = log?.count?.page;
+  } else if (configBadge === 'tab') {
+    count = log?.count?.tab;
+  } else if (configBadge === 'total') {
+    count = globalData?.count;
+  }
+  count = `${count || ''}`;
   browser.browserAction.setBadgeText({
     text: count,
     tabId,
@@ -93,6 +104,15 @@ const commands = {
       ...logs[tab.id]?.count,
       global: globalData.count,
     };
+  },
+  GetConfig: async () => {
+    await loading;
+    return config;
+  },
+  SetConfig: async ({ key, value }) => {
+    await loading;
+    config[key] = value;
+    dumpExactData('config', config);
   },
 };
 browser.runtime.onMessage.addListener((req, src) => {
