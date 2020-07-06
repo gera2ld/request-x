@@ -26,4 +26,6 @@ the POST ones and keep the GET ones.
 
 ## Screenshots
 
+<img width="331" src="https://user-images.githubusercontent.com/3139113/86558920-4066e300-bf8d-11ea-84d1-29140bdcbeca.png">
+
 ![Snapshot](https://user-images.githubusercontent.com/3139113/58897021-f1b39d80-8729-11e9-979a-f823a5783d8b.png)
