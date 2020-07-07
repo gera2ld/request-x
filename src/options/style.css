@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 html {
-  font-size: 14px;
 }
 
 body {
@@ -20,14 +19,14 @@ a {
 }
 
 button {
-  @apply p-1 rounded border border-gray-400 bg-gray-100 cursor-pointer text-sm text-gray-700;
+  @apply p-1 rounded border border-gray-400 bg-gray-100 cursor-pointer text-gray-700;
   &:hover {
     @apply border-gray-500 bg-gray-200;
   }
 }
 
 input {
-  @apply w-full outline-none border border-gray-400 p-2;
+  @apply w-full outline-none rounded border border-gray-400 p-2;
   &:focus {
     @apply border-gray-500;
   }
@@ -68,8 +67,48 @@ select {
 }
 
 .rule-item {
-  @apply px-3 py-2 rounded border border-transparent;
+  @apply px-2 py-1 rounded border border-transparent;
   &:hover {
     @apply border-gray-300;
+  }
+}
+
+.rule-label {
+  @apply inline-block mr-1 mb-2 px-1 rounded border border-blue-400 text-blue-400 uppercase;
+  &.disabled {
+    @apply bg-gray-500 border-gray-500 text-white;
+  }
+}
+
+.nav-group-title {
+  @apply mt-2 mb-1 uppercase text-gray-600;
+}
+
+.nav-item {
+  @apply flex items-center px-2 py-1 rounded cursor-pointer;
+  &:hover {
+    @apply bg-gray-100;
+  }
+  &.active {
+    @apply bg-gray-200;
+  }
+  &-status {
+    @apply w-3 h-3 mr-1 rounded bg-gray-500;
+    .enabled > & {
+      @apply bg-green-600;
+    }
+  }
+}
+
+.dropdown-menu {
+  @apply bg-white rounded border border-gray-400;
+  > div {
+    @apply px-2 py-1 cursor-pointer;
+    &:hover {
+      @apply bg-gray-200;
+    }
+    &.sep {
+      @apply p-0 border-b border-gray-400;
+    }
   }
 }

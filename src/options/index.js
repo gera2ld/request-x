@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import { store } from './util';
+import './components/vueleton';
 import App from './components/app.vue';
 import './style.css';
 

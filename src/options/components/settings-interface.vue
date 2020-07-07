@@ -1,14 +1,18 @@
 <template>
   <div class="p-2" v-if="store.config">
-    <label>
-      Show number of handled requests on badge:
-      <select :value="store.config.badge" @change="onChange('badge', $event.target.value)">
-        <option value="">none</option>
-        <option value="page">on current page</option>
-        <option value="tab">in current tab</option>
-        <option value="total">in total</option>
-      </select>
-    </label>
+    <ul class="list-disc pl-6">
+      <li>
+        <label>
+          Show number of handled requests on badge:
+          <select :value="store.config.badge" @change="onChange('badge', $event.target.value)">
+            <option value="">none</option>
+            <option value="page">on current page</option>
+            <option value="tab">in current tab</option>
+            <option value="total">in total</option>
+          </select>
+        </label>
+      </li>
+    </ul>
   </div>
 </template>
 

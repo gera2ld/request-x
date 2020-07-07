@@ -1,6 +1,6 @@
 <template>
-  <div class="nav flex flex-col">
-    <div class="nav-body flex-auto">
+  <div class="nav flex flex-col w-64 mr-2">
+    <div class="flex-1 overflow-y-auto">
       <div class="nav-group-title">Settings</div>
       <div
         class="nav-item"
@@ -17,14 +17,20 @@
         @click="onSelect(item)"
         :title="getName(item)">
         <span class="nav-item-status" @click.prevent.stop="switchStatus(item)"></span>
-        <span class="nav-item-text" v-text="getName(item)"></span>
+        <span class="mx-1 flex-1 truncate" v-text="getName(item)"></span>
+        <span class="text-xs rounded border border-blue-400 text-blue-400 px-1 uppercase" v-if="item.subscribeUrl" title="Subscribed">s</span>
       </div>
     </div>
     <div class="py-4">
-      <button class="mr-1 mb-1" @click.prevent="onListNew">Add new list</button>
-      <button class="mr-1 mb-1" @click.prevent="onListImport">Import list</button>
-      <button class="mr-1 mb-1" @click.prevent="onListSubscribe">Subscribe list</button>
-      <button class="mr-1 mb-1" @click.prevent="onListFetchAll">Fetch all</button>
+      <vl-dropdown direction="up">
+        <button slot="toggle" class="button-panel-title">Manage list &#8227;</button>
+        <div class="dropdown-menu w-24">
+          <div @click.prevent="onListNew">Create new</div>
+          <div @click.prevent="onListImport">Import</div>
+          <div @click.prevent="onListSubscribe">Subscribe</div>
+          <div @click.prevent="onListFetchAll">Fetch all</div>
+        </div>
+      </vl-dropdown>
     </div>
   </div>
 </template>
@@ -75,92 +81,9 @@ export default {
         isSubscribed: true,
       };
     },
-    onListSave() {
-      this.checkErrors();
-      if (Object.keys(this.errors).some(key => this.errors[key])) return;
-      dump(pickData(this.editList, ['id', 'name', 'subscribeUrl']));
-      this.onListCancel();
-    },
-    onListCancel() {
-      this.editList = null;
-    },
     onListFetchAll() {
       browser.runtime.sendMessage({ cmd: 'FetchLists' });
     },
   },
 };
 </script>
-
-<style>
-.nav {
-  width: 15rem;
-  margin-right: 16px;
-  &-body {
-    margin-top: 1rem;
-    margin-right: -1px;
-    overflow-y: auto;
-    z-index: 1;
-  }
-  &-item {
-    position: relative;
-    display: block;
-    margin-left: 1px;
-    padding: .6rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    color: #888;
-    &-text {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    &:hover {
-      background: #f8f8f8;
-    }
-    &.active {
-      margin-left: 0;
-      background: #eef;
-      color: inherit;
-    }
-    &-status {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      margin-right: 6px;
-      border-radius: 4px;
-      background: gray;
-      .enabled > & {
-        background: green;
-      }
-    }
-    &-manage {
-      display: none;
-      position: absolute;
-      top: .5rem;
-      right: .5rem;
-      color: #888;
-    }
-    &:hover,
-    &.active {
-      .nav-item-manage {
-        display: block;
-      }
-    }
-    &-btn {
-      padding: .5rem;
-      margin-right: -.5rem;
-      > div {
-        border-top: .4rem solid;
-        border-left: .4rem solid transparent;
-        border-right: .4rem solid transparent;
-      }
-    }
-  }
-  &-group-title {
-    margin: 12px 0 6px;
-    text-transform: uppercase;
-    font-size: 12px;
-    color: #999;
-  }
-}
-</style>

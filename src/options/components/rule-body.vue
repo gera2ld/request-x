@@ -1,5 +1,21 @@
 <template>
   <div class="rule flex flex-col">
+    <div class="flex items-center p-1 border-b border-gray-200">
+      <button v-if="!store.current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
+      <div v-else class="text-gray-600">You may fork this list before making changes to it</div>
+      <div class="flex-1"></div>
+      <vl-dropdown align="right">
+        <button slot="toggle">Manage list &#8227;</button>
+        <div class="dropdown-menu">
+          <div @click.prevent="onListEdit">Edit</div>
+          <div @click.prevent="onListFetch" v-if="store.current.subscribeUrl">Fetch</div>
+          <div @click.prevent="onListFork" v-if="store.current.subscribeUrl">Fork</div>
+          <div @click.prevent="onListExport">Export</div>
+          <div class="sep"></div>
+          <div @click.prevent="onListRemove">Remove</div>
+        </div>
+      </vl-dropdown>
+    </div>
     <div class="flex-1 pt-1 overflow-y-auto">
       <rule-item
         v-for="(rule, index) in store.current.rules"
@@ -23,24 +39,17 @@
       />
     </div>
     <footer>
+      <div class="mb-1 truncate text-gray-500" v-if="store.current.subscribeUrl">
+        Subscribed from:
+        <span class="text-gray-900" v-text="store.current.subscribeUrl"></span>
+      </div>
+      <div class="mb-1 text-gray-500" v-if="store.current.subscribeUrl && store.current.lastUpdated">
+        Last updated at:
+        <span class="text-gray-900" v-text="new Date(store.current.lastUpdated).toLocaleString()"></span>
+      </div>
       <div>
         <div class="rule-label" v-if="store.current.subscribeUrl">Subscribed</div>
-        <div class="rule-label rule-label-disabled" v-if="!store.current.enabled">Disabled</div>
-      </div>
-      <div>
-        <button class="mr-1" v-if="!store.current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
-        <button class="mr-1" @click.prevent="onListEdit">Edit list</button>
-        <button class="mr-1" @click.prevent="onListFetch" v-if="store.current.subscribeUrl">Fetch now</button>
-        <button class="mr-1" @click.prevent="onListExport">Export list</button>
-        <button class="mr-1" @click.prevent="onListRemove">Remove list</button>
-      </div>
-      <div class="mt-1 truncate" v-if="store.current.subscribeUrl">
-        Subscribed from:
-        <em v-text="store.current.subscribeUrl"></em>
-      </div>
-      <div class="mt-1" v-if="store.current.subscribeUrl && store.current.lastUpdated">
-        Last updated at:
-        <em v-text="new Date(store.current.lastUpdated).toLocaleString()"></em>
+        <div class="rule-label disabled" v-if="!store.current.enabled">Disabled</div>
       </div>
     </footer>
   </div>
@@ -165,26 +174,3 @@ export default {
   },
 };
 </script>
-
-<style>
-.rule {
-  em {
-    color: #333;
-    font-style: normal;
-  }
-  &-label {
-    display: inline-block;
-    margin-right: .5rem;
-    margin-bottom: .5rem;
-    padding: .3rem;
-    border-radius: .3rem;
-    font-size: .8rem;
-    text-transform: uppercase;
-    background-color: #f29b34;
-    color: white;
-    &-disabled {
-      background-color: #ee543a;
-    }
-  }
-}
-</style>

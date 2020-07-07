@@ -1,2 +1,6 @@
-export { default as Dropdown } from 'vueleton/lib/dropdown/bundle';
-export { default as Modal } from 'vueleton/lib/modal/bundle';
+import Vue from 'vue';
+import VlDropdown from 'vueleton/lib/dropdown/bundle';
+import VlModal from 'vueleton/lib/modal/bundle';
+
+Vue.use(VlDropdown);
+Vue.use(VlModal);
