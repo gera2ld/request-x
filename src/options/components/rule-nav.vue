@@ -13,7 +13,7 @@
         class="nav-item"
         v-for="(item, index) in store.lists"
         :key="index"
-        :class="{ active: store.route.value === `rules/${item.id}`, enabled: item.enabled }"
+        :class="{ active: store.route.value === `lists/${item.id}`, enabled: item.enabled }"
         @click="onSelect(item)"
         :title="getName(item)">
         <span class="nav-item-status" @click.prevent.stop="switchStatus(item)"></span>
@@ -22,7 +22,7 @@
       </div>
     </div>
     <div class="py-4">
-      <vl-dropdown direction="up">
+      <vl-dropdown direction="up" :closeAfterClick="true">
         <button slot="toggle" class="button-panel-title">Manage list &#8227;</button>
         <div class="dropdown-menu w-24">
           <div @click.prevent="onListNew">Create new</div>
@@ -55,11 +55,9 @@ export default {
     },
     onSelectSetting(id) {
       setRoute(`settings/${id}`);
-      this.store.current = null;
     },
     onSelect(item) {
-      setRoute(`rules/${item.id}`);
-      this.store.current = item;
+      setRoute(`lists/${item.id}`);
     },
     onListNew() {
       this.store.editList = {

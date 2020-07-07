@@ -95,7 +95,16 @@ const commands = {
   GetLists: () => List.get(),
   GetList: id => List.find(id).get(),
   RemoveList: id => List.remove(id),
-  UpdateList: data => (data.id ? List.find(data.id).update(data) : List.create(data)),
+  UpdateList: async data => {
+    let list;
+    if (data.id) {
+      list = List.find(data.id);
+      await list.update(data);
+    } else {
+      list = await List.create(data);
+    }
+    return list.id;
+  },
   FetchLists: () => List.fetch(),
   FetchList: id => List.find(id).fetch(),
   GetCount: async () => {

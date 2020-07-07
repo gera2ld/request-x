@@ -1,6 +1,5 @@
 export const store = {
   lists: [],
-  current: {},
   editList: null,
   route: {},
   config: null,

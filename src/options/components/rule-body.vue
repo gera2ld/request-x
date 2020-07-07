@@ -1,15 +1,15 @@
 <template>
-  <div class="rule flex flex-col">
+  <div class="rule flex flex-col" v-if="current">
     <div class="flex items-center p-1 border-b border-gray-200">
-      <button v-if="!store.current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
+      <button v-if="!current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
       <div v-else class="text-gray-600">You may fork this list before making changes to it</div>
       <div class="flex-1"></div>
-      <vl-dropdown align="right">
+      <vl-dropdown align="right" :closeAfterClick="true">
         <button slot="toggle">Manage list &#8227;</button>
         <div class="dropdown-menu">
           <div @click.prevent="onListEdit">Edit</div>
-          <div @click.prevent="onListFetch" v-if="store.current.subscribeUrl">Fetch</div>
-          <div @click.prevent="onListFork" v-if="store.current.subscribeUrl">Fork</div>
+          <div @click.prevent="onListFetch" v-if="current.subscribeUrl">Fetch</div>
+          <div @click.prevent="onListFork" v-if="current.subscribeUrl">Fork</div>
           <div @click.prevent="onListExport">Export</div>
           <div class="sep"></div>
           <div @click.prevent="onListRemove">Remove</div>
@@ -18,7 +18,7 @@
     </div>
     <div class="flex-1 pt-1 overflow-y-auto">
       <rule-item
-        v-for="(rule, index) in store.current.rules"
+        v-for="(rule, index) in current.rules"
         :key="index"
         :rule="rule"
         :extra="index"
@@ -39,17 +39,17 @@
       />
     </div>
     <footer>
-      <div class="mb-1 truncate text-gray-500" v-if="store.current.subscribeUrl">
+      <div class="mb-1 truncate text-gray-500" v-if="current.subscribeUrl">
         Subscribed from:
-        <span class="text-gray-900" v-text="store.current.subscribeUrl"></span>
+        <span class="text-gray-900" v-text="current.subscribeUrl"></span>
       </div>
-      <div class="mb-1 text-gray-500" v-if="store.current.subscribeUrl && store.current.lastUpdated">
+      <div class="mb-1 text-gray-500" v-if="current.subscribeUrl && current.lastUpdated">
         Last updated at:
-        <span class="text-gray-900" v-text="new Date(store.current.lastUpdated).toLocaleString()"></span>
+        <span class="text-gray-900" v-text="new Date(current.lastUpdated).toLocaleString()"></span>
       </div>
       <div>
-        <div class="rule-label" v-if="store.current.subscribeUrl">Subscribed</div>
-        <div class="rule-label disabled" v-if="!store.current.enabled">Disabled</div>
+        <div class="rule-label" v-if="current.subscribeUrl">Subscribed</div>
+        <div class="rule-label disabled" v-if="!current.enabled">Disabled</div>
       </div>
     </footer>
   </div>
@@ -58,7 +58,7 @@
 <script>
 import Vue from 'vue';
 import {
-  store, dump, remove, getName,
+  store, dump, remove, getName, setRoute,
 } from '../util';
 import RuleItem from './rule-item.vue';
 
@@ -74,14 +74,22 @@ export default {
     };
   },
   watch: {
-    'store.current': 'onCancel',
+    current: 'onCancel',
   },
   computed: {
+    current() {
+      const { group, id } = this.store.route;
+      if (group === 'lists') {
+        const current = this.store.lists.find(item => `${item.id}` === `${id}`);
+        return current;
+      }
+      return null;
+    },
     editable() {
-      return !this.store.current.subscribeUrl;
+      return this.current && !this.current.subscribeUrl;
     },
     labelToggle() {
-      return this.store.current.enabled ? 'Disable' : 'Enable';
+      return this.current?.enabled ? 'Disable' : 'Enable';
     },
   },
   methods: {
@@ -99,7 +107,7 @@ export default {
       this.onEdit();
     },
     onRemove(index) {
-      const { current: { rules } } = this.store;
+      const { current: { rules } } = this;
       rules.splice(index, 1);
       this.save();
     },
@@ -109,7 +117,7 @@ export default {
         url,
         target,
       };
-      const { current: { rules } } = this.store;
+      const { current: { rules } } = this;
       if (extra < 0) {
         rules.push(rule);
       } else {
@@ -119,21 +127,21 @@ export default {
       this.onCancel();
     },
     save() {
-      const { current } = this.store;
+      const { current } = this;
       dump({
         id: current.id,
         rules: current.rules,
       });
     },
     onListEdit() {
-      const { current } = this.store;
+      const { current } = this;
       this.store.editList = {
         ...current,
         editing: true,
       };
     },
     onListSubmit({ title, subscribeUrl }) {
-      const { current } = this.store;
+      const { current } = this;
       Object.assign(current, {
         title,
         subscribeUrl,
@@ -146,18 +154,18 @@ export default {
       this.onListCancel();
     },
     onListFetch() {
-      const { current } = this.store;
+      const { current } = this;
       browser.runtime.sendMessage({
         cmd: 'FetchList',
         data: current.id,
       });
     },
     onListRemove() {
-      const { current } = this.store;
+      const { current } = this;
       remove(current.id);
     },
     onListExport() {
-      const { current } = this.store;
+      const { current } = this;
       const data = {
         name: getName(current) || 'No name',
         rules: current.rules,
@@ -170,6 +178,15 @@ export default {
       a.href = url;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url));
+    },
+    async onListFork() {
+      const { current } = this;
+      const data = {
+        name: `${current.name || 'No name'} (forked)`,
+        rules: current.rules,
+      };
+      const id = await dump(data);
+      setRoute(`lists/${id}`);
     },
   },
 };

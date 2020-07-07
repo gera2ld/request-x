@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { store } from './util';
+import { store, setRoute } from './util';
 import './components/vueleton';
 import App from './components/app.vue';
 import './style.css';
@@ -7,7 +7,7 @@ import './style.css';
 browser.runtime.sendMessage({ cmd: 'GetLists' })
   .then(data => {
     store.lists = data;
-    store.current = data[0];
+    setRoute(`lists/${data[0]?.id}`);
   });
 browser.runtime.sendMessage({ cmd: 'GetConfig' })
   .then(data => {
@@ -22,17 +22,11 @@ const commands = {
     } else {
       Vue.set(store.lists, i, data);
     }
-    if (store.current.id === data.id) {
-      store.current = data;
-    }
   },
   RemovedList(id) {
     const i = store.lists.findIndex(item => item.id === id);
     if (i < 0) return;
-    const item = store.lists.splice(i, 1)[0];
-    if (item === store.current) {
-      store.current = store.lists[i] || store.lists[i - 1];
-    }
+    store.lists.splice(i, 1);
   },
 };
 browser.runtime.onMessage.addListener((req, src) => {

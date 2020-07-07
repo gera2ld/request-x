@@ -52,7 +52,7 @@ export class List {
 
   async update(data) {
     await this.load(data);
-    return this.dump();
+    await this.dump();
   }
 
   async doFetch() {
@@ -102,6 +102,7 @@ export class List {
     data.enabled = data.enabled == null ? true : data.enabled;
     await list.update(data);
     await list.fetch();
+    return list;
   }
 
   static find(id) {
