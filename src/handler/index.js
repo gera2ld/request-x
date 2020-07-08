@@ -1,18 +1,10 @@
 import { List } from './list';
-import { getData, dumpExactData, getActiveTab } from './util';
+import { getActiveTab, ObjectStorage } from './util';
 
 const logs = {};
 const MAX_RECORD_NUM = 200;
-let globalData;
-let config;
-let loading = initialize();
-
-async function initialize() {
-  const data = await getData(['global', 'config']);
-  globalData = data.global || {};
-  config = data.config || {};
-  loading = null;
-}
+const global = new ObjectStorage('global');
+const config = new ObjectStorage('config');
 
 function pushLog(details, result) {
   const { tabId, url } = details;
@@ -29,10 +21,9 @@ function pushLog(details, result) {
   }
   log.count.page += 1;
   log.count.tab += 1;
-  if (globalData) {
-    globalData.count = (globalData.count || 0) + 1;
-    dumpExactData('global', globalData);
-  }
+  global.set(data => {
+    data.count = (data.count || 0) + 1;
+  });
   log.records.push({
     url,
     result,
@@ -49,14 +40,14 @@ function updateBadge(tabId) {
     color: '#808',
     tabId,
   });
-  const configBadge = config.badge;
+  const configBadge = config.get('badge');
   let count;
   if (configBadge === 'page') {
     count = log?.count?.page;
   } else if (configBadge === 'tab') {
     count = log?.count?.tab;
   } else if (configBadge === 'total') {
-    count = globalData?.count;
+    count = global.get('count');
   }
   count = `${count || ''}`;
   browser.browserAction.setBadgeText({
@@ -107,21 +98,27 @@ const commands = {
   },
   FetchLists: () => List.fetch(),
   FetchList: id => List.find(id).fetch(),
-  GetCount: async () => {
+  async GetCount() {
     const tab = await getActiveTab();
     return {
       ...logs[tab.id]?.count,
-      global: globalData.count,
+      global: global.get('count'),
     };
   },
-  GetConfig: async () => {
-    await loading;
-    return config;
+  async GetConfig() {
+    await config.loading;
+    return config.get();
   },
-  SetConfig: async ({ key, value }) => {
-    await loading;
-    config[key] = value;
-    dumpExactData('config', config);
+  async SetConfig({ key, value }) {
+    await config.loading;
+    config.set({
+      [key]: value,
+    });
+  },
+  async ResetCount() {
+    return global.set({
+      count: 0,
+    });
   },
 };
 browser.runtime.onMessage.addListener((req, src) => {

@@ -4,7 +4,7 @@
       <rule-nav></rule-nav>
       <rule-body v-if="store.route.group === 'lists'" class="flex-1 min-w-0"></rule-body>
       <settings-interface
-        v-if="store.route.value === 'settings/interface'"
+        v-if="isRoute('settings', 'general')"
         class="flex-1">
       </settings-interface>
     </div>
@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { store } from '../util';
+import { store, isRoute } from '../util';
 import RuleNav from './rule-nav.vue';
 import RuleBody from './rule-body.vue';
 import ModalList from './modal-list.vue';
@@ -39,6 +39,9 @@ export default {
     return {
       store,
     };
+  },
+  methods: {
+    isRoute,
   },
 };
 </script>

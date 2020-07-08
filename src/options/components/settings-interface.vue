@@ -1,5 +1,6 @@
 <template>
   <div class="p-2" v-if="store.config">
+    <div class="font-bold mt-4 mb-2">Options</div>
     <ul class="list-disc pl-6">
       <li>
         <label>
@@ -13,6 +14,11 @@
         </label>
       </li>
     </ul>
+    <div class="font-bold mt-4 mb-2">Actions</div>
+    <div class="flex items-center">
+      <button class="mr-1" @click="onResetCount">Reset total count</button>
+      <div class="text-gray-600" v-text="messageResetCount"></div>
+    </div>
   </div>
 </template>
 
@@ -23,6 +29,7 @@ export default {
   data() {
     return {
       store,
+      messageResetCount: '',
     };
   },
   methods: {
@@ -31,6 +38,12 @@ export default {
         cmd: 'SetConfig',
         data: { key, value },
       });
+    },
+    async onResetCount() {
+      await browser.runtime.sendMessage({
+        cmd: 'ResetCount',
+      });
+      this.messageResetCount = 'Total count has been reset.';
     },
   },
 };

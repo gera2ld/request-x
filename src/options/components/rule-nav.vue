@@ -2,24 +2,24 @@
   <div class="nav flex flex-col w-64 mr-2">
     <div class="flex-1 overflow-y-auto">
       <div class="nav-group-title">Settings</div>
-      <div
+      <a
         class="nav-item"
-        :class="{ active: store.route.value === 'settings/interface'}"
-        @click="onSelectSetting('interface')">
-        Interface
-      </div>
+        :class="{ active: isRoute('settings', 'general') }"
+        href="#settings/general">
+        General
+      </a>
       <div class="nav-group-title">Lists</div>
-      <div
+      <a
         class="nav-item"
         v-for="(item, index) in store.lists"
         :key="index"
-        :class="{ active: store.route.value === `lists/${item.id}`, enabled: item.enabled }"
-        @click="onSelect(item)"
+        :class="{ active: isRoute('lists', item.id), enabled: item.enabled }"
+        :href="`#lists/${item.id}`"
         :title="getName(item)">
         <span class="nav-item-status" @click.prevent.stop="switchStatus(item)"></span>
         <span class="mx-1 flex-1 truncate" v-text="getName(item)"></span>
         <span class="text-xs rounded border border-blue-400 text-blue-400 px-1 uppercase" v-if="item.subscribeUrl" title="Subscribed">s</span>
-      </div>
+      </a>
     </div>
     <div class="py-4">
       <vl-dropdown direction="up" :closeAfterClick="true">
@@ -37,7 +37,7 @@
 
 <script>
 import {
-  store, dump, pickData, loadFile, blob2Text, setRoute, getName,
+  store, dump, pickData, loadFile, blob2Text, getName, isRoute,
 } from '../util';
 
 export default {
@@ -49,15 +49,10 @@ export default {
   },
   methods: {
     getName,
+    isRoute,
     switchStatus(item) {
       item.enabled = !item.enabled;
       dump(pickData(item, ['id', 'enabled']));
-    },
-    onSelectSetting(id) {
-      setRoute(`settings/${id}`);
-    },
-    onSelect(item) {
-      setRoute(`lists/${item.id}`);
     },
     onListNew() {
       this.store.editList = {

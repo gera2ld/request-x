@@ -4,15 +4,24 @@ export const store = {
   route: {},
   config: null,
 };
-setRoute('settings/interface');
+window.addEventListener('hashchange', updateRoute);
+setRoute('settings/general');
 
-export function setRoute(value) {
-  const [group, id] = value.split('/');
+export function updateRoute() {
+  const [group, id] = window.location.hash.slice(1).split('/');
   store.route = {
-    value,
     group,
     id,
   };
+}
+
+export function setRoute(value) {
+  window.location.hash = value;
+}
+
+export function isRoute(group, id) {
+  const { route } = store;
+  return route.group === group && `${route.id}` === `${id}`;
 }
 
 export function dump(list) {
