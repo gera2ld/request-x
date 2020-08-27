@@ -5,7 +5,7 @@
       <div v-else class="text-gray-600">You may fork this list before making changes to it</div>
       <div class="flex-1"></div>
       <vl-dropdown align="right" :closeAfterClick="true">
-        <button slot="toggle">Manage list &#8227;</button>
+        <button slot="toggle">Manage current list &#8227;</button>
         <div class="dropdown-menu">
           <div @click.prevent="onListEdit">Edit</div>
           <div @click.prevent="onListFetch" v-if="current.subscribeUrl">Fetch</div>

@@ -23,7 +23,7 @@
     </div>
     <div class="py-4">
       <vl-dropdown direction="up" :closeAfterClick="true">
-        <button slot="toggle" class="button-panel-title">Manage list &#8227;</button>
+        <button slot="toggle" class="button-panel-title">Manage lists &#8227;</button>
         <div class="dropdown-menu w-24">
           <div @click.prevent="onListNew">Create new</div>
           <div @click.prevent="onListImport">Import</div>
