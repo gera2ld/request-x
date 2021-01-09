@@ -36,7 +36,7 @@ async function createIcons() {
 function manifest() {
   return gulp.src(paths.manifest, { base: 'src' })
   .pipe(string((input, file) => {
-    const data = yaml.safeLoad(input);
+    const data = yaml.load(input);
     // Strip alphabetic suffix
     data.version = pkg.version.replace(/-[^.]*/, '');
     file.path = file.path.replace(/\.yml$/, '.json');
