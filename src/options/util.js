@@ -38,6 +38,11 @@ export function remove(id) {
   });
 }
 
+export function setStatus(item, enabled) {
+  item.enabled = enabled;
+  dump(pickData(item, ['id', 'enabled']));
+}
+
 export function isValidMethod(method) {
   return method === '*' || /^[A-Z]*$/.test(method);
 }

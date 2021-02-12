@@ -11,8 +11,9 @@
         </svg>
       </div>
       <vl-dropdown align="right" :closeAfterClick="true">
-        <button slot="toggle">Manage current list &#8227;</button>
+        <button slot="toggle">Actions &#8227;</button>
         <div class="dropdown-menu">
+          <div @click.prevent="onToggle" v-text="current.enabled ? 'Disable' : 'Enable'"></div>
           <div @click.prevent="onListEdit">Edit</div>
           <div @click.prevent="onListFetch" v-if="current.subscribeUrl">Fetch</div>
           <div @click.prevent="onListFork" v-if="current.subscribeUrl">Fork</div>
@@ -64,7 +65,7 @@
 <script>
 import Vue from 'vue';
 import {
-  store, dump, remove, getName, setRoute, debounce,
+  store, dump, remove, getName, setRoute, debounce, setStatus,
 } from '../util';
 import RuleItem from './rule-item.vue';
 
@@ -201,6 +202,9 @@ export default {
       };
       const id = await dump(data);
       setRoute(`lists/${id}`);
+    },
+    onToggle() {
+      setStatus(this.current, !this.current.enabled);
     },
     updateList() {
       let rules = this.current?.rules;

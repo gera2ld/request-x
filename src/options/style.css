@@ -6,7 +6,8 @@ html {
 }
 
 body {
-  @apply text-gray-800;
+  @apply text-gray-800 max-w-screen-xl mx-auto;
+  min-width: 768px;
 }
 
 a {
@@ -92,8 +93,14 @@ select {
   }
 }
 
-.nav-group-title {
-  @apply mt-2 mb-1 uppercase text-gray-600;
+.nav-sep {
+  @apply mt-2 mb-1;
+  &-title {
+    @apply uppercase text-gray-600;
+  }
+  button {
+    @apply py-0;
+  }
 }
 
 .nav-item {
