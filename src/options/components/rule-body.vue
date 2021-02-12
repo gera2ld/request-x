@@ -4,6 +4,12 @@
       <button v-if="!current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
       <div v-else class="text-gray-600">You may fork this list before making changes to it</div>
       <div class="flex-1"></div>
+      <div class="input ml-2 mr-2">
+        <input type="search" v-model="filter">
+        <svg class="input-icon" viewBox="0 0 24 24">
+          <path d="M10 4c8 0 8 12 0 12c-8 0 -8 -12 0 -12m0 1c-6 0 -6 10 0 10c6 0 6 -10 0 -10zm4 8l6 6l-1 1l-6 -6z" />
+        </svg>
+      </div>
       <vl-dropdown align="right" :closeAfterClick="true">
         <button slot="toggle">Manage current list &#8227;</button>
         <div class="dropdown-menu">
@@ -18,7 +24,7 @@
     </div>
     <div class="flex-1 pt-1 overflow-y-auto">
       <rule-item
-        v-for="(rule, index) in current.rules"
+        v-for="(rule, index) in filteredRules"
         :key="index"
         :rule="rule"
         :extra="index"
@@ -58,7 +64,7 @@
 <script>
 import Vue from 'vue';
 import {
-  store, dump, remove, getName, setRoute,
+  store, dump, remove, getName, setRoute, debounce,
 } from '../util';
 import RuleItem from './rule-item.vue';
 
@@ -71,10 +77,18 @@ export default {
       store,
       editing: null,
       newRule: null,
+      filter: '',
+      filteredRules: null,
     };
   },
   watch: {
-    current: 'onCancel',
+    current() {
+      this.onCancel();
+      this.updateList();
+    },
+    filter() {
+      this.debouncedUpdateList();
+    },
   },
   computed: {
     current() {
@@ -188,6 +202,18 @@ export default {
       const id = await dump(data);
       setRoute(`lists/${id}`);
     },
+    updateList() {
+      let rules = this.current?.rules;
+      const { filter } = this;
+      if (rules && filter) {
+        rules = rules.filter(rule => rule.url?.includes(filter));
+      }
+      this.filteredRules = rules;
+    },
+  },
+  created() {
+    this.debouncedUpdateList = debounce(this.updateList, 200);
+    this.updateList();
   },
 };
 </script>

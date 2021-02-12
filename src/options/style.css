@@ -6,8 +6,6 @@ html {
 }
 
 body {
-  width: 960px;
-  height: 500px;
   @apply text-gray-800;
 }
 
@@ -18,10 +16,24 @@ a {
   }
 }
 
+svg {
+  fill: currentColor;
+}
+
 button {
   @apply p-1 rounded border border-gray-400 bg-gray-100 cursor-pointer text-gray-700;
   &:hover {
     @apply border-gray-500 bg-gray-200;
+  }
+}
+
+.input {
+  @apply relative;
+  > input {
+    @apply pl-8;
+  }
+  &-icon {
+    @apply absolute w-8 top-0 left-0 h-full text-gray-500;
   }
 }
 
