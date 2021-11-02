@@ -2,6 +2,7 @@ const { modifyWebpackConfig } = require('@gera2ld/plaid');
 const webpack = require('webpack');
 
 module.exports = modifyWebpackConfig(async (config) => {
+  config.output.publicPath = '/';
   config.optimization = {
     ...config.optimization,
     runtimeChunk: false,
