@@ -2,30 +2,37 @@
 
 ![Request X](https://user-images.githubusercontent.com/3139113/47605468-5e024c00-da39-11e8-9762-2ba6c4a4f7cc.png)
 
-This is a Chrome extension to block or redirect undesired requests.
+This is a web extension to block or redirect undesired requests.
+
+Supported browsers:
+
+- Chrome
+- Brave
+- Edge
+- Firefox (not officially released)
+- Other Chromium-based browsers
 
 ## Installation
 
-* [Chrome web store](https://chrome.google.com/webstore/detail/request-blocker/cblonkdlnemhdeefhmaoiijjaedcphbf)
+- [Chrome web store](https://chrome.google.com/webstore/detail/request-x/cblonkdlnemhdeefhmaoiijjaedcphbf)
 
 ## Features
 
-* Block requests by methods and URL patterns
-* Maintainable lists
-* Easy to share your lists with others
-* Redirect requests
+- Block requests by methods and URL patterns
+- Maintainable lists
+- Easy to share your lists with others
+- Redirect requests
+- Modify headers
 
-## What makes it different?
+## Use cases
 
-There are blockers such as ABP, blocking requests by URLs.
-
-Request X can do even more, blocking requests by both methods and
-URLs. For example, sometimes we need to show data via GET requests, but
-don't want to make modifications via POST requests, so we just block
-the POST ones and keep the GET ones.
+- Debug APIs but avoid unexpected mutations
+- Block unwanted contents in an extremely flexible way
+- Set authorization header to avoid inputing username/password again and again
+- ...
 
 ## Screenshots
 
 <img width="331" src="https://user-images.githubusercontent.com/3139113/86558920-4066e300-bf8d-11ea-84d1-29140bdcbeca.png">
 
-![Snapshot](https://user-images.githubusercontent.com/3139113/58897021-f1b39d80-8729-11e9-979a-f823a5783d8b.png)
+<img width="999" src="https://user-images.githubusercontent.com/3139113/139872360-ec9f8bd0-38d4-4809-a805-0457cc0460f3.png">
