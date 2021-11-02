@@ -4,10 +4,40 @@ import {
 } from './util';
 
 export class List {
+  /**
+   * @type List[]
+   */
   static all = [];
 
   constructor(id) {
+    /**
+     * @type {number}
+     */
     this.id = id;
+    /**
+     * @type {string}
+     */
+    this.name = 'No name';
+    /**
+     * @type {string}
+     */
+    this.title = '';
+    /**
+     * @type {string}
+     */
+    this.subscribeUrl = '';
+    /**
+     * @type {number}
+     */
+    this.lastUpdated = 0;
+    /**
+     * @type {boolean}
+     */
+    this.enabled = true;
+    /**
+     * @type {Rule[]}
+     */
+    this.rules = [];
     this.fetching = null;
   }
 
@@ -17,7 +47,7 @@ export class List {
 
   async load(data) {
     const key = this.key();
-    if (!data) data = await getExactData(key);
+    data ??= await getExactData(key);
     if (data) {
       [
         'name',
@@ -25,12 +55,12 @@ export class List {
         'subscribeUrl',
         'lastUpdated',
         'enabled',
-      ].forEach((ikey) => {
+      ].forEach(ikey => {
         if (data[ikey] != null) this[ikey] = data[ikey];
       });
+      this.name ||= 'No name';
+      if (data.rules) this.rules = data.rules.map(rule => new Rule(rule));
     }
-    this.name = this.name || 'No name';
-    if (data?.rules) this.rules = data.rules.map(rule => new Rule(rule));
   }
 
   async dump() {
@@ -75,10 +105,10 @@ export class List {
     return this.fetching;
   }
 
-  match(details) {
+  match(details, method) {
     if (!this.enabled) return;
     for (const rule of this.rules) {
-      const target = rule.check(details);
+      const target = rule[method](details);
       if (target) return target;
     }
   }
@@ -87,6 +117,9 @@ export class List {
     browser.runtime.sendMessage({ cmd: 'UpdatedList', data: this.get() });
   }
 
+  /**
+   * @param {number} id
+   */
   static key(id) {
     return `list:${id}`;
   }
@@ -98,8 +131,6 @@ export class List {
     await dumpExactData('lists', ids);
     const list = new List(newId);
     List.all.push(list);
-    data.rules = data.rules || [];
-    data.enabled = data.enabled == null ? true : data.enabled;
     await list.update(data);
     await list.fetch();
     return list;
@@ -142,9 +173,9 @@ export class List {
     return Promise.all(List.all.map(list => list.fetch().catch(() => {})));
   }
 
-  static match(details) {
+  static match(...args) {
     for (const list of List.all) {
-      const target = list.match(details);
+      const target = list.match(...args);
       if (target) return target;
     }
   }

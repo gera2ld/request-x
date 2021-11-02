@@ -57,7 +57,7 @@ function updateBadge(tabId) {
 }
 
 browser.webRequest.onBeforeRequest.addListener((details) => {
-  const target = List.match(details);
+  const target = List.match(details, 'beforeRequest');
   if (target) {
     console.info(`matched: ${details.method} ${details.url}`, target);
     pushLog(details, target);
@@ -66,6 +66,16 @@ browser.webRequest.onBeforeRequest.addListener((details) => {
 }, {
   urls: ['<all_urls>'],
 }, ['blocking']);
+
+browser.webRequest.onBeforeSendHeaders.addListener((details) => {
+  const target = List.match(details, 'beforeSendHeaders');
+  if (target) {
+    console.info(`matched: ${details.method} ${details.url}`, target);
+    return target;
+  }
+}, {
+  urls: ['<all_urls>'],
+}, ['blocking', 'requestHeaders']);
 
 browser.tabs.onRemoved.addListener((tabId) => {
   delete logs[tabId];

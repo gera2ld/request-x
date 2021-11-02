@@ -60,11 +60,11 @@ export default {
     },
     onListImport() {
       loadFile()
-      .then(blob2Text)
-      .then((text) => {
-        const data = JSON.parse(text);
-        dump(pickData(data, ['name', 'rules']));
-      });
+        .then(blob2Text)
+        .then((text) => {
+          const data = JSON.parse(text);
+          dump(pickData(data, ['name', 'rules']));
+        });
     },
     onListSubscribe() {
       this.store.editList = {

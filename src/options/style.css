@@ -11,9 +11,9 @@ body {
 }
 
 a {
-  @apply text-blue-600 cursor-pointer;
+  @apply text-blue-500 cursor-pointer;
   &:hover {
-    @apply text-blue-400 underline;
+    @apply text-blue-600 underline;
   }
 }
 
@@ -38,8 +38,9 @@ button {
   }
 }
 
-input {
-  @apply w-full outline-none rounded border border-gray-400 overflow-hidden px-2 py-1;
+input,
+textarea {
+  @apply block w-full outline-none rounded border border-gray-400 overflow-hidden px-2 py-1;
   &:focus {
     @apply border-gray-500;
   }
@@ -77,6 +78,9 @@ select {
 
 .form-hint {
   @apply p-1 bg-gray-200;
+  code {
+    @apply px-1 bg-yellow-200 border border-gray-400 rounded;
+  }
 }
 
 .rule-item {

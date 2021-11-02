@@ -23,7 +23,14 @@
         <div class="mt-1" :class="{error: errors.target}">
           <input type="text" v-model="input.target" placeholder="Target">
           <div class="form-hint">
-            Leave empty to block the request, or redirect to a new URL.
+            Set to <code>-</code> for blocking the request, <code>=</code> for keeping the original, or a new URL to redirect.
+          </div>
+        </div>
+        <div class="mt-1">
+          <textarea type="text" v-model="input.headers" placeholder="Request headers" rows="5"></textarea>
+          <div class="form-hint">
+            Modify request headers, each in a line, prefixed with <code>-</code> to remove, e.g.<br>
+            <code>x-added-by: request-x</code>, <code>authorization: token just-keep-my-token</code>, <code>-x-to-remove</code>.
           </div>
         </div>
       </div>
@@ -35,7 +42,7 @@
     <div class="flex items-center" v-else>
       <div class="w-20 mr-1" v-text="rule.method"></div>
       <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
-      <div class="p-1 text-xs text-gray-600 uppercase" v-text="getTargetBadge(rule)"></div>
+      <div class="p-1 text-xs text-gray-600 uppercase" v-for="badge in badges" v-text="badge" :key="badge"></div>
       <div class="ml-1" v-if="editable">
         <button class="mr-1" @click="onEdit">Edit</button>
         <button @click="onRemove">Remove</button>
@@ -58,13 +65,19 @@ export default {
   ],
   data() {
     return {
-      input: {
-        method: null,
-        url: null,
-        target: null,
-      },
+      input: null,
       errors: {},
     };
+  },
+  computed: {
+    badges() {
+      const { rule } = this;
+      return [
+        rule.target === '-' && 'block',
+        rule.target?.length > 1 && 'redirect',
+        rule.headers.length && 'headers',
+      ].filter(Boolean);
+    },
   },
   watch: {
     'input.method'(method, lastMethod) {
@@ -87,6 +100,7 @@ export default {
           method: this.rule.method,
           url: this.rule.url,
           target: this.rule.target,
+          headers: (this.rule.headers || []).map(pair => pair.join(': ')).join('\n'),
         };
         this.$nextTick(() => {
           const { method } = this.$refs;
@@ -97,12 +111,9 @@ export default {
     checkErrors() {
       this.errors = {
         method: !isValidMethod(this.input.method),
-        url: !isValidPattern(this.input.url),
-        target: this.input.target && !isValidTarget(this.input.target),
+        url: !this.input.url || !isValidPattern(this.input.url),
+        target: this.input.target && !['-', '='].includes(this.input.target) && !isValidTarget(this.input.target),
       };
-    },
-    getTargetBadge(rule) {
-      return rule.target ? 'redirect' : 'block';
     },
     onEdit() {
       this.$emit('edit');

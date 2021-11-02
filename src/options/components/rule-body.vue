@@ -126,11 +126,19 @@ export default {
       rules.splice(index, 1);
       this.save();
     },
-    onSubmit({ extra, input: { method, url, target } }) {
+    onSubmit({ extra, input: { method, url, target, headers } }) {
+      const headerPairs = headers.split('\n').filter(Boolean).map(line => {
+        let i = line.indexOf(':');
+        if (i < 0) i = line.length;
+        const key = line.slice(0, i).trim();
+        const value = line.slice(i + 1).trim();
+        return [key, value];
+      });
       const rule = {
         method,
         url,
         target,
+        headers: headerPairs,
       };
       const { current: { rules } } = this;
       if (extra < 0) {
