@@ -5,20 +5,23 @@
       <a
         class="nav-item"
         :class="{ active: isRoute('settings', 'general') }"
-        href="#settings/general">
+        href="#settings/general"
+      >
         General
       </a>
       <div class="flex nav-sep">
         <div class="nav-sep-title flex-1">Lists</div>
-        <vl-dropdown align="right" :closeAfterClick="true">
-          <button slot="toggle" class="button-panel-title">&mldr;</button>
+        <VlDropdown align="right" :closeAfterClick="true">
+          <template v-slot:toggle>
+            <button class="button-panel-title">&mldr;</button>
+          </template>
           <div class="dropdown-menu w-24">
             <div @click.prevent="onListNew">Create new</div>
             <div @click.prevent="onListImport">Import</div>
             <div @click.prevent="onListSubscribe">Subscribe</div>
             <div @click.prevent="onListFetchAll">Fetch all</div>
           </div>
-        </vl-dropdown>
+        </VlDropdown>
       </div>
       <a
         class="nav-item"
@@ -26,56 +29,84 @@
         :key="index"
         :class="{ active: isRoute('lists', item.id), enabled: item.enabled }"
         :href="`#lists/${item.id}`"
-        :title="getName(item)">
-        <span class="nav-item-status" @click.prevent.stop="switchStatus(item)"></span>
+        :title="getName(item)"
+      >
+        <span
+          class="nav-item-status"
+          @click.prevent.stop="switchStatus(item)"
+        ></span>
         <span class="mx-1 flex-1 truncate" v-text="getName(item)"></span>
-        <span class="text-xs rounded border border-blue-400 text-blue-400 px-1 uppercase" v-if="item.subscribeUrl" title="Subscribed">s</span>
+        <span
+          class="text-xs rounded border border-blue-400 text-blue-400 px-1 uppercase"
+          v-if="item.subscribeUrl"
+          title="Subscribed"
+          >s</span
+        >
       </a>
     </div>
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
+import { pick } from 'lodash-es';
+import VlDropdown from 'vueleton/lib/dropdown';
+import browser from '#/common/browser';
+import { ListData } from '#/types';
 import {
-  store, dump, pickData, loadFile, blob2Text, getName, isRoute, setStatus,
+  store,
+  dump,
+  loadFile,
+  blob2Text,
+  getName,
+  isRoute,
+  setStatus,
 } from '../util';
 
-export default {
-  data() {
-    return {
-      store,
-      errors: {},
-    };
+export default defineComponent({
+  components: {
+    VlDropdown,
   },
-  methods: {
-    getName,
-    isRoute,
-    switchStatus(item) {
+  setup() {
+    const switchStatus = (item: ListData) => {
       setStatus(item, !item.enabled);
-    },
-    onListNew() {
-      this.store.editList = {
+    };
+
+    const onListNew = () => {
+      store.editList = {
         name: '',
       };
-    },
-    onListImport() {
-      loadFile()
-        .then(blob2Text)
-        .then((text) => {
-          const data = JSON.parse(text);
-          dump(pickData(data, ['name', 'rules']));
-        });
-    },
-    onListSubscribe() {
-      this.store.editList = {
+    };
+
+    const onListImport = async () => {
+      const blob = await loadFile();
+      const text = await blob2Text(blob);
+      const data = JSON.parse(text);
+      dump(pick(data, ['name', 'rules']));
+    };
+
+    const onListSubscribe = () => {
+      store.editList = {
         name: '',
         subscribeUrl: '',
         isSubscribed: true,
       };
-    },
-    onListFetchAll() {
+    };
+
+    const onListFetchAll = () => {
       browser.runtime.sendMessage({ cmd: 'FetchLists' });
-    },
+    };
+
+    return {
+      store,
+      getName,
+      isRoute,
+      switchStatus,
+      onListNew,
+      onListImport,
+      onListSubscribe,
+      onListFetchAll,
+    };
   },
-};
+});
 </script>

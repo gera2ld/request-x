@@ -1,65 +1,36 @@
+import browser from '#/common/browser';
+import { ListData, RequestDetails } from '#/types';
 import { Rule } from './rule';
-import {
-  getExactData, dumpExactData, getData, removeData,
-} from './util';
+import { getExactData, dumpExactData, getData, removeData } from './util';
 
 export class List {
-  /**
-   * @type List[]
-   */
-  static all = [];
+  static all: List[] = [];
 
-  constructor(id) {
-    /**
-     * @type {number}
-     */
-    this.id = id;
-    /**
-     * @type {string}
-     */
-    this.name = 'No name';
-    /**
-     * @type {string}
-     */
-    this.title = '';
-    /**
-     * @type {string}
-     */
-    this.subscribeUrl = '';
-    /**
-     * @type {number}
-     */
-    this.lastUpdated = 0;
-    /**
-     * @type {boolean}
-     */
-    this.enabled = true;
-    /**
-     * @type {Rule[]}
-     */
-    this.rules = [];
-    this.fetching = null;
-  }
+  private name = 'No name';
+  private title = '';
+  private subscribeUrl = '';
+  private lastUpdated = 0;
+  private enabled = true;
+  private rules: Rule[] = [];
+  private fetching: Promise<void> | undefined;
+
+  constructor(public id: number) {}
 
   key() {
     return List.key(this.id);
   }
 
-  async load(data) {
+  async load(data: Partial<ListData>) {
     const key = this.key();
     data ??= await getExactData(key);
     if (data) {
-      [
-        'name',
-        'title',
-        'subscribeUrl',
-        'lastUpdated',
-        'enabled',
-      ].forEach(ikey => {
-        if (data[ikey] != null) this[ikey] = data[ikey];
-      });
+      ['name', 'title', 'subscribeUrl', 'lastUpdated', 'enabled'].forEach(
+        (ikey) => {
+          if (data[ikey] != null) this[ikey] = data[ikey];
+        }
+      );
       this.name ||= 'No name';
-      if (data.rules) this.rules = data.rules.map(rule => new Rule(rule));
+      if (data.rules) this.rules = data.rules.map((rule) => new Rule(rule));
     }
   }
 
@@ -76,11 +47,11 @@ export class List {
       enabled: this.enabled,
       subscribeUrl: this.subscribeUrl,
       lastUpdated: this.lastUpdated,
-      rules: this.rules.map(rule => rule.dump()),
+      rules: this.rules.map((rule) => rule.dump()),
     };
   }
 
-  async update(data) {
+  async update(data: Partial<ListData>) {
     await this.load(data);
     await this.dump();
   }
@@ -95,7 +66,7 @@ export class List {
         lastUpdated: Date.now(),
       });
     } finally {
-      this.fetching = null;
+      this.fetching = undefined;
     }
   }
 
@@ -105,7 +76,10 @@ export class List {
     return this.fetching;
   }
 
-  match(details, method) {
+  match(
+    details: RequestDetails,
+    method: string
+  ): void | browser.WebRequest.BlockingResponse {
     if (!this.enabled) return;
     for (const rule of this.rules) {
       const target = rule[method](details);
@@ -117,15 +91,12 @@ export class List {
     browser.runtime.sendMessage({ cmd: 'UpdatedList', data: this.get() });
   }
 
-  /**
-   * @param {number} id
-   */
-  static key(id) {
+  static key(id: number) {
     return `list:${id}`;
   }
 
-  static async create(data) {
-    const ids = await getExactData('lists') || [];
+  static async create(data: Partial<ListData>) {
+    const ids = (await getExactData<number[]>('lists')) || [];
     const newId = (ids[ids.length - 1] || 0) + 1;
     ids.push(newId);
     await dumpExactData('lists', ids);
@@ -136,22 +107,22 @@ export class List {
     return list;
   }
 
-  static find(id) {
-    return List.all.find(list => list.id === id);
+  static find(id: number) {
+    return List.all.find((list) => list.id === id);
   }
 
-  static async remove(id) {
+  static async remove(id: number) {
     const list = List.find(id);
     const i = List.all.indexOf(list);
     List.all.splice(i, 1);
     await removeData(list.key());
-    const ids = List.all.map(item => item.id);
+    const ids = List.all.map((item) => item.id);
     browser.runtime.sendMessage({ cmd: 'RemovedList', data: id });
     await dumpExactData('lists', ids);
   }
 
   static async load() {
-    const ids = await getExactData('lists');
+    const ids = await getExactData<number[]>('lists');
     if (ids) {
       const data = await getData(ids.map(List.key));
       List.all = ids.map((id) => {
@@ -166,14 +137,14 @@ export class List {
   }
 
   static get() {
-    return List.all.map(list => list.get());
+    return List.all.map((list) => list.get());
   }
 
   static fetch() {
-    return Promise.all(List.all.map(list => list.fetch().catch(() => {})));
+    return Promise.all(List.all.map((list) => list.fetch().catch(() => {})));
   }
 
-  static match(...args) {
+  static match(...args: Parameters<List['match']>) {
     for (const list of List.all) {
       const target = list.match(...args);
       if (target) return target;

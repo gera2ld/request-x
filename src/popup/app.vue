@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div class="flex p-4 items-center text-lg">
-      <img class="w-8 mr-4" src="/public/images/icon_48.png">
+      <img class="w-8 mr-4" src="/public/images/icon_48.png" />
       <div class="flex-1">Request X</div>
       <a class="text-xs" @click.prevent="openDashboard">Dashboard</a>
     </div>
@@ -26,18 +26,19 @@
 </template>
 
 <script>
+import browser from '#/common/browser';
 import { store } from './util';
 
 export default {
-  data() {
+  setup() {
+    const openDashboard = () => {
+      browser.runtime.openOptionsPage();
+    };
+
     return {
       store,
+      openDashboard,
     };
-  },
-  methods: {
-    openDashboard() {
-      browser.runtime.openOptionsPage();
-    },
   },
 };
 </script>

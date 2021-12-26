@@ -1,12 +1,19 @@
+import browser from '#/common/browser';
+import { GlobalStorage, ConfigStorage, LogItem, ListData } from '#/types';
 import { List } from './list';
 import { getActiveTab, ObjectStorage } from './util';
 
-const logs = {};
+const logs: { [key: number]: LogItem } = {};
 const MAX_RECORD_NUM = 200;
-const global = new ObjectStorage('global');
-const config = new ObjectStorage('config');
+const global = new ObjectStorage<GlobalStorage>('global', { count: 0 });
+const config = new ObjectStorage<ConfigStorage>('config', {
+  badge: '',
+});
 
-function pushLog(details, result) {
+function pushLog(
+  details: { tabId: number; url: string },
+  result: browser.WebRequest.BlockingResponse
+) {
   const { tabId, url } = details;
   let log = logs[tabId];
   if (!log) {
@@ -21,9 +28,9 @@ function pushLog(details, result) {
   }
   log.count.page += 1;
   log.count.tab += 1;
-  global.set(data => {
-    data.count = (data.count || 0) + 1;
-  });
+  global.set((data) => ({
+    count: (data.count || 0) + 1,
+  }));
   log.records.push({
     url,
     result,
@@ -34,48 +41,56 @@ function pushLog(details, result) {
   updateBadge(tabId);
 }
 
-function updateBadge(tabId) {
+async function updateBadge(tabId: number) {
   const log = logs[tabId];
   browser.browserAction.setBadgeBackgroundColor({
     color: '#808',
     tabId,
   });
-  const configBadge = config.get('badge');
-  let count;
+  const configBadge = await config.get('badge');
+  let count: number | undefined;
   if (configBadge === 'page') {
     count = log?.count?.page;
   } else if (configBadge === 'tab') {
     count = log?.count?.tab;
   } else if (configBadge === 'total') {
-    count = global.get('count');
+    count = await global.get('count');
   }
-  count = `${count || ''}`;
+  const countStr = `${count || ''}`;
   browser.browserAction.setBadgeText({
-    text: count,
+    text: countStr,
     tabId,
   });
 }
 
-browser.webRequest.onBeforeRequest.addListener((details) => {
-  const target = List.match(details, 'beforeRequest');
-  if (target) {
-    console.info(`matched: ${details.method} ${details.url}`, target);
-    pushLog(details, target);
-    return target;
-  }
-}, {
-  urls: ['<all_urls>'],
-}, ['blocking']);
+browser.webRequest.onBeforeRequest.addListener(
+  (details) => {
+    const target = List.match(details, 'beforeRequest');
+    if (target) {
+      console.info(`matched: ${details.method} ${details.url}`, target);
+      pushLog(details, target);
+      return target;
+    }
+  },
+  {
+    urls: ['<all_urls>'],
+  },
+  ['blocking']
+);
 
-browser.webRequest.onBeforeSendHeaders.addListener((details) => {
-  const target = List.match(details, 'beforeSendHeaders');
-  if (target) {
-    console.info(`matched: ${details.method} ${details.url}`, target);
-    return target;
-  }
-}, {
-  urls: ['<all_urls>'],
-}, ['blocking', 'requestHeaders']);
+browser.webRequest.onBeforeSendHeaders.addListener(
+  (details) => {
+    const target = List.match(details, 'beforeSendHeaders');
+    if (target) {
+      console.info(`matched: ${details.method} ${details.url}`, target);
+      return target;
+    }
+  },
+  {
+    urls: ['<all_urls>'],
+  },
+  ['blocking', 'requestHeaders']
+);
 
 browser.tabs.onRemoved.addListener((tabId) => {
   delete logs[tabId];
@@ -93,11 +108,14 @@ browser.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
 });
 
 const commands = {
-  GetLists: () => List.get(),
-  GetList: id => List.find(id).get(),
-  RemoveList: id => List.remove(id),
-  UpdateList: async data => {
-    let list;
+  GetLists: () => {
+    const result = List.get();
+    return result;
+  },
+  GetList: (id: number) => List.find(id).get(),
+  RemoveList: (id: number) => List.remove(id),
+  UpdateList: async (data: Partial<ListData>) => {
+    let list: List;
     if (data.id) {
       list = List.find(data.id);
       await list.update(data);
@@ -107,20 +125,24 @@ const commands = {
     return list.id;
   },
   FetchLists: () => List.fetch(),
-  FetchList: id => List.find(id).fetch(),
+  FetchList: (id: number) => List.find(id).fetch(),
   async GetCount() {
     const tab = await getActiveTab();
     return {
       ...logs[tab.id]?.count,
-      global: global.get('count'),
+      global: await global.get('count'),
     };
   },
   async GetConfig() {
-    await config.loading;
-    return config.get();
+    return config.getAll();
   },
-  async SetConfig({ key, value }) {
-    await config.loading;
+  SetConfig<K extends keyof ConfigStorage>({
+    key,
+    value,
+  }: {
+    key: K;
+    value: ConfigStorage[K];
+  }) {
     config.set({
       [key]: value,
     });
@@ -131,7 +153,7 @@ const commands = {
     });
   },
 };
-browser.runtime.onMessage.addListener((req, src) => {
+browser.runtime.onMessage.addListener(async (req, src) => {
   const func = commands[req.cmd];
   if (!func) return;
   return func(req.data, src);

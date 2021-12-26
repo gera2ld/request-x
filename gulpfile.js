@@ -56,5 +56,6 @@ async function jsProd() {
   });
 }
 
+exports.clean = clean;
 exports.dev = gulp.parallel(manifest, createIcons, copyFiles, jsDev);
 exports.build = gulp.series(clean, gulp.parallel(manifest, createIcons, copyFiles, jsProd));

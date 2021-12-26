@@ -1,27 +1,42 @@
 <template>
   <div class="rule flex flex-col" v-if="current">
     <div class="flex items-center p-1 border-b border-gray-200">
-      <button v-if="!current.subscribeUrl" @click.prevent="onNew">Add new rule</button>
-      <div v-else class="text-gray-600">You may fork this list before making changes to it</div>
+      <button v-if="!current.subscribeUrl" @click.prevent="onNew">
+        Add new rule
+      </button>
+      <div v-else class="text-gray-600">
+        You may fork this list before making changes to it
+      </div>
       <div class="flex-1"></div>
       <div class="input ml-2 mr-2">
-        <input type="search" v-model="filter">
+        <input type="search" v-model="filter" />
         <svg class="input-icon" viewBox="0 0 24 24">
-          <path d="M10 4c8 0 8 12 0 12c-8 0 -8 -12 0 -12m0 1c-6 0 -6 10 0 10c6 0 6 -10 0 -10zm4 8l6 6l-1 1l-6 -6z" />
+          <path
+            d="M10 4c8 0 8 12 0 12c-8 0 -8 -12 0 -12m0 1c-6 0 -6 10 0 10c6 0 6 -10 0 -10zm4 8l6 6l-1 1l-6 -6z"
+          />
         </svg>
       </div>
-      <vl-dropdown align="right" :closeAfterClick="true">
-        <button slot="toggle">Actions &#8227;</button>
+      <VlDropdown align="right" :closeAfterClick="true">
+        <template v-slot:toggle>
+          <button>Actions &#8227;</button>
+        </template>
         <div class="dropdown-menu">
-          <div @click.prevent="onToggle" v-text="current.enabled ? 'Disable' : 'Enable'"></div>
+          <div
+            @click.prevent="onToggle"
+            v-text="current.enabled ? 'Disable' : 'Enable'"
+          ></div>
           <div @click.prevent="onListEdit">Edit</div>
-          <div @click.prevent="onListFetch" v-if="current.subscribeUrl">Fetch</div>
-          <div @click.prevent="onListFork" v-if="current.subscribeUrl">Fork</div>
+          <div @click.prevent="onListFetch" v-if="current.subscribeUrl">
+            Fetch
+          </div>
+          <div @click.prevent="onListFork" v-if="current.subscribeUrl">
+            Fork
+          </div>
           <div @click.prevent="onListExport">Export</div>
           <div class="sep"></div>
           <div @click.prevent="onListRemove">Remove</div>
         </div>
-      </vl-dropdown>
+      </VlDropdown>
     </div>
     <div class="flex-1 pt-1 overflow-y-auto">
       <rule-item
@@ -50,9 +65,15 @@
         Subscribed from:
         <span class="text-gray-900" v-text="current.subscribeUrl"></span>
       </div>
-      <div class="mb-1 text-gray-500" v-if="current.subscribeUrl && current.lastUpdated">
+      <div
+        class="mb-1 text-gray-500"
+        v-if="current.subscribeUrl && current.lastUpdated"
+      >
         Last updated at:
-        <span class="text-gray-900" v-text="new Date(current.lastUpdated).toLocaleString()"></span>
+        <span
+          class="text-gray-900"
+          v-text="new Date(current.lastUpdated).toLocaleString()"
+        ></span>
       </div>
       <div>
         <div class="rule-label" v-if="current.subscribeUrl">Subscribed</div>
@@ -62,170 +83,212 @@
   </div>
 </template>
 
-<script>
-import Vue from 'vue';
+<script lang="ts">
 import {
-  store, dump, remove, getName, setRoute, debounce, setStatus,
-} from '../util';
+  computed,
+  defineComponent,
+  ref,
+  watch,
+  watchEffect,
+  onMounted,
+} from 'vue';
+import { debounce, pick } from 'lodash-es';
+import VlDropdown from 'vueleton/lib/dropdown';
+import browser from '#/common/browser';
+import { RuleData } from '#/types';
+import { store, dump, remove, getName, setRoute, setStatus } from '../util';
 import RuleItem from './rule-item.vue';
 
-export default {
+export default defineComponent({
   components: {
+    VlDropdown,
     RuleItem,
   },
-  data() {
-    return {
-      store,
-      editing: null,
-      newRule: null,
-      filter: '',
-      filteredRules: null,
-    };
-  },
-  watch: {
-    current() {
-      this.onCancel();
-      this.updateList();
-    },
-    filter() {
-      this.debouncedUpdateList();
-    },
-  },
-  computed: {
-    current() {
-      const { group, id } = this.store.route;
+  setup() {
+    const filter = ref('');
+    const filteredRules = ref<RuleData[]>([]);
+
+    const current = computed(() => {
+      const { group, id } = store.route;
       if (group === 'lists') {
-        const current = this.store.lists.find(item => `${item.id}` === `${id}`);
-        return current;
+        return store.lists.find((item) => `${item.id}` === `${id}`);
       }
       return null;
-    },
-    editable() {
-      return this.current && !this.current.subscribeUrl;
-    },
-    labelToggle() {
-      return this.current?.enabled ? 'Disable' : 'Enable';
-    },
-  },
-  methods: {
-    onNew() {
-      this.newRule = {
+    });
+
+    const editable = computed(
+      () => current.value && !current.value.subscribeUrl
+    );
+
+    const labelToggle = computed(() =>
+      current.value?.enabled ? 'Disable' : 'Enable'
+    );
+
+    const newRule = ref<{ editable: boolean } & Partial<RuleData>>(null);
+
+    const editing = ref<RuleData>(null);
+
+    const onNew = () => {
+      newRule.value = {
         editable: false,
       };
-      this.editing = this.newRule;
-    },
-    onEdit(rule) {
-      this.newRule = null;
-      this.editing = rule;
-    },
-    onCancel() {
-      this.onEdit();
-    },
-    onRemove(index) {
-      const { current: { rules } } = this;
+      editing.value = newRule.value as RuleData;
+    };
+
+    const onEdit = (rule?: RuleData) => {
+      newRule.value = null;
+      editing.value = rule;
+    };
+
+    const onCancel = () => {
+      onEdit();
+    };
+
+    const onRemove = (index: number) => {
+      const { rules } = current.value;
       rules.splice(index, 1);
-      this.save();
-    },
-    onSubmit({ extra, input: { method, url, target, headers } }) {
-      const headerPairs = headers.split('\n').filter(Boolean).map(line => {
-        let i = line.indexOf(':');
-        if (i < 0) i = line.length;
-        const key = line.slice(0, i).trim();
-        const value = line.slice(i + 1).trim();
-        return [key, value];
-      });
-      const rule = {
+      save();
+    };
+
+    const onSubmit = ({
+      extra,
+      input: { method, url, target, headers },
+    }: {
+      extra: number;
+      input: {
+        method: string;
+        url: string;
+        target: string;
+        headers: string;
+      };
+    }) => {
+      const headerPairs = headers
+        .split('\n')
+        .filter(Boolean)
+        .map((line: string) => {
+          let i = line.indexOf(':');
+          if (i < 0) i = line.length;
+          const key = line.slice(0, i).trim();
+          const value = line.slice(i + 1).trim();
+          return [key, value] as [string, string];
+        });
+      const rule: RuleData = {
         method,
         url,
         target,
         headers: headerPairs,
       };
-      const { current: { rules } } = this;
+      const { rules } = current.value;
       if (extra < 0) {
         rules.push(rule);
       } else {
-        Vue.set(rules, extra, rule);
+        rules[extra] = rule;
       }
-      this.save();
-      this.onCancel();
-    },
-    save() {
-      const { current } = this;
-      dump({
-        id: current.id,
-        rules: current.rules,
-      });
-    },
-    onListEdit() {
-      const { current } = this;
-      this.store.editList = {
-        ...current,
+      save();
+      onCancel();
+    };
+
+    const save = () => {
+      dump(pick(current.value, ['id', 'rules']));
+    };
+
+    const onListEdit = () => {
+      store.editList = {
+        ...current.value,
         editing: true,
       };
-    },
-    onListSubmit({ title, subscribeUrl }) {
-      const { current } = this;
-      Object.assign(current, {
+    };
+
+    const onListSubmit = ({ title, subscribeUrl }) => {
+      Object.assign(current.value, {
         title,
         subscribeUrl,
       });
       dump({
-        id: current.id,
+        id: current.value.id,
         title,
         subscribeUrl,
       });
-      this.onListCancel();
-    },
-    onListFetch() {
-      const { current } = this;
+    };
+
+    const onListFetch = () => {
       browser.runtime.sendMessage({
         cmd: 'FetchList',
-        data: current.id,
+        data: current.value.id,
       });
-    },
-    onListRemove() {
-      const { current } = this;
-      remove(current.id);
-    },
-    onListExport() {
-      const { current } = this;
+    };
+
+    const onListRemove = () => {
+      remove(current.value.id);
+    };
+
+    const onListExport = () => {
       const data = {
-        name: getName(current) || 'No name',
-        rules: current.rules,
+        name: getName(current.value),
+        rules: current.value.rules,
       };
       const basename = data.name.replace(/\s+/g, '-').toLowerCase();
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(data)], {
+        type: 'application/json',
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.download = `${basename}.json`;
       a.href = url;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url));
-    },
-    async onListFork() {
-      const { current } = this;
+    };
+
+    const onListFork = async () => {
       const data = {
-        name: `${current.name || 'No name'} (forked)`,
-        rules: current.rules,
+        name: `${current.value.name || 'No name'} (forked)`,
+        rules: current.value.rules,
       };
       const id = await dump(data);
       setRoute(`lists/${id}`);
-    },
-    onToggle() {
-      setStatus(this.current, !this.current.enabled);
-    },
-    updateList() {
-      let rules = this.current?.rules;
-      const { filter } = this;
-      if (rules && filter) {
-        rules = rules.filter(rule => rule.url?.includes(filter));
+    };
+
+    const onToggle = () => {
+      setStatus(current.value, !current.value.enabled);
+    };
+
+    const updateList = () => {
+      let rules = current.value?.rules;
+      if (rules && filter.value) {
+        rules = rules.filter((rule) => rule.url?.includes(filter.value));
       }
-      this.filteredRules = rules;
-    },
+      filteredRules.value = rules;
+    };
+    const updateListLater = debounce(updateList, 200);
+
+    watchEffect(onCancel);
+
+    watch([current, filter], updateListLater);
+
+    onMounted(updateList);
+
+    return {
+      filter,
+      filteredRules,
+      store,
+      current,
+      editable,
+      labelToggle,
+      editing,
+      newRule,
+      onNew,
+      onEdit,
+      onCancel,
+      onRemove,
+      onListEdit,
+      onListSubmit,
+      onListFetch,
+      onListRemove,
+      onListExport,
+      onListFork,
+      onSubmit,
+      onToggle,
+    };
   },
-  created() {
-    this.debouncedUpdateList = debounce(this.updateList, 200);
-    this.updateList();
-  },
-};
+});
 </script>

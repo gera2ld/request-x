@@ -5,7 +5,10 @@
       <li>
         <label>
           Show number of handled requests on badge:
-          <select :value="store.config.badge" @change="onChange('badge', $event.target.value)">
+          <select
+            :value="store.config.badge"
+            @change="onChange('badge', $event.target.value)"
+          >
             <option value="">none</option>
             <option value="page">on current page</option>
             <option value="tab">in current tab</option>
@@ -23,28 +26,34 @@
 </template>
 
 <script>
+import { defineComponent, ref } from 'vue';
+import browser from '#/common/browser';
 import { store } from '../util';
 
-export default {
-  data() {
-    return {
-      store,
-      messageResetCount: '',
-    };
-  },
-  methods: {
-    onChange(key, value) {
+export default defineComponent({
+  setup() {
+    const messageResetCount = ref('');
+
+    const onChange = (key, value) => {
       browser.runtime.sendMessage({
         cmd: 'SetConfig',
         data: { key, value },
       });
-    },
-    async onResetCount() {
+    };
+
+    const onResetCount = async () => {
       await browser.runtime.sendMessage({
         cmd: 'ResetCount',
       });
-      this.messageResetCount = 'Total count has been reset.';
-    },
+      messageResetCount.value = 'Total count has been reset.';
+    };
+
+    return {
+      store,
+      messageResetCount,
+      onChange,
+      onResetCount,
+    };
   },
-};
+});
 </script>

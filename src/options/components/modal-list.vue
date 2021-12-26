@@ -1,10 +1,17 @@
 <template>
-  <vl-modal :visible="!!store.editList" @close="onListCancel" transition="fade">
-    <form class="w-1/2 mx-auto p-2 bg-white" v-if="store.editList" @submit.prevent="onListSave">
+  <VlModal :show="!!store.editList" @close="onListCancel" transition="fade">
+    <form
+      class="w-1/2 mx-auto p-2 bg-white"
+      v-if="store.editList"
+      @submit.prevent="onListSave"
+    >
       <h3 class="font-bold mb-2" v-text="modalTitle" />
       <div class="nav-modal-group" v-if="!store.editList.isSubscribed">
         <div>Name:</div>
-        <input v-model="store.editList.name" :placeholder="store.editList.defaultName">
+        <input
+          v-model="store.editList.name"
+          :placeholder="store.editList.defaultName"
+        />
       </div>
       <div class="nav-modal-group" v-if="store.editList.isSubscribed">
         <div>Subscribe URL:</div>
@@ -12,7 +19,10 @@
           :class="{ error: errors.subscribeUrl }"
           :value="store.editList.subscribeUrl"
           :readonly="store.editList.isEdit"
-          @input="store.editList.isEdit || (store.editList.subscribeUrl = $event.target.value)"
+          @input="
+            store.editList.isEdit ||
+              (store.editList.subscribeUrl = $event.target.value)
+          "
         />
       </div>
       <div class="mt-1 text-right">
@@ -20,56 +30,52 @@
         <button @click.prevent="onListCancel">Cancel</button>
       </div>
     </form>
-  </vl-modal>
+  </VlModal>
 </template>
 
-<script>
-import {
-  debounce, store, isValidURL, dump, pickData,
-} from '../util';
+<script lang="ts">
+import { computed, defineComponent } from 'vue';
+import { pick } from 'lodash-es';
+import VlModal from 'vueleton/lib/modal';
+import { store, isValidURL, dump } from '../util';
 
-export default {
-  data() {
-    return {
-      store,
-      errors: {},
-    };
+export default defineComponent({
+  components: {
+    VlModal,
   },
-  computed: {
-    modalTitle() {
+  setup() {
+    const modalTitle = computed(() => {
       if (!store.editList) return null;
       if (store.editList.editing) return 'Edit list';
       if (store.editList.isSubscribed) return 'Subscribe list';
       return 'Create list';
-    },
-  },
-  watch: {
-    'store.editList': {
-      deep: true,
-      handler() {
-        this.updateErrors();
-      },
-    },
-  },
-  methods: {
-    checkErrors() {
-      const editList = this.store.editList || {};
-      this.errors = {
-        subscribeUrl: editList.isSubscribed && !isValidURL(editList.subscribeUrl),
+    });
+
+    const errors = computed(() => {
+      const { editList } = store;
+      return {
+        subscribeUrl:
+          editList.isSubscribed && !isValidURL(editList.subscribeUrl),
       };
-    },
-    onListCancel() {
+    });
+
+    const onListCancel = () => {
       store.editList = null;
-    },
-    onListSave() {
-      this.checkErrors();
-      if (Object.keys(this.errors).some(key => this.errors[key])) return;
-      dump(pickData(this.store.editList, ['id', 'name', 'subscribeUrl']));
-      this.onListCancel();
-    },
+    };
+
+    const onListSave = () => {
+      if (Object.values(errors.value).some(Boolean)) return;
+      dump(pick(store.editList, ['id', 'name', 'subscribeUrl']));
+      onListCancel();
+    };
+
+    return {
+      store,
+      errors,
+      modalTitle,
+      onListCancel,
+      onListSave,
+    };
   },
-  created() {
-    this.updateErrors = debounce(this.checkErrors, 200);
-  },
-};
+});
 </script>
