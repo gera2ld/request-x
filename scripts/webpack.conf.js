@@ -13,7 +13,6 @@ module.exports = modifyWebpackConfig(async (config) => {
           minChunks: 2,
           chunks(chunk) {
             return ![
-              'browser',
               'handler',
             ].includes(chunk.name);
           },

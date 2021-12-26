@@ -17,14 +17,23 @@ exports.pages = {
     entry: './src/common/browser',
   },
   handler: {
-    entry: './src/handler',
+    entry: {
+      import: './src/handler',
+      dependOn: 'browser',
+    },
   },
   'options/index': {
-    entry: './src/options/index',
+    entry: {
+      import: './src/options/index',
+      dependOn: 'browser',
+    },
     html: htmlFactory(),
   },
   'popup/index': {
-    entry: './src/popup/index',
+    entry: {
+      import: './src/popup/index',
+      dependOn: 'browser',
+    },
     html: htmlFactory(),
   },
 };
