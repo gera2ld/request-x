@@ -25,6 +25,7 @@ background:
 options_ui:
   page: options/index.html
   open_in_tab: true
+devtools_page: devtools/index.html
 permissions:
   - <all_urls>
   - webRequest

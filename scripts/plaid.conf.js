@@ -36,6 +36,20 @@ exports.pages = {
     },
     html: htmlFactory(),
   },
+  'devtools/index': {
+    entry: {
+      import: './src/devtools/index',
+      dependOn: 'browser',
+    },
+    html: htmlFactory(),
+  },
+  'devtools/panel': {
+    entry: {
+      import: './src/devtools/panel',
+      dependOn: 'browser',
+    },
+    html: htmlFactory(),
+  },
 };
 
 exports.global = {

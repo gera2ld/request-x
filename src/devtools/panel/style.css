@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply dark:bg-gray-900 dark:text-gray-200;
+}
+
+.table {
+  @apply flex flex-col border dark:border-gray-500 h-screen;
+}
+
+.row {
+  @apply flex;
+  > * {
+    @apply border-r dark:border-gray-500 px-1;
+    &:last-child {
+      border-right: 0;
+    }
+  }
+  &.header > * {
+    @apply border-b;
+  }
+  &:nth-child(even) {
+    @apply bg-gray-800;
+  }
+}

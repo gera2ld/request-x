@@ -1,10 +1,16 @@
 import browser from '#/common/browser';
-import { GlobalStorage, ConfigStorage, LogItem, ListData } from '#/types';
+import {
+  GlobalStorage,
+  ConfigStorage,
+  LogItem,
+  ListData,
+  InterceptionData,
+  PortMessage,
+} from '#/types';
 import { List } from './list';
 import { getActiveTab, ObjectStorage } from './util';
 
 const logs: { [key: number]: LogItem } = {};
-const MAX_RECORD_NUM = 200;
 const global = new ObjectStorage<GlobalStorage>('global', { count: 0 });
 const config = new ObjectStorage<ConfigStorage>('config', {
   badge: '',
@@ -31,13 +37,13 @@ function pushLog(
   global.set((data) => ({
     count: (data.count || 0) + 1,
   }));
-  log.records.push({
-    url,
-    result,
-  });
-  while (log.records.length > MAX_RECORD_NUM) {
-    log.records.shift(); // shift is faster than splice
-  }
+  ports.get(tabId)?.postMessage({
+    type: 'interception',
+    data: {
+      url,
+      result,
+    },
+  } as PortMessage<InterceptionData>);
   updateBadge(tabId);
 }
 
@@ -168,4 +174,16 @@ browser.alarms.create({
 browser.alarms.onAlarm.addListener(() => {
   console.info(new Date().toISOString(), 'Fetching lists...');
   List.fetch();
+});
+
+const ports = new Map<number, browser.Runtime.Port>();
+
+browser.runtime.onConnect.addListener((port) => {
+  const tabId = port.name.startsWith('inspect-') && +port.name.slice(8);
+  if (tabId) {
+    ports.set(tabId, port);
+    port.onDisconnect.addListener(() => {
+      ports.delete(tabId);
+    });
+  }
 });

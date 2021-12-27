@@ -39,3 +39,13 @@ export interface RequestDetails {
   url: string;
   requestHeaders?: Array<{ name: string; value?: string }>;
 }
+
+export interface InterceptionData {
+  url: string;
+  result: import('webextension-polyfill').WebRequest.BlockingResponse;
+}
+
+export interface PortMessage<T> {
+  type: string;
+  data: T;
+}
