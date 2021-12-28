@@ -8,6 +8,10 @@
           <span class="entry-label">Request URL:</span>
           <span v-text="store.active.url"></span>
         </div>
+        <div>
+          <span class="entry-label">Request Method:</span>
+          <span v-text="store.active.method"></span>
+        </div>
       </div>
     </section>
     <section>

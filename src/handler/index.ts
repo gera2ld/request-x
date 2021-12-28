@@ -19,10 +19,10 @@ const config = new ObjectStorage<ConfigStorage>('config', {
 });
 
 function pushLog(
-  details: { tabId: number; url: string; requestId: string },
+  details: { tabId: number; method: string; url: string; requestId: string },
   result: RuleMatchResult
 ) {
-  const { tabId, url, requestId } = details;
+  const { tabId, method, url, requestId } = details;
   let log = logs[tabId];
   if (!log) {
     log = {
@@ -48,6 +48,7 @@ function pushLog(
     data: {
       requestId,
       update,
+      method,
       url,
       result,
     },

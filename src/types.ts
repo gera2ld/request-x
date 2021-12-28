@@ -54,6 +54,7 @@ export type RuleMatchResult =
 
 export interface InterceptionData {
   requestId: string;
+  method: string;
   url: string;
   update: boolean;
   result: RuleMatchResult;
