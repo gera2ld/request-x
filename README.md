@@ -35,4 +35,6 @@ Supported browsers:
 
 <img width="331" src="https://user-images.githubusercontent.com/3139113/86558920-4066e300-bf8d-11ea-84d1-29140bdcbeca.png">
 
-<img width="999" src="https://user-images.githubusercontent.com/3139113/139872360-ec9f8bd0-38d4-4809-a805-0457cc0460f3.png">
+<img width="1080" src="https://user-images.githubusercontent.com/3139113/147549564-5744b2f7-9328-46d2-afb8-0a4310f2e2cd.png">
+
+<img width="1080" src="https://user-images.githubusercontent.com/3139113/147549923-44a2194d-1fd3-4384-94fb-6e2eb0e0add0.png">
