@@ -6,8 +6,17 @@ body {
   @apply dark:bg-gray-900 dark:text-gray-200;
 }
 
-.table {
+.request-list {
   @apply flex flex-col border dark:border-gray-500 h-screen;
+}
+
+.toolbar {
+  @apply border-b bg-gray-100 p-1;
+}
+
+.icon {
+  @apply w-4 h-4 mr-2 cursor-pointer text-gray-600 hover:text-gray-800;
+  fill: currentColor;
 }
 
 .row {
@@ -22,7 +31,7 @@ body {
     }
   }
   &.header > * {
-    @apply border-b;
+    @apply border-b bg-gray-100;
   }
   &:not(.header) {
     @apply cursor-pointer;
@@ -31,7 +40,8 @@ body {
     }
   }
   &:nth-child(even) {
-    @apply bg-gray-200 dark:bg-gray-800;
+    @apply dark:bg-gray-800;
+    background: #fbfbfb;
   }
   &.active {
     @apply bg-blue-600 text-white;
