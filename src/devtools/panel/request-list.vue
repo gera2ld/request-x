@@ -15,6 +15,7 @@
     </div>
     <div class="row header">
       <div
+        class="solid"
         v-for="(field, i) in store.fields"
         :key="i"
         :style="{ flex: field.width }"
