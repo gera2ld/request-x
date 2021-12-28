@@ -48,10 +48,10 @@
           ></textarea>
           <div class="form-hint">
             Modify request headers, each in a line, prefixed with
-            <code>-</code> to remove, e.g.<br />
+            <code>!</code> to remove, e.g.<br />
             <code>x-added-by: request-x</code>,
             <code>authorization: token just-keep-my-token</code>,
-            <code>-x-to-remove</code>.
+            <code>!x-to-remove</code>.
           </div>
         </div>
       </div>

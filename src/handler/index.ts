@@ -6,7 +6,9 @@ import {
   ListData,
   InterceptionData,
   PortMessage,
+  RuleMatchResult,
 } from '#/types';
+import { omit } from 'lodash-es';
 import { List } from './list';
 import { getActiveTab, ObjectStorage } from './util';
 
@@ -17,10 +19,10 @@ const config = new ObjectStorage<ConfigStorage>('config', {
 });
 
 function pushLog(
-  details: { tabId: number; url: string },
-  result: browser.WebRequest.BlockingResponse
+  details: { tabId: number; url: string; requestId: string },
+  result: RuleMatchResult
 ) {
-  const { tabId, url } = details;
+  const { tabId, url, requestId } = details;
   let log = logs[tabId];
   if (!log) {
     log = {
@@ -28,18 +30,24 @@ function pushLog(
         page: 0,
         tab: 0,
       },
-      records: [],
+      requestIds: new Set(),
     };
     logs[tabId] = log;
   }
-  log.count.page += 1;
-  log.count.tab += 1;
-  global.set((data) => ({
-    count: (data.count || 0) + 1,
-  }));
+  const update = log.requestIds.has(requestId);
+  if (!update) {
+    log.count.page += 1;
+    log.count.tab += 1;
+    global.set((data) => ({
+      count: (data.count || 0) + 1,
+    }));
+    log.requestIds.add(requestId);
+  }
   ports.get(tabId)?.postMessage({
     type: 'interception',
     data: {
+      requestId,
+      update,
       url,
       result,
     },
@@ -71,11 +79,11 @@ async function updateBadge(tabId: number) {
 
 browser.webRequest.onBeforeRequest.addListener(
   (details) => {
-    const target = List.match(details, 'beforeRequest');
-    if (target) {
-      console.info(`matched: ${details.method} ${details.url}`, target);
-      pushLog(details, target);
-      return target;
+    const result = List.match(details, 'beforeRequest');
+    if (result) {
+      console.info(`matched: ${details.method} ${details.url}`, result);
+      pushLog(details, result);
+      return omit(result, 'payload');
     }
   },
   {
@@ -86,10 +94,11 @@ browser.webRequest.onBeforeRequest.addListener(
 
 browser.webRequest.onBeforeSendHeaders.addListener(
   (details) => {
-    const target = List.match(details, 'beforeSendHeaders');
-    if (target) {
-      console.info(`matched: ${details.method} ${details.url}`, target);
-      return target;
+    const result = List.match(details, 'beforeSendHeaders');
+    if (result) {
+      console.info(`matched: ${details.method} ${details.url}`, result);
+      pushLog(details, result);
+      return omit(result, 'payload');
     }
   },
   {

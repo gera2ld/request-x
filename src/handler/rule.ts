@@ -1,7 +1,7 @@
-import browser from '#/common/browser';
-import { RuleData, RequestDetails } from '#/types';
+import { RuleData, RequestDetails, RuleMatchResult } from '#/types';
 
 const NEVER_MATCH = /^:NEVER_MATCH/;
+const PREFIX_REMOVE = '!';
 
 function str2re(str: string) {
   return str.replace(/([.?/])/g, '\\$1').replace(/\*/g, '.*?');
@@ -46,9 +46,7 @@ export class Rule {
 
   match(
     details: RequestDetails,
-    callback: (
-      matches: RegExpMatchArray
-    ) => void | browser.WebRequest.BlockingResponse
+    callback: (matches: RegExpMatchArray) => void | RuleMatchResult
   ) {
     if (!this.testMethod(details.method)) return;
     const matches = details.url.match(tester(this.data.url));
@@ -71,23 +69,33 @@ export class Rule {
     return this.match(details, (matches) => {
       const { headers } = this.data;
       if (!headers) return;
-      const toUpdate = [];
+      const added = [];
       const toRemove = {};
       headers.forEach(([key, value]) => {
         key = fill(key, matches).toLowerCase();
         value = fill(value, matches);
-        if (key.startsWith('-')) {
-          key = key.slice(1);
+        if (key.startsWith(PREFIX_REMOVE)) {
+          key = key.slice(PREFIX_REMOVE.length).trim();
         } else {
-          toUpdate.push({ name: key, value });
+          added.push({ name: key, value });
         }
         toRemove[key] = 1;
       });
+      const removed = [];
       const requestHeaders = [...details.requestHeaders]
-        .filter((item) => !toRemove[item.name.toLowerCase()])
-        .concat(toUpdate);
+        .filter((item) => {
+          if (toRemove[item.name.toLowerCase()]) {
+            removed.push(item);
+            return false;
+          }
+          return true;
+        })
+        .concat(added);
       return {
         requestHeaders,
+        payload: {
+          requestHeaders: { removed, added },
+        },
       };
     });
   }

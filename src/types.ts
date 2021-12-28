@@ -11,10 +11,7 @@ export interface LogItem {
     page: number;
     tab: number;
   };
-  records: Array<{
-    url: string;
-    result: import('./common/browser').default.WebRequest.BlockingResponse;
-  }>;
+  requestIds: Set<string>;
 }
 
 export interface ListData {
@@ -34,15 +31,32 @@ export interface RuleData {
   headers: [string, string][];
 }
 
+export interface HttpHeaderItem {
+  name: string;
+  value?: string;
+}
+
 export interface RequestDetails {
   method: string;
   url: string;
-  requestHeaders?: Array<{ name: string; value?: string }>;
+  requestHeaders?: HttpHeaderItem[];
 }
 
+export type RuleMatchResult =
+  import('webextension-polyfill').WebRequest.BlockingResponse & {
+    payload?: {
+      requestHeaders?: {
+        added?: HttpHeaderItem[];
+        removed?: HttpHeaderItem[];
+      };
+    };
+  };
+
 export interface InterceptionData {
+  requestId: string;
   url: string;
-  result: import('webextension-polyfill').WebRequest.BlockingResponse;
+  update: boolean;
+  result: RuleMatchResult;
 }
 
 export interface PortMessage<T> {

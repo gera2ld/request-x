@@ -1,5 +1,5 @@
 import browser from '#/common/browser';
-import { ListData, RequestDetails } from '#/types';
+import { ListData, RequestDetails, RuleMatchResult } from '#/types';
 import { Rule } from './rule';
 import { getExactData, dumpExactData, getData, removeData } from './util';
 
@@ -76,10 +76,7 @@ export class List {
     return this.fetching;
   }
 
-  match(
-    details: RequestDetails,
-    method: string
-  ): void | browser.WebRequest.BlockingResponse {
+  match(details: RequestDetails, method: string): void | RuleMatchResult {
     if (!this.enabled) return;
     for (const rule of this.rules) {
       const target = rule[method](details);
