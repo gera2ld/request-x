@@ -13,15 +13,44 @@ body {
 .row {
   @apply flex;
   > * {
-    @apply border-r dark:border-gray-500 px-1;
+    @apply border-r dark:border-gray-500 px-1 min-w-0;
     &:last-child {
       border-right: 0;
+    }
+    > div {
+      @apply w-full break-all;
     }
   }
   &.header > * {
     @apply border-b;
   }
-  &:nth-child(even) {
-    @apply bg-gray-800;
+  &:not(.header) {
+    @apply cursor-pointer;
+    &:not(.active):hover {
+      @apply bg-blue-100;
+    }
   }
+  &:nth-child(even) {
+    @apply bg-gray-200 dark:bg-gray-800;
+  }
+  &.active {
+    @apply bg-blue-600 text-white;
+  }
+}
+
+.panel {
+  @apply absolute top-0 bottom-0 right-0 w-2/3 bg-white border-l border-gray-300 break-all overflow-y-auto;
+  &-close {
+    @apply fixed top-0 right-0 m-1 cursor-pointer z-10;
+  }
+}
+
+.section-title {
+  @apply sticky top-0 bg-gray-200 font-bold p-1;
+}
+.section-body {
+  @apply pl-4;
+}
+.entry-label {
+  @apply font-bold mr-2;
 }
