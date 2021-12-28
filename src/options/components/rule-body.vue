@@ -131,6 +131,8 @@ export default defineComponent({
     const onNew = () => {
       newRule.value = {
         editable: false,
+        method: '*',
+        target: '=',
       };
       editing.value = newRule.value as RuleData;
     };
