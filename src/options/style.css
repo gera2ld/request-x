@@ -79,7 +79,7 @@ select {
 .form-hint {
   @apply p-1 bg-gray-200;
   code {
-    @apply px-1 bg-yellow-200 border border-gray-400 rounded;
+    @apply px-1 bg-yellow-200 border border-gray-400 rounded whitespace-nowrap;
   }
 }
 
@@ -87,6 +87,9 @@ select {
   @apply px-2 py-1 rounded border border-transparent;
   &:hover {
     @apply border-gray-300;
+  }
+  > form {
+    grid-template-columns:
   }
 }
 

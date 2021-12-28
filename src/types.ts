@@ -24,28 +24,36 @@ export interface ListData {
   rules: RuleData[];
 }
 
-export interface RuleData {
-  method: string;
-  url: string;
-  target: string;
-  headers: [string, string][];
-}
-
 export interface HttpHeaderItem {
   name: string;
   value?: string;
 }
 
-export interface RequestDetails {
+export interface RuleData {
   method: string;
   url: string;
+  target: string;
   requestHeaders?: HttpHeaderItem[];
+  responseHeaders?: HttpHeaderItem[];
+}
+
+export interface RequestDetails {
+  tabId: number;
+  method: string;
+  url: string;
+  requestId: string;
+  requestHeaders?: HttpHeaderItem[];
+  responseHeaders?: HttpHeaderItem[];
 }
 
 export type RuleMatchResult =
   import('webextension-polyfill').WebRequest.BlockingResponse & {
     payload?: {
       requestHeaders?: {
+        added?: HttpHeaderItem[];
+        removed?: HttpHeaderItem[];
+      };
+      responseHeaders?: {
         added?: HttpHeaderItem[];
         removed?: HttpHeaderItem[];
       };

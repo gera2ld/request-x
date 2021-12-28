@@ -150,33 +150,37 @@ export default defineComponent({
       save();
     };
 
+    const parseHeaders = (headers: string) =>
+      headers
+        .split('\n')
+        .filter(Boolean)
+        .map((line: string) => {
+          let i = line.indexOf(':');
+          if (i < 0) i = line.length;
+          const name = line.slice(0, i).trim();
+          const value = line.slice(i + 1).trim();
+          return { name, value };
+        });
+
     const onSubmit = ({
       extra,
-      input: { method, url, target, headers },
+      input: { method, url, target, reqHeaders, resHeaders },
     }: {
       extra: number;
       input: {
         method: string;
         url: string;
         target: string;
-        headers: string;
+        reqHeaders: string;
+        resHeaders: string;
       };
     }) => {
-      const headerPairs = headers
-        .split('\n')
-        .filter(Boolean)
-        .map((line: string) => {
-          let i = line.indexOf(':');
-          if (i < 0) i = line.length;
-          const key = line.slice(0, i).trim();
-          const value = line.slice(i + 1).trim();
-          return [key, value] as [string, string];
-        });
       const rule: RuleData = {
         method,
         url,
         target,
-        headers: headerPairs,
+        requestHeaders: parseHeaders(reqHeaders),
+        responseHeaders: parseHeaders(resHeaders),
       };
       const { rules } = current.value;
       if (extra < 0) {

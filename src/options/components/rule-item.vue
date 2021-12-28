@@ -1,7 +1,11 @@
 <template>
   <div class="rule-item">
-    <form class="flex" v-if="editing" @submit.prevent="onSubmit">
-      <div class="w-20 mr-1" :class="{ error: errors.method }">
+    <form
+      class="grid grid-cols-[5rem_auto_min-content] gap-2"
+      v-if="editing"
+      @submit.prevent="onSubmit"
+    >
+      <div class="row-span-5" :class="{ error: errors.method }">
         <input
           type="text"
           :value="input.method"
@@ -19,45 +23,55 @@
           <div>DELETE</div>
         </div>
       </div>
-      <div class="flex-1">
-        <div :class="{ error: errors.url }">
-          <input type="text" v-model="input.url" placeholder="URL" />
-          <div class="form-hint">
-            A
-            <a
-              target="_blank"
-              href="https://developer.chrome.com/extensions/match_patterns"
-              >match pattern</a
-            >
-            or a RegExp (e.g. <code>/^https:/</code>).
-          </div>
-        </div>
-        <div class="mt-1" :class="{ error: errors.target }">
-          <input type="text" v-model="input.target" placeholder="Target" />
-          <div class="form-hint">
-            Set to <code>-</code> for blocking the request, <code>=</code> for
-            keeping the original, or a new URL to redirect.
-          </div>
-        </div>
-        <div class="mt-1">
-          <textarea
-            type="text"
-            v-model="input.headers"
-            placeholder="Request headers"
-            rows="5"
-          ></textarea>
-          <div class="form-hint">
-            Modify request headers, each in a line, prefixed with
-            <code>!</code> to remove, e.g.<br />
-            <code>x-added-by: request-x</code>,
-            <code>authorization: token just-keep-my-token</code>,
-            <code>!x-to-remove</code>.
-          </div>
+      <div :class="{ error: errors.url }">
+        <input type="text" v-model="input.url" placeholder="URL" />
+        <div class="form-hint">
+          A
+          <a
+            target="_blank"
+            href="https://developer.chrome.com/extensions/match_patterns"
+            >match pattern</a
+          >
+          or a RegExp (e.g. <code>/^https:/</code>).
         </div>
       </div>
-      <div class="ml-1">
+      <div class="row-span-2 whitespace-nowrap">
         <button class="mr-1" type="submit">Save</button>
         <button type="reset" @click="onCancel">Cancel</button>
+      </div>
+      <div :class="{ error: errors.target }">
+        <input type="text" v-model="input.target" placeholder="Target" />
+        <div class="form-hint">
+          Set to <code>-</code> for blocking the request, <code>=</code> for
+          keeping the original, or a new URL to redirect.
+        </div>
+      </div>
+      <div>
+        <textarea
+          type="text"
+          v-model="input.reqHeaders"
+          placeholder="Modify request headers"
+          rows="3"
+        ></textarea>
+      </div>
+      <div class="mt-1">Request headers</div>
+      <div>
+        <textarea
+          type="text"
+          v-model="input.resHeaders"
+          placeholder="Modify response headers"
+          rows="3"
+        ></textarea>
+      </div>
+      <div class="mt-1">Response headers</div>
+      <div>
+        <div class="form-hint">
+          Modify headers, each in a line, prefixed with
+          <code>!</code> to remove, e.g.<br />
+          <code>x-powered-by: request-x</code>,
+          <code>authorization: token always-add-my-token</code>,
+          <code>!x-to-remove</code>.
+        </div>
       </div>
     </form>
     <div class="flex items-center" v-else>
@@ -88,7 +102,7 @@ import {
   nextTick,
   onMounted,
 } from 'vue';
-import { RuleData } from '#/types';
+import { HttpHeaderItem, RuleData } from '#/types';
 import { isValidMethod, isValidPattern, isValidTarget } from '../util';
 
 export default defineComponent({
@@ -106,18 +120,22 @@ export default defineComponent({
       method?: string;
       url?: string;
       target?: string;
-      headers?: string;
+      reqHeaders?: string;
+      resHeaders?: string;
     }>({});
     const refMethod = ref(null);
 
     const reset = () => {
       if (!props.editing) return;
       const { rule } = props;
+      const stringifyHeaders = (headers?: HttpHeaderItem[]) =>
+        headers?.map(({ name, value }) => `${name}: ${value}`).join('\n') || '';
       Object.assign(input, {
         method: rule.method,
         url: rule.url,
         target: rule.target,
-        headers: (rule.headers || []).map((pair) => pair.join(': ')).join('\n'),
+        reqHeaders: stringifyHeaders(rule.requestHeaders),
+        resHeaders: stringifyHeaders(rule.responseHeaders),
       });
       nextTick(() => {
         refMethod.value?.focus();
@@ -140,7 +158,8 @@ export default defineComponent({
       return [
         rule.target === '-' && 'block',
         rule.target?.length > 1 && 'redirect',
-        rule.headers.length && 'headers',
+        rule.requestHeaders?.length && 'req_headers',
+        rule.responseHeaders?.length && 'res_headers',
       ].filter(Boolean);
     });
 

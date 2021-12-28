@@ -61,7 +61,8 @@ export default defineComponent({
       const labels = [
         result.cancel && 'blocked',
         result.redirectUrl && 'redirected',
-        result.requestHeaders && 'headers',
+        result.requestHeaders && 'req_headers',
+        result.responseHeaders && 'res_headers',
       ].filter(Boolean);
       return labels;
     };

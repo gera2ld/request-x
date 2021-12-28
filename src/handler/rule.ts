@@ -55,7 +55,7 @@ export class Rule {
     return callback(matches);
   }
 
-  beforeRequest(details: RequestDetails) {
+  onBeforeRequest(details: RequestDetails) {
     return this.match(details, (matches) => {
       let { target } = this.data;
       if (target === '=') return null;
@@ -65,24 +65,24 @@ export class Rule {
     });
   }
 
-  beforeSendHeaders(details: RequestDetails) {
+  onBeforeSendHeaders(details: RequestDetails) {
     return this.match(details, (matches) => {
-      const { headers } = this.data;
-      if (!headers) return;
+      const { requestHeaders } = this.data;
+      if (!requestHeaders) return;
       const added = [];
       const toRemove = {};
-      headers.forEach(([key, value]) => {
-        key = fill(key, matches).toLowerCase();
+      requestHeaders.forEach(({ name, value }) => {
+        name = fill(name, matches).toLowerCase();
         value = fill(value, matches);
-        if (key.startsWith(PREFIX_REMOVE)) {
-          key = key.slice(PREFIX_REMOVE.length).trim();
+        if (name.startsWith(PREFIX_REMOVE)) {
+          name = name.slice(PREFIX_REMOVE.length).trim();
         } else {
-          added.push({ name: key, value });
+          added.push({ name, value });
         }
-        toRemove[key] = 1;
+        toRemove[name] = 1;
       });
       const removed = [];
-      const requestHeaders = [...details.requestHeaders]
+      const headers = [...details.requestHeaders]
         .filter((item) => {
           if (toRemove[item.name.toLowerCase()]) {
             removed.push(item);
@@ -91,12 +91,49 @@ export class Rule {
           return true;
         })
         .concat(added);
-      return {
-        requestHeaders,
-        payload: {
-          requestHeaders: { removed, added },
-        },
-      };
+      if (added.length || removed.length)
+        return {
+          requestHeaders: headers,
+          payload: {
+            requestHeaders: { removed, added },
+          },
+        };
+    });
+  }
+
+  onHeadersReceived(details: RequestDetails) {
+    return this.match(details, (matches) => {
+      const { responseHeaders } = this.data;
+      if (!responseHeaders) return;
+      const added = [];
+      const toRemove = {};
+      responseHeaders.forEach(({ name, value }) => {
+        name = fill(name, matches).toLowerCase();
+        value = fill(value, matches);
+        if (name.startsWith(PREFIX_REMOVE)) {
+          name = name.slice(PREFIX_REMOVE.length).trim();
+        } else {
+          added.push({ name, value });
+        }
+        toRemove[name] = 1;
+      });
+      const removed = [];
+      const headers = [...details.responseHeaders]
+        .filter((item) => {
+          if (toRemove[item.name.toLowerCase()]) {
+            removed.push(item);
+            return false;
+          }
+          return true;
+        })
+        .concat(added);
+      if (added.length || removed.length)
+        return {
+          responseHeaders: headers,
+          payload: {
+            responseHeaders: { removed, added },
+          },
+        };
     });
   }
 

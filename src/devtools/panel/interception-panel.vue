@@ -31,14 +31,14 @@
           <template v-if="action.type === 'headers'">
             <div
               class="text-red-500"
-              v-for="(header, j) in action.requestHeaders?.removed"
+              v-for="(header, j) in action.headers?.removed"
               :key="j"
             >
               - {{ header.name }}: {{ header.value }}
             </div>
             <div
               class="text-green-500"
-              v-for="(header, j) in action.requestHeaders?.added"
+              v-for="(header, j) in action.headers?.added"
               :key="j"
             >
               + {{ header.name }}: {{ header.value }}
@@ -71,7 +71,12 @@ export default defineComponent({
         result.requestHeaders && {
           type: 'headers',
           typeText: 'Modify request headers',
-          ...result.payload,
+          headers: result.payload?.requestHeaders,
+        },
+        result.responseHeaders && {
+          type: 'headers',
+          typeText: 'Modify response headers',
+          headers: result.payload?.responseHeaders,
         },
       ].filter(Boolean);
       return actions;

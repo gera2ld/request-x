@@ -7,6 +7,7 @@ import {
   InterceptionData,
   PortMessage,
   RuleMatchResult,
+  RequestDetails,
 } from '#/types';
 import { omit } from 'lodash-es';
 import { List } from './list';
@@ -18,10 +19,7 @@ const config = new ObjectStorage<ConfigStorage>('config', {
   badge: '',
 });
 
-function pushLog(
-  details: { tabId: number; method: string; url: string; requestId: string },
-  result: RuleMatchResult
-) {
+function pushLog(details: RequestDetails, result: RuleMatchResult) {
   const { tabId, method, url, requestId } = details;
   let log = logs[tabId];
   if (!log) {
@@ -78,15 +76,19 @@ async function updateBadge(tabId: number) {
   });
 }
 
-browser.webRequest.onBeforeRequest.addListener(
-  (details) => {
-    const result = List.match(details, 'beforeRequest');
+function getRequestHandler(type: string) {
+  return (details: RequestDetails) => {
+    const result = List.match(details, type);
     if (result) {
-      console.info(`matched: ${details.method} ${details.url}`, result);
+      console.info(`matched: ${details.method} ${details.url}`, type, result);
       pushLog(details, result);
       return omit(result, 'payload');
     }
-  },
+  };
+}
+
+browser.webRequest.onBeforeRequest.addListener(
+  getRequestHandler('onBeforeRequest'),
   {
     urls: ['<all_urls>'],
   },
@@ -94,18 +96,20 @@ browser.webRequest.onBeforeRequest.addListener(
 );
 
 browser.webRequest.onBeforeSendHeaders.addListener(
-  (details) => {
-    const result = List.match(details, 'beforeSendHeaders');
-    if (result) {
-      console.info(`matched: ${details.method} ${details.url}`, result);
-      pushLog(details, result);
-      return omit(result, 'payload');
-    }
-  },
+  getRequestHandler('onBeforeSendHeaders'),
   {
     urls: ['<all_urls>'],
   },
   ['blocking', 'requestHeaders']
+);
+
+browser.webRequest.onHeadersReceived.addListener(
+  getRequestHandler('onHeadersReceived'),
+  { urls: ['<all_urls>'] },
+  // 'extraHeaders' is required to deceive the CORS protocol
+  // but may have a negative impact on performance
+  // TODO only include 'extraHeaders' when necessary
+  ['blocking', 'responseHeaders', 'extraHeaders']
 );
 
 browser.tabs.onRemoved.addListener((tabId) => {
