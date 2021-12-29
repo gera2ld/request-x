@@ -64,8 +64,7 @@ export interface InterceptionData {
   requestId: string;
   method: string;
   url: string;
-  update: boolean;
-  result: RuleMatchResult;
+  result?: RuleMatchResult;
 }
 
 export interface PortMessage<T> {

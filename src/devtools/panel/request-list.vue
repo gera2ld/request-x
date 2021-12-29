@@ -24,7 +24,7 @@
     </div>
     <div class="flex-1 overflow-y-auto">
       <div
-        v-for="(row, i) in store.rows"
+        v-for="(row, i) in store.requests"
         :key="i"
         class="row"
         :class="{ active: store.active === row }"
@@ -52,7 +52,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { InterceptionData } from '#/types';
-import { store } from './util';
+import { store, clearRequests } from './util';
 
 export default defineComponent({
   setup() {
@@ -72,7 +72,7 @@ export default defineComponent({
     };
 
     const onClear = () => {
-      store.rows = [];
+      clearRequests();
       store.active = null;
     };
 

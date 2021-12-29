@@ -19,7 +19,7 @@ const config = new ObjectStorage<ConfigStorage>('config', {
   badge: '',
 });
 
-function pushLog(details: RequestDetails, result: RuleMatchResult) {
+function pushLog(details: RequestDetails, result?: RuleMatchResult) {
   const { tabId, method, url, requestId } = details;
   let log = logs[tabId];
   if (!log) {
@@ -32,26 +32,29 @@ function pushLog(details: RequestDetails, result: RuleMatchResult) {
     };
     logs[tabId] = log;
   }
-  const update = log.requestIds.has(requestId);
-  if (!update) {
+  const matched = log.requestIds.has(requestId);
+  if (result && !matched) {
+    // intercept request
     log.count.page += 1;
     log.count.tab += 1;
     global.set((data) => ({
       count: (data.count || 0) + 1,
     }));
     log.requestIds.add(requestId);
+    updateBadge(tabId);
+  } else if (!result && matched) {
+    // request end
+    log.requestIds.delete(requestId);
   }
   ports.get(tabId)?.postMessage({
     type: 'interception',
     data: {
       requestId,
-      update,
       method,
       url,
       result,
     },
   } as PortMessage<InterceptionData>);
-  updateBadge(tabId);
 }
 
 async function updateBadge(tabId: number) {
@@ -76,10 +79,13 @@ async function updateBadge(tabId: number) {
   });
 }
 
+const matchedRequestIds = new Set<string>();
+
 function getRequestHandler(type: string) {
   return (details: RequestDetails) => {
     const result = List.match(details, type);
     if (result) {
+      matchedRequestIds.add(details.requestId);
       console.info(`matched: ${details.method} ${details.url}`, type, result);
       pushLog(details, result);
       return omit(result, 'payload');
@@ -111,6 +117,18 @@ browser.webRequest.onHeadersReceived.addListener(
   // TODO only include 'extraHeaders' when necessary
   ['blocking', 'responseHeaders', 'extraHeaders']
 );
+
+function handleRequestEnd(details: RequestDetails) {
+  pushLog(details);
+}
+
+browser.webRequest.onErrorOccurred.addListener(handleRequestEnd, {
+  urls: ['<all_urls>'],
+});
+
+browser.webRequest.onCompleted.addListener(handleRequestEnd, {
+  urls: ['<all_urls>'],
+});
 
 browser.tabs.onRemoved.addListener((tabId) => {
   delete logs[tabId];

@@ -4,7 +4,7 @@ import { PortMessage, InterceptionData } from '#/types';
 
 export const store = reactive<{
   fields: Array<{ title: string; width: number }>;
-  rows: InterceptionData[];
+  requests: InterceptionData[];
   active: InterceptionData | null;
 }>({
   fields: [
@@ -17,9 +17,16 @@ export const store = reactive<{
       width: 0.3,
     },
   ],
-  rows: [],
+  requests: [],
   active: null,
 });
+
+const requestMap = new Map<string, InterceptionData>();
+
+export function clearRequests() {
+  store.requests = [];
+  requestMap.clear();
+}
 
 const port = browser.runtime.connect({
   name: `inspect-${browser.devtools.inspectedWindow.tabId}`,
@@ -27,9 +34,11 @@ const port = browser.runtime.connect({
 port.onMessage.addListener((message: PortMessage<any>) => {
   if (message.type === 'interception') {
     const data = message.data as InterceptionData;
-    const { update, requestId, result } = data;
-    if (update) {
-      const oldData = store.rows.find((item) => item.requestId === requestId);
+    const { requestId, result } = data;
+    if (!result) {
+      requestMap.delete(requestId);
+    } else {
+      const oldData = requestMap.get(requestId);
       if (oldData) {
         oldData.result = {
           ...oldData.result,
@@ -39,9 +48,9 @@ port.onMessage.addListener((message: PortMessage<any>) => {
             ...result.payload,
           },
         };
+      } else {
+        store.requests.push(data);
       }
-    } else {
-      store.rows.push(data);
     }
   }
 });
