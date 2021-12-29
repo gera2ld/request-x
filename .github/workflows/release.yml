@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - uses: pnpm/action-setup@v2.0.1
+        with:
+          version: 6
+      - name: Prepare
+        run: |
+          VERSION=`node -e 'console.log(require("./package.json").version)'`
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "ASSETS_DIR=dist-assets" >> $GITHUB_ENV
+          echo "ASSET_ZIP=request-x-v$VERSION.zip" >> $GITHUB_ENV
+          pnpm i
+      - name: Build
+        run: |
+          pnpm build
+          mkdir -p $ASSETS_DIR
+          cd dist && zip -r ../$ASSETS_DIR/$ASSET_ZIP . && cd ..
+      - name: Publish to CWS
+        continue-on-error: true
+        run: |
+          set -x
+          npx chrome-webstore-upload-cli@1 upload --extension-id $EXTENSION_ID --source $ASSETS_DIR/$ASSET_ZIP --auto-publish
+        env:
+          EXTENSION_ID: cblonkdlnemhdeefhmaoiijjaedcphbf
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
