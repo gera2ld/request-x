@@ -66,7 +66,7 @@
       <div class="mt-1">Response headers</div>
       <div>
         <div class="form-hint">
-          Modify headers, each in a line, prefixed with
+          Modify headers, each in a line, prefix with
           <code>!</code> to remove, e.g.<br />
           <code>x-powered-by: request-x</code>,
           <code>authorization: token always-add-my-token</code>,
