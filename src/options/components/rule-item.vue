@@ -58,12 +58,18 @@
       <div>
         <textarea
           type="text"
+          :class="{ unsupported: !store.features.responseHeaders }"
           v-model="input.resHeaders"
           placeholder="Modify response headers"
           rows="3"
         ></textarea>
       </div>
-      <div class="mt-1">Response headers</div>
+      <div class="mt-1">
+        Response headers
+        <span v-if="!store.features.responseHeaders" class="label-unsupported">
+          {{ ' (unsupported)' }}
+        </span>
+      </div>
       <div>
         <div class="form-hint">
           Modify headers, each in a line, prefix with
@@ -103,7 +109,7 @@ import {
   onMounted,
 } from 'vue';
 import { HttpHeaderItem, RuleData } from '#/types';
-import { isValidMethod, isValidPattern, isValidTarget } from '../util';
+import { isValidMethod, isValidPattern, isValidTarget, store } from '../util';
 
 export default defineComponent({
   props: {
@@ -191,6 +197,7 @@ export default defineComponent({
     onMounted(reset);
 
     return {
+      store,
       input,
       errors,
       badges,

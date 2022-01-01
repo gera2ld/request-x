@@ -6,6 +6,10 @@ export interface ConfigStorage {
   badge: '' | 'page' | 'tab' | 'total';
 }
 
+export interface FeatureToggles {
+  responseHeaders?: boolean;
+}
+
 export interface LogItem {
   count: {
     page: number;

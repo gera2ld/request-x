@@ -52,6 +52,9 @@ textarea {
   .error > & {
     @apply bg-red-200 border-red-600 dark:bg-red-900 dark:border-red-500;
   }
+  &.unsupported {
+    @apply text-gray-400 dark:text-gray-500;
+  }
 }
 
 input,
@@ -90,6 +93,10 @@ textarea {
   code {
     @apply px-1 bg-yellow-200 border border-gray-400 rounded whitespace-nowrap dark:bg-yellow-700;
   }
+}
+
+.label-unsupported {
+  @apply text-yellow-600 dark:text-yellow-600;
 }
 
 .rule-list-header {

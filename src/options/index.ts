@@ -9,8 +9,9 @@ browser.runtime.sendMessage({ cmd: 'GetLists' }).then((data) => {
   store.lists = data;
   setRoute(`lists/${data[0]?.id}`);
 });
-browser.runtime.sendMessage({ cmd: 'GetConfig' }).then((data) => {
-  store.config = data;
+browser.runtime.sendMessage({ cmd: 'GetData' }).then(({ config, features }) => {
+  store.config = config;
+  store.features = features;
 });
 
 const commands = {

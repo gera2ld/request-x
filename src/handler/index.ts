@@ -8,6 +8,7 @@ import {
   PortMessage,
   RuleMatchResult,
   RequestDetails,
+  FeatureToggles,
 } from '#/types';
 import { omit } from 'lodash-es';
 import { List } from './list';
@@ -18,6 +19,9 @@ const global = new ObjectStorage<GlobalStorage>('global', { count: 0 });
 const config = new ObjectStorage<ConfigStorage>('config', {
   badge: '',
 });
+const features: FeatureToggles = {
+  responseHeaders: true,
+};
 
 function pushLog(details: RequestDetails, result?: RuleMatchResult) {
   const { tabId, method, url, requestId } = details;
@@ -109,14 +113,20 @@ browser.webRequest.onBeforeSendHeaders.addListener(
   ['blocking', 'requestHeaders']
 );
 
-browser.webRequest.onHeadersReceived.addListener(
-  getRequestHandler('onHeadersReceived'),
-  { urls: ['<all_urls>'] },
-  // 'extraHeaders' is required to deceive the CORS protocol
-  // but may have a negative impact on performance
-  // TODO only include 'extraHeaders' when necessary
-  ['blocking', 'responseHeaders', 'extraHeaders']
-);
+try {
+  browser.webRequest.onHeadersReceived.addListener(
+    getRequestHandler('onHeadersReceived'),
+    { urls: ['<all_urls>'] },
+    // 'extraHeaders' is required to deceive the CORS protocol
+    // but may have a negative impact on performance
+    // TODO only include 'extraHeaders' when necessary
+    ['blocking', 'responseHeaders', 'extraHeaders']
+  );
+} catch {
+  // Some browsers may not support `responseHeaders` and `extraHeaders`
+  features.responseHeaders = false;
+  console.info('Disabled modification of response headers.');
+}
 
 function handleRequestEnd(details: RequestDetails) {
   pushLog(details);
@@ -150,7 +160,6 @@ const commands = {
     const result = List.get();
     return result;
   },
-  GetList: (id: number) => List.find(id).get(),
   RemoveList: (id: number) => List.remove(id),
   UpdateList: async (data: Partial<ListData>) => {
     let list: List;
@@ -171,8 +180,11 @@ const commands = {
       global: await global.get('count'),
     };
   },
-  async GetConfig() {
-    return config.getAll();
+  async GetData() {
+    return {
+      config: await config.getAll(),
+      features,
+    };
   },
   SetConfig<K extends keyof ConfigStorage>({
     key,

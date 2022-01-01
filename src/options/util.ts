@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { pick } from 'lodash-es';
-import { ListData, ConfigStorage } from '#/types';
+import { ListData, ConfigStorage, FeatureToggles } from '#/types';
 import browser from '#/common/browser';
 
 export const store = reactive({
@@ -8,6 +8,7 @@ export const store = reactive({
   editList: null,
   route: {},
   config: null,
+  features: null,
 } as {
   lists: ListData[];
   editList: {
@@ -19,6 +20,7 @@ export const store = reactive({
     id: string;
   };
   config: ConfigStorage;
+  features: FeatureToggles;
 });
 window.addEventListener('hashchange', updateRoute);
 setRoute('settings/general');
