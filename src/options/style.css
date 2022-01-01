@@ -6,14 +6,14 @@ html {
 }
 
 body {
-  @apply text-gray-800 max-w-screen-xl mx-auto;
+  @apply text-gray-800 max-w-screen-xl mx-auto dark:bg-gray-900 dark:text-gray-300;
   min-width: 768px;
 }
 
 a {
-  @apply text-blue-500 cursor-pointer;
+  @apply text-blue-500 cursor-pointer dark:text-blue-400;
   &:hover {
-    @apply text-blue-600 underline;
+    @apply text-blue-600 underline dark:text-blue-300;
   }
 }
 
@@ -22,9 +22,9 @@ svg {
 }
 
 button {
-  @apply p-1 rounded border border-gray-400 bg-gray-100 cursor-pointer text-gray-700;
+  @apply p-1 rounded border border-gray-400 bg-gray-100 cursor-pointer dark:bg-gray-800 dark:border-gray-600;
   &:hover {
-    @apply border-gray-500 bg-gray-200;
+    @apply border-gray-500 bg-gray-200 dark:bg-gray-600 dark:border-gray-400;
   }
 }
 
@@ -38,23 +38,25 @@ button {
   }
 }
 
+select,
 input,
 textarea {
-  @apply block w-full outline-none rounded border border-gray-400 overflow-hidden px-2 py-1;
+  @apply outline-none rounded border border-gray-400 overflow-hidden px-2 py-1 dark:border-gray-600 dark:bg-gray-800;
   &:focus {
-    @apply border-gray-500;
+    @apply border-gray-500 dark:border-gray-400;
   }
   &[readonly] {
     color: text-gray-600;
   }
   &.error,
   .error > & {
-    @apply bg-red-200 border-red-600;
+    @apply bg-red-200 border-red-600 dark:bg-red-900 dark:border-red-500;
   }
 }
 
-select {
-  @apply border border-gray-400 p-2 rounded;
+input,
+textarea {
+  @apply block w-full;
 }
 
 .fade-enter-active,
@@ -66,30 +68,38 @@ select {
   opacity: 0;
 }
 
-.nav-modal-group {
+.modal {
+  @apply w-1/2 mx-auto p-2 bg-white dark:bg-gray-900;
+}
+.vl-modal-backdrop {
+  @apply dark:bg-white/10;
+}
+
+.modal-group {
   @apply text-left;
   > input {
     @apply w-full;
   }
-  ~ .nav-modal-group {
+  ~ .modal-group {
     @apply mt-1;
   }
 }
 
 .form-hint {
-  @apply p-1 bg-gray-200;
+  @apply p-1 bg-gray-200 dark:bg-gray-700;
   code {
-    @apply px-1 bg-yellow-200 border border-gray-400 rounded whitespace-nowrap;
+    @apply px-1 bg-yellow-200 border border-gray-400 rounded whitespace-nowrap dark:bg-yellow-700;
   }
+}
+
+.rule-list-header {
+  @apply flex items-center p-1 border-b border-gray-200 dark:border-gray-600;
 }
 
 .rule-item {
   @apply px-2 py-1 rounded border border-transparent;
   &:hover {
-    @apply border-gray-300;
-  }
-  > form {
-    grid-template-columns:
+    @apply border-gray-300 dark:border-gray-600;
   }
 }
 
@@ -100,10 +110,14 @@ select {
   }
 }
 
+.nav {
+  @apply flex flex-col w-1/4 max-w-[16rem] mr-2 pr-2 border-r border-gray-200 dark:border-gray-600;
+}
+
 .nav-sep {
   @apply mt-2 mb-1;
   &-title {
-    @apply uppercase text-gray-600;
+    @apply uppercase text-gray-600 dark:text-gray-400;
   }
   button {
     @apply py-0;
@@ -113,10 +127,10 @@ select {
 .nav-item {
   @apply flex items-center px-2 py-1 rounded cursor-pointer;
   &:hover {
-    @apply bg-gray-100;
+    @apply bg-gray-100 dark:bg-gray-800;
   }
   &.active {
-    @apply bg-gray-200;
+    @apply bg-gray-200 dark:bg-gray-700;
   }
   &-status {
     @apply w-3 h-3 mr-1 rounded bg-gray-500;
@@ -127,14 +141,14 @@ select {
 }
 
 .dropdown-menu {
-  @apply bg-white rounded border border-gray-400;
+  @apply bg-white rounded border border-gray-400 dark:bg-gray-900 dark:border-gray-600;
   > div {
     @apply px-2 py-1 cursor-pointer;
     &:hover {
-      @apply bg-gray-200;
+      @apply bg-gray-200 dark:bg-gray-800;
     }
     &.sep {
-      @apply p-0 border-b border-gray-400;
+      @apply p-0 border-b border-gray-400 dark:border-gray-600;
     }
   }
 }

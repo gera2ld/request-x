@@ -1,6 +1,6 @@
 <template>
-  <div class="rule flex flex-col" v-if="current">
-    <div class="flex items-center p-1 border-b border-gray-200">
+  <div class="flex flex-col" v-if="current">
+    <div class="rule-list-header">
       <button v-if="!current.subscribeUrl" @click.prevent="onNew">
         Add new rule
       </button>

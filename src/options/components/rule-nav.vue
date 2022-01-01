@@ -1,5 +1,5 @@
 <template>
-  <div class="nav flex flex-col w-64 mr-2 pr-2 border-r border-gray-200">
+  <div class="nav">
     <div class="flex-1 overflow-y-auto">
       <div class="nav-sep nav-sep-title">Settings</div>
       <a

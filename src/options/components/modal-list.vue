@@ -1,19 +1,15 @@
 <template>
   <VlModal :show="!!store.editList" @close="onListCancel" transition="fade">
-    <form
-      class="w-1/2 mx-auto p-2 bg-white"
-      v-if="store.editList"
-      @submit.prevent="onListSave"
-    >
+    <form class="modal" v-if="store.editList" @submit.prevent="onListSave">
       <h3 class="font-bold mb-2" v-text="modalTitle" />
-      <div class="nav-modal-group" v-if="!store.editList.isSubscribed">
+      <div class="modal-group" v-if="!store.editList.isSubscribed">
         <div>Name:</div>
         <input
           v-model="store.editList.name"
           :placeholder="store.editList.defaultName"
         />
       </div>
-      <div class="nav-modal-group" v-if="store.editList.isSubscribed">
+      <div class="modal-group" v-if="store.editList.isSubscribed">
         <div>Subscribe URL:</div>
         <input
           :class="{ error: errors.subscribeUrl }"
