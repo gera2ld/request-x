@@ -14,13 +14,13 @@
           ref="method"
         />
         <div class="form-hint">
-          <div>*</div>
-          <div>GET</div>
-          <div>POST</div>
-          <div>HEAD</div>
-          <div>PUT</div>
-          <div>PATCH</div>
-          <div>DELETE</div>
+          <div
+            class="cursor-pointer hover:font-bold"
+            v-for="method in methodList"
+            :key="method"
+            v-text="method"
+            @click="input.method = method"
+          ></div>
         </div>
       </div>
       <div :class="{ error: errors.url }">
@@ -110,6 +110,8 @@ import {
 } from 'vue';
 import { HttpHeaderItem, RequestData } from '#/types';
 import { isValidMethod, isValidPattern, isValidTarget, store } from '../util';
+
+const methodList = ['*', 'GET', 'POST', 'HEAD', 'PUT', 'PATCH', 'DELETE'];
 
 function stringifyHeaders(headers?: HttpHeaderItem[]) {
   return (
@@ -225,6 +227,7 @@ export default defineComponent({
       errors,
       badges,
       refMethod,
+      methodList,
       onMethodInput,
       onEdit,
       onRemove,
