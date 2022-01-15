@@ -20,7 +20,6 @@ export const store = reactive({
   features: FeatureToggles;
 });
 window.addEventListener('hashchange', updateRoute);
-updateRoute();
 
 export function updateRoute() {
   store.route = window.location.hash.slice(1).split('/').filter(Boolean);

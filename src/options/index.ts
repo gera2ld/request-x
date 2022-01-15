@@ -1,13 +1,16 @@
 import { createApp } from 'vue';
 import browser from '#/common/browser';
 import { ListData } from '#/types';
-import { store, setRoute, isRoute } from './util';
+import { store, setRoute, isRoute, updateRoute } from './util';
 import App from './components/app.vue';
 import './style.css';
 
 browser.runtime.sendMessage({ cmd: 'GetLists' }).then((data) => {
   store.lists = data;
-  setRoute();
+  updateRoute();
+  if (!isRoute('lists') && !isRoute('settings')) {
+    setRoute();
+  }
 });
 browser.runtime.sendMessage({ cmd: 'GetData' }).then(({ config, features }) => {
   store.config = config;
