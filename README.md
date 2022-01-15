@@ -10,6 +10,7 @@ Supported browsers:
 - Brave
 - Edge
 - Firefox (not officially released)
+- Kiwi Browser (not all features)
 - Other Chromium-based browsers
 
 ## Installation
@@ -23,6 +24,7 @@ Supported browsers:
 - Easy to share your lists with others
 - Redirect requests
 - Modify headers
+- Modify cookie properties like `SameSite`
 
 ## Use cases
 
@@ -30,6 +32,7 @@ Supported browsers:
 - Block unwanted contents in an extremely flexible way
 - Set authorization header to avoid inputing username/password again and again
 - Set CORS header to allow certain cross-site requests without server changes
+- Change `SameSite` for old services to work on latest browsers
 - ...
 
 ## Screenshots
