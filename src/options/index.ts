@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import browser from '#/common/browser';
 import { ListData } from '#/types';
-import { store, setRoute, isRoute, updateRoute } from './util';
+import { store, setRoute, isRoute, updateRoute, getData } from './util';
 import App from './components/app.vue';
 import './style.css';
 
@@ -12,10 +12,7 @@ browser.runtime.sendMessage({ cmd: 'GetLists' }).then((data) => {
     setRoute();
   }
 });
-browser.runtime.sendMessage({ cmd: 'GetData' }).then(({ config, features }) => {
-  store.config = config;
-  store.features = features;
-});
+getData();
 
 const commands = {
   UpdatedList(data: ListData) {

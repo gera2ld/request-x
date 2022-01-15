@@ -136,6 +136,12 @@ textarea {
       @apply bg-green-600;
     }
   }
+  &-unsupported {
+    @apply py-1 px-8;
+    .unsupported {
+      @apply text-gray-400 dark:text-gray-500;
+    }
+  }
 }
 
 .nav-item {

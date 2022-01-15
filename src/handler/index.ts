@@ -20,7 +20,8 @@ const config = new ObjectStorage<ConfigStorage>('config', {
   badge: '',
 });
 const features: FeatureToggles = {
-  responseHeaders: true,
+  responseHeaders: false,
+  cookies: false,
 };
 
 loadLists();
@@ -128,9 +129,9 @@ try {
     // TODO only include 'extraHeaders' when necessary
     ['blocking', 'responseHeaders', 'extraHeaders']
   );
+  features.responseHeaders = true;
 } catch {
   // Some browsers may not support `responseHeaders` and `extraHeaders`
-  features.responseHeaders = false;
   console.info('Disabled modification of response headers.');
 }
 
@@ -219,6 +220,9 @@ const commands = {
       count: 0,
     });
   },
+  SetUpCookies() {
+    setUpCookies();
+  },
 };
 browser.runtime.onMessage.addListener(async (req, src) => {
   const func = commands[req.cmd];
@@ -249,8 +253,22 @@ browser.runtime.onConnect.addListener((port) => {
 
 let processing = false;
 const updates = new Map<string, browser.Cookies.SetDetailsType>();
+const updateCookiesLater = debounce(updateCookies, 100);
+setUpCookies();
 
-browser.cookies.onChanged.addListener((changeInfo) => {
+function setUpCookies() {
+  if (features.cookies) return;
+  try {
+    browser.cookies.onChanged.addListener(handleCookieChange);
+    features.cookies = true;
+  } catch {
+    // ignore
+  }
+}
+
+function handleCookieChange(
+  changeInfo: browser.Cookies.OnChangedChangeInfoType
+) {
   if (['expired', 'evicted'].includes(changeInfo.cause)) return;
   if (processing) return;
   const result = lists.cookie.match(changeInfo, 'onCookieChange');
@@ -288,9 +306,7 @@ browser.cookies.onChanged.addListener((changeInfo) => {
     );
     updateCookiesLater();
   }
-});
-
-const updateCookiesLater = debounce(updateCookies, 100);
+}
 
 async function updateCookies() {
   if (processing) return;

@@ -8,7 +8,7 @@ export const store = reactive({
   editList: null,
   route: [],
   config: null,
-  features: null,
+  features: {},
 } as {
   lists: { [key: string]: ListData[] };
   editList: {
@@ -111,4 +111,12 @@ export function blob2Text(blob: Blob) {
 
 export function getName(list: ListData) {
   return list.name || 'No name';
+}
+
+export async function getData() {
+  const { config, features } = await browser.runtime.sendMessage({
+    cmd: 'GetData',
+  });
+  store.config = config;
+  store.features = features;
 }

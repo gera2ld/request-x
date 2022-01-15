@@ -8,6 +8,7 @@ export interface ConfigStorage {
 
 export interface FeatureToggles {
   responseHeaders?: boolean;
+  cookies?: boolean;
 }
 
 export interface LogItem {

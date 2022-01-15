@@ -32,4 +32,5 @@ permissions:
   - webRequestBlocking
   - storage
   - alarms
+optional_permissions:
   - cookies
