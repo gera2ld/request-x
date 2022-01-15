@@ -1,13 +1,13 @@
 import { createApp } from 'vue';
 import browser from '#/common/browser';
 import { ListData } from '#/types';
-import { store, setRoute } from './util';
+import { store, setRoute, isRoute } from './util';
 import App from './components/app.vue';
 import './style.css';
 
 browser.runtime.sendMessage({ cmd: 'GetLists' }).then((data) => {
   store.lists = data;
-  setRoute(`lists/${data[0]?.id}`);
+  setRoute();
 });
 browser.runtime.sendMessage({ cmd: 'GetData' }).then(({ config, features }) => {
   store.config = config;
@@ -16,17 +16,25 @@ browser.runtime.sendMessage({ cmd: 'GetData' }).then(({ config, features }) => {
 
 const commands = {
   UpdatedList(data: ListData) {
-    const i = store.lists.findIndex((item) => item.id === data.id);
+    const group = store.lists[data.type];
+    if (!group) return;
+    const i = group.findIndex((item) => item.id === data.id);
     if (i < 0) {
-      store.lists.push(data);
+      group.push(data);
     } else {
-      store.lists[i] = data;
+      group[i] = data;
     }
   },
-  RemovedList(id: number) {
-    const i = store.lists.findIndex((item) => item.id === id);
-    if (i < 0) return;
-    store.lists.splice(i, 1);
+  RemovedList({ type, id }: { type: ListData['type']; id: number }) {
+    const group = store.lists[type];
+    const i = group?.findIndex((item) => item.id === id);
+    if (i >= 0) {
+      group.splice(i, 1);
+      if (isRoute('lists', type, id)) {
+        const next = group[Math.min(group.length - 1, i)]?.id;
+        setRoute(next ? `lists/${type}/${next}` : undefined);
+      }
+    }
   },
 };
 browser.runtime.onMessage.addListener((req, src) => {

@@ -18,27 +18,54 @@ export interface LogItem {
   requestIds: Set<string>;
 }
 
-export interface ListData {
+export interface ListMeta {
   id: number;
   name: string;
   title: string;
   subscribeUrl: string;
   lastUpdated: number;
   enabled: boolean;
-  rules: RuleData[];
 }
+
+export interface RequestListData extends ListMeta {
+  type: 'request';
+  rules: RequestData[];
+}
+
+export interface CookieListData extends ListMeta {
+  type: 'cookie';
+  rules: CookieData[];
+}
+
+export type ListData = RequestListData | CookieListData;
+export type RuleData = RequestData | CookieData;
 
 export interface HttpHeaderItem {
   name: string;
   value?: string;
 }
 
-export interface RuleData {
+export interface RequestData {
   method: string;
   url: string;
+  /**
+   * `-` for blocking, `=` for keeping, otherwise redirection
+   */
   target: string;
   requestHeaders?: HttpHeaderItem[];
   responseHeaders?: HttpHeaderItem[];
+}
+
+export interface CookieData {
+  url: string;
+  name: string;
+  sameSite?: SameSiteStatus;
+  httpOnly?: boolean;
+  secure?: boolean;
+  /**
+   * 0 for session cookie, -1 for removing, otherwise overwrites expiration date.
+   */
+  ttl?: number;
 }
 
 export interface RequestDetails {
@@ -50,7 +77,26 @@ export interface RequestDetails {
   responseHeaders?: HttpHeaderItem[];
 }
 
-export type RuleMatchResult =
+export type SameSiteStatus = 'no_restriction' | 'lax' | 'strict';
+
+export interface CookieDetails {
+  cause: string;
+  cookie: {
+    domain: string;
+    expirationDate?: number;
+    hostOnly: boolean;
+    httpOnly: boolean;
+    name: string;
+    path: string;
+    sameSite: SameSiteStatus;
+    secure: boolean;
+    session: boolean;
+    value: string;
+  };
+  removed: boolean;
+}
+
+export type RequestMatchResult =
   import('webextension-polyfill').WebRequest.BlockingResponse & {
     payload?: {
       requestHeaders?: {
@@ -64,11 +110,18 @@ export type RuleMatchResult =
     };
   };
 
+export interface CookieMatchResult {
+  sameSite?: SameSiteStatus;
+  httpOnly?: boolean;
+  secure?: boolean;
+  expirationDate?: number;
+}
+
 export interface InterceptionData {
   requestId: string;
   method: string;
   url: string;
-  result?: RuleMatchResult;
+  result?: RequestMatchResult;
 }
 
 export interface PortMessage<T> {

@@ -4,42 +4,38 @@ import { ListData, ConfigStorage, FeatureToggles } from '#/types';
 import browser from '#/common/browser';
 
 export const store = reactive({
-  lists: [],
+  lists: {},
   editList: null,
-  route: {},
+  route: [],
   config: null,
   features: null,
 } as {
-  lists: ListData[];
+  lists: { [key: string]: ListData[] };
   editList: {
     editing?: boolean;
     isSubscribed?: boolean;
   } & Partial<ListData>;
-  route: {
-    group: string;
-    id: string;
-  };
+  route: string[];
   config: ConfigStorage;
   features: FeatureToggles;
 });
 window.addEventListener('hashchange', updateRoute);
-setRoute('settings/general');
+updateRoute();
 
 export function updateRoute() {
-  const [group, id] = window.location.hash.slice(1).split('/');
-  store.route = {
-    group,
-    id,
-  };
+  store.route = window.location.hash.slice(1).split('/').filter(Boolean);
 }
 
-export function setRoute(value: string) {
+export function setRoute(value = 'settings/general') {
   window.location.hash = value;
 }
 
-export function isRoute(group: string, id: number | string) {
+export function isRoute(...args: (string | number)[]) {
   const { route } = store;
-  return route.group === group && `${route.id}` === `${id}`;
+  for (let i = 0; i < args.length; i += 1) {
+    if (route[i] != args[i]) return false;
+  }
+  return true;
 }
 
 export function dump(list: Partial<ListData>) {
@@ -49,16 +45,16 @@ export function dump(list: Partial<ListData>) {
   });
 }
 
-export function remove(id: number) {
+export function remove(type: string, id: number) {
   return browser.runtime.sendMessage({
     cmd: 'RemoveList',
-    data: id,
+    data: { id, type },
   });
 }
 
 export function setStatus(item: ListData, enabled: boolean) {
   item.enabled = enabled;
-  dump(pick(item, ['id', 'enabled']));
+  dump(pick(item, ['id', 'type', 'enabled']));
 }
 
 export function isValidMethod(method: string) {

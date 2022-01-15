@@ -1,16 +1,24 @@
-import { RuleData, RequestDetails, RuleMatchResult } from '#/types';
+import {
+  CookieData,
+  CookieDetails,
+  CookieMatchResult,
+  RequestData,
+  RequestDetails,
+  RequestMatchResult,
+} from '#/types';
+import { pick } from 'lodash-es';
+import { getUrl } from './util';
 
 const NEVER_MATCH = /^:NEVER_MATCH/;
+const MATCH_ALL = /.*/;
 const PREFIX_REMOVE = '!';
+const RE_MATCH_PATTERN = /^([^:]+):\/\/([^/]*)(\/.*)$/;
 
 function str2re(str: string) {
   return str.replace(/([.?/])/g, '\\$1').replace(/\*/g, '.*?');
 }
 
-function tester(rule: string) {
-  if (rule === '<all_urls>') {
-    return /.*/;
-  }
+function loadRegExp(rule: string) {
   if (rule.startsWith('/') && rule.endsWith('/')) {
     try {
       return new RegExp(rule.slice(1, -1));
@@ -18,8 +26,13 @@ function tester(rule: string) {
       return NEVER_MATCH;
     }
   }
-  const RE = /^([^:]+):\/\/([^/]*)(\/.*)$/;
-  let [, scheme, host, path] = rule.match(RE) || [];
+}
+
+function urlTester(rule: string) {
+  if (rule === '<all_urls>') return MATCH_ALL;
+  const re = loadRegExp(rule);
+  if (re) return re;
+  let [, scheme, host, path] = rule.match(RE_MATCH_PATTERN) || [];
   if (!scheme) return NEVER_MATCH;
   if (scheme === '*') scheme = '[^:]+';
   if (host === '*') host = '[^/]+';
@@ -37,26 +50,37 @@ function fill(pattern: string, matches: string[]) {
   });
 }
 
-export class Rule {
-  constructor(private data: RuleData) {}
+function textTester(rule: string) {
+  if (!rule) return MATCH_ALL;
+  const re = loadRegExp(rule);
+  if (re) return re;
+  return new RegExp(`^${str2re(rule)}$`);
+}
 
+export abstract class BaseRule<T> {
+  constructor(protected data: T) {}
+
+  abstract dump(): T;
+}
+
+export class RequestRule extends BaseRule<RequestData> {
   testMethod(method: string) {
     return ['*', method].includes(this.data.method);
   }
 
-  match(
+  matchCallback(
     details: RequestDetails,
-    callback: (matches: RegExpMatchArray) => void | RuleMatchResult
+    callback: (matches: RegExpMatchArray) => void | RequestMatchResult
   ) {
     if (!this.testMethod(details.method)) return;
-    const matches = details.url.match(tester(this.data.url));
+    const matches = details.url.match(urlTester(this.data.url));
     if (!matches) return;
     (matches as any).method = details.method;
     return callback(matches);
   }
 
   onBeforeRequest(details: RequestDetails) {
-    return this.match(details, (matches) => {
+    return this.matchCallback(details, (matches) => {
       let { target } = this.data;
       if (target === '=') return null;
       if (!target || target === '-') return { cancel: true };
@@ -66,7 +90,7 @@ export class Rule {
   }
 
   onBeforeSendHeaders(details: RequestDetails) {
-    return this.match(details, (matches) => {
+    return this.matchCallback(details, (matches) => {
       const { requestHeaders } = this.data;
       if (!requestHeaders) return;
       const added = [];
@@ -102,7 +126,7 @@ export class Rule {
   }
 
   onHeadersReceived(details: RequestDetails) {
-    return this.match(details, (matches) => {
+    return this.matchCallback(details, (matches) => {
       const { responseHeaders } = this.data;
       if (!responseHeaders) return;
       const added = [];
@@ -137,11 +161,55 @@ export class Rule {
     });
   }
 
-  dump(): RuleData {
+  dump(): RequestData {
     return {
       method: '*',
       url: '*://*/*',
       target: '',
+      ...this.data,
+    };
+  }
+}
+
+export class CookieRule extends BaseRule<CookieData> {
+  matchCallback(
+    details: CookieDetails,
+    callback: (matches: RegExpMatchArray) => void | CookieMatchResult
+  ) {
+    if (details.cause !== 'explicit') return;
+    const { cookie } = details;
+    const url = getUrl(cookie);
+    const matches = url.match(urlTester(this.data.url));
+    if (!matches) return;
+    if (this.data.name && !cookie.name.match(textTester(this.data.name)))
+      return;
+    return callback(matches);
+  }
+
+  onCookieChange(details: CookieDetails): void | CookieMatchResult {
+    return this.matchCallback(details, () => {
+      const update: CookieMatchResult = pick(this.data, [
+        'sameSite',
+        'httpOnly',
+        'secure',
+      ]);
+      const { ttl } = this.data;
+      if (details.removed && !(ttl > 0)) {
+        // If cookie is removed and no positive ttl, ignore since change will not persist
+        return;
+      }
+      if (ttl != null) {
+        // If ttl is 0, set to undefined to mark the cookie as a session cookie
+        update.expirationDate = ttl ? Date.now() + ttl : undefined;
+      }
+      if (update.sameSite === 'no_restriction') update.secure = true;
+      return update;
+    });
+  }
+
+  dump(): CookieData {
+    return {
+      url: '*://*/*',
       ...this.data,
     };
   }

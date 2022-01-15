@@ -28,20 +28,12 @@ button {
   }
 }
 
-.input {
-  @apply relative;
-  > input {
-    @apply pl-8;
-  }
-  &-icon {
-    @apply absolute w-8 top-0 left-0 h-full text-gray-500;
-  }
-}
-
 select,
-input,
+input[type=text],
+input[type=search],
+input[type=number],
 textarea {
-  @apply outline-none rounded border border-gray-400 overflow-hidden px-2 py-1 dark:border-gray-600 dark:bg-gray-800;
+  @apply block w-full outline-none rounded border border-gray-400 overflow-hidden px-2 py-1 dark:border-gray-600 dark:bg-gray-800;
   &:focus {
     @apply border-gray-500 dark:border-gray-400;
   }
@@ -57,9 +49,14 @@ textarea {
   }
 }
 
-input,
-textarea {
-  @apply block w-full;
+.input {
+  @apply relative;
+  > input {
+    @apply pl-8;
+  }
+  &-icon {
+    @apply absolute w-8 top-0 left-0 h-full text-gray-500;
+  }
 }
 
 .fade-enter-active,
@@ -80,9 +77,6 @@ textarea {
 
 .modal-group {
   @apply text-left;
-  > input {
-    @apply w-full;
-  }
   ~ .modal-group {
     @apply mt-1;
   }
@@ -121,13 +115,26 @@ textarea {
   @apply flex flex-col w-1/4 max-w-[16rem] mr-2 pr-2 border-r border-gray-200 dark:border-gray-600;
 }
 
-.nav-sep {
-  @apply mt-2 mb-1;
+.nav-section {
+  @apply mt-2;
   &-title {
     @apply uppercase text-gray-600 dark:text-gray-400;
   }
-  button {
-    @apply py-0;
+}
+
+.list-section {
+  @apply mt-2;
+  &-title {
+    @apply mb-1 text-gray-600 dark:text-gray-400;
+  }
+  &-empty {
+    @apply py-1 px-8 italic text-gray-400 dark:text-gray-600;
+  }
+  &-status {
+    @apply w-3 h-3 mr-1 rounded bg-gray-500;
+    .enabled > & {
+      @apply bg-green-600;
+    }
   }
 }
 
@@ -138,12 +145,6 @@ textarea {
   }
   &.active {
     @apply bg-gray-200 dark:bg-gray-700;
-  }
-  &-status {
-    @apply w-3 h-3 mr-1 rounded bg-gray-500;
-    .enabled > & {
-      @apply bg-green-600;
-    }
   }
 }
 

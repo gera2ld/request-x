@@ -32,3 +32,4 @@ permissions:
   - webRequestBlocking
   - storage
   - alarms
+  - cookies

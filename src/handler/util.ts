@@ -62,3 +62,18 @@ export class ObjectStorage<T extends { [key: string]: any }> {
     await this.dump();
   }
 }
+
+export function getUrl(cookie: {
+  secure: boolean;
+  domain: string;
+  path: string;
+}) {
+  const url = [
+    cookie.secure ? 'https:' : 'http:',
+    '//',
+    cookie.domain.startsWith('.') ? 'www' : '',
+    cookie.domain,
+    cookie.path,
+  ].join('');
+  return url;
+}

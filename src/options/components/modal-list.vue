@@ -2,9 +2,31 @@
   <VlModal :show="!!store.editList" @close="onListCancel" transition="fade">
     <form class="modal" v-if="store.editList" @submit.prevent="onListSave">
       <h3 class="font-bold mb-2" v-text="modalTitle" />
+      <div class="modal-group" v-if="!store.editList.id">
+        <div>Type:</div>
+        <div class="flex">
+          <label
+            class="flex mr-4 items-center"
+            v-for="type in ['request', 'cookie']"
+            :key="type"
+          >
+            <input
+              class="mr-1"
+              type="radio"
+              :value="type"
+              v-model="store.editList.type"
+            />
+            {{ formatType(type) }}
+          </label>
+        </div>
+      </div>
+      <div class="modal-group" v-else>
+        <div>Type: {{ formatType(store.editList.type) }}</div>
+      </div>
       <div class="modal-group" v-if="!store.editList.isSubscribed">
         <div>Name:</div>
         <input
+          type="text"
           v-model="store.editList.name"
           :placeholder="store.editList.defaultName"
         />
@@ -12,6 +34,7 @@
       <div class="modal-group" v-if="store.editList.isSubscribed">
         <div>Subscribe URL:</div>
         <input
+          type="text"
           :class="{ error: errors.subscribeUrl }"
           :value="store.editList.subscribeUrl"
           :readonly="store.editList.isEdit"
@@ -61,9 +84,11 @@ export default defineComponent({
 
     const onListSave = () => {
       if (Object.values(errors.value).some(Boolean)) return;
-      dump(pick(store.editList, ['id', 'name', 'subscribeUrl']));
+      dump(pick(store.editList, ['id', 'name', 'type', 'subscribeUrl']));
       onListCancel();
     };
+
+    const formatType = (type: string) => type[0].toUpperCase() + type.slice(1);
 
     return {
       store,
@@ -71,6 +96,7 @@ export default defineComponent({
       modalTitle,
       onListCancel,
       onListSave,
+      formatType,
     };
   },
 });

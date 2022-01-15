@@ -39,8 +39,9 @@
       </VlDropdown>
     </div>
     <div class="flex-1 pt-1 overflow-y-auto">
-      <rule-item
+      <component
         v-for="(rule, index) in filteredRules"
+        :is="RuleItem"
         :key="index"
         :rule="rule"
         :extra="index"
@@ -51,7 +52,8 @@
         @submit="onSubmit"
         @cancel="onCancel"
       />
-      <rule-item
+      <component
+        :is="RuleItem"
         v-if="newRule"
         :rule="newRule"
         :editing="true"
@@ -95,25 +97,36 @@ import {
 import { debounce, pick } from 'lodash-es';
 import VlDropdown from 'vueleton/lib/dropdown';
 import browser from '#/common/browser';
-import { RuleData } from '#/types';
+import { RuleData, ListData } from '#/types';
 import { store, dump, remove, getName, setRoute, setStatus } from '../util';
-import RuleItem from './rule-item.vue';
+import RequestItem from './request-item.vue';
+import CookieItem from './cookie-item.vue';
+
+const ruleItemMap = {
+  request: RequestItem,
+  cookie: CookieItem,
+};
 
 export default defineComponent({
   components: {
     VlDropdown,
-    RuleItem,
   },
   setup() {
     const filter = ref('');
     const filteredRules = ref<RuleData[]>([]);
 
+    const type = computed<ListData['type']>(
+      () => store.route[1] as ListData['type']
+    );
+
+    const RuleItem = computed(() => ruleItemMap[type.value]);
+
     const current = computed(() => {
-      const { group, id } = store.route;
-      if (group === 'lists') {
-        return store.lists.find((item) => `${item.id}` === `${id}`);
-      }
-      return null;
+      const [page, , sid] = store.route;
+      if (page !== 'lists') return null;
+      const id = +sid;
+      const list = store.lists[type.value]?.find((item) => item.id === id);
+      return list;
     });
 
     const editable = computed(
@@ -124,16 +137,12 @@ export default defineComponent({
       current.value?.enabled ? 'Disable' : 'Enable'
     );
 
-    const newRule = ref<{ editable: boolean } & Partial<RuleData>>(null);
+    const newRule = ref<Partial<RuleData>>(null);
 
     const editing = ref<RuleData>(null);
 
     const onNew = () => {
-      newRule.value = {
-        editable: false,
-        method: '*',
-        target: '=',
-      };
+      newRule.value = {};
       editing.value = newRule.value as RuleData;
     };
 
@@ -152,39 +161,8 @@ export default defineComponent({
       save();
     };
 
-    const parseHeaders = (headers: string) =>
-      headers
-        .split('\n')
-        .filter(Boolean)
-        .map((line: string) => {
-          let i = line.indexOf(':');
-          if (i < 0) i = line.length;
-          const name = line.slice(0, i).trim();
-          const value = line.slice(i + 1).trim();
-          return { name, value };
-        });
-
-    const onSubmit = ({
-      extra,
-      input: { method, url, target, reqHeaders, resHeaders },
-    }: {
-      extra: number;
-      input: {
-        method: string;
-        url: string;
-        target: string;
-        reqHeaders: string;
-        resHeaders: string;
-      };
-    }) => {
-      const rule: RuleData = {
-        method,
-        url,
-        target,
-        requestHeaders: parseHeaders(reqHeaders),
-        responseHeaders: parseHeaders(resHeaders),
-      };
-      const { rules } = current.value;
+    const onSubmit = ({ extra, rule }: { extra: number; rule: RuleData }) => {
+      const rules = current.value.rules as RuleData[];
       if (extra < 0) {
         rules.push(rule);
       } else {
@@ -195,11 +173,12 @@ export default defineComponent({
     };
 
     const save = () => {
-      dump(pick(current.value, ['id', 'rules']));
+      dump(pick(current.value, ['id', 'type', 'rules']) as Partial<ListData>);
     };
 
     const onListEdit = () => {
       store.editList = {
+        type: type.value,
         ...current.value,
         editing: true,
       };
@@ -218,18 +197,20 @@ export default defineComponent({
     };
 
     const onListFetch = () => {
+      const { id } = current.value;
       browser.runtime.sendMessage({
         cmd: 'FetchList',
-        data: current.value.id,
+        data: { type: type.value, id },
       });
     };
 
     const onListRemove = () => {
-      remove(current.value.id);
+      remove(type.value, current.value.id);
     };
 
     const onListExport = () => {
       const data = {
+        type: type.value,
         name: getName(current.value),
         rules: current.value.rules,
       };
@@ -247,10 +228,11 @@ export default defineComponent({
 
     const onListFork = async () => {
       const data = {
+        type: type.value,
         name: `${current.value.name || 'No name'} (forked)`,
         rules: current.value.rules,
       };
-      const id = await dump(data);
+      const id = await dump(data as Partial<ListData>);
       setRoute(`lists/${id}`);
     };
 
@@ -259,7 +241,7 @@ export default defineComponent({
     };
 
     const updateList = () => {
-      let rules = current.value?.rules;
+      let rules = current.value?.rules as RuleData[];
       if (rules && filter.value) {
         rules = rules.filter((rule) => rule.url?.includes(filter.value));
       }
@@ -269,14 +251,20 @@ export default defineComponent({
 
     watchEffect(onCancel);
 
-    watch([current, filter], updateListLater);
+    watch(current, () => {
+      onCancel();
+      updateList();
+    });
+    watch(filter, updateListLater);
 
     onMounted(updateList);
 
     return {
+      RuleItem,
       filter,
       filteredRules,
       store,
+      type,
       current,
       editable,
       labelToggle,

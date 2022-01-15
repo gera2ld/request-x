@@ -6,13 +6,13 @@ import {
   ListData,
   InterceptionData,
   PortMessage,
-  RuleMatchResult,
+  RequestMatchResult,
   RequestDetails,
   FeatureToggles,
 } from '#/types';
-import { omit } from 'lodash-es';
-import { List } from './list';
-import { getActiveTab, ObjectStorage } from './util';
+import { debounce, omit, pick } from 'lodash-es';
+import { RequestList, lists, loadLists, CookieList, fetchLists } from './list';
+import { getActiveTab, getUrl, ObjectStorage } from './util';
 
 const logs: { [key: number]: LogItem } = {};
 const global = new ObjectStorage<GlobalStorage>('global', { count: 0 });
@@ -23,7 +23,9 @@ const features: FeatureToggles = {
   responseHeaders: true,
 };
 
-function pushLog(details: RequestDetails, result?: RuleMatchResult) {
+loadLists();
+
+function pushLog(details: RequestDetails, result?: RequestMatchResult) {
   const { tabId, method, url, requestId } = details;
   let log = logs[tabId];
   if (!log) {
@@ -87,10 +89,14 @@ const matchedRequestIds = new Set<string>();
 
 function getRequestHandler(type: string) {
   return (details: RequestDetails) => {
-    const result = List.match(details, type);
+    const result = lists.request.match(details, type);
     if (result) {
       matchedRequestIds.add(details.requestId);
-      console.info(`matched: ${details.method} ${details.url}`, type, result);
+      console.info(
+        `[request] matched: ${details.method} ${details.url}`,
+        type,
+        result
+      );
       pushLog(details, result);
       return omit(result, 'payload');
     }
@@ -157,22 +163,33 @@ browser.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
 
 const commands = {
   GetLists: () => {
-    const result = List.get();
-    return result;
+    return {
+      request: lists.request.get(),
+      cookie: lists.cookie.get(),
+    };
   },
-  RemoveList: (id: number) => List.remove(id),
-  UpdateList: async (data: Partial<ListData>) => {
-    let list: List;
+  RemoveList: async ({ type, id }: { type: ListData['type']; id: number }) => {
+    await lists[type]?.remove(id);
+    browser.runtime.sendMessage({
+      cmd: 'RemovedList',
+      data: { type, id },
+    });
+  },
+  UpdateList: async (data: Partial<ListData> & { type: ListData['type'] }) => {
+    const group = lists[data.type || 'request'];
+    if (!group) return -1;
+    let list: RequestList | CookieList;
     if (data.id) {
-      list = List.find(data.id);
+      list = group.find(data.id);
       await list.update(data);
     } else {
-      list = await List.create(data);
+      list = await group.create(data);
     }
     return list.id;
   },
-  FetchLists: () => List.fetch(),
-  FetchList: (id: number) => List.find(id).fetch(),
+  FetchLists: () => fetchLists(),
+  FetchList: ({ type, id }: { type: ListData['type']; id: number }) =>
+    lists[type]?.find(id)?.fetch(),
   async GetCount() {
     const tab = await getActiveTab();
     return {
@@ -209,15 +226,13 @@ browser.runtime.onMessage.addListener(async (req, src) => {
   return func(req.data, src);
 });
 
-List.load();
-
 browser.alarms.create({
   delayInMinutes: 1,
   periodInMinutes: 120,
 });
 browser.alarms.onAlarm.addListener(() => {
   console.info(new Date().toISOString(), 'Fetching lists...');
-  List.fetch();
+  fetchLists();
 });
 
 const ports = new Map<number, browser.Runtime.Port>();
@@ -231,3 +246,64 @@ browser.runtime.onConnect.addListener((port) => {
     });
   }
 });
+
+let processing = false;
+const updates = new Map<string, browser.Cookies.SetDetailsType>();
+
+browser.cookies.onChanged.addListener((changeInfo) => {
+  if (['expired', 'evicted'].includes(changeInfo.cause)) return;
+  if (processing) return;
+  const result = lists.cookie.match(changeInfo, 'onCookieChange');
+  if (result) {
+    const { cookie } = changeInfo;
+    const hasUpdate = Object.entries(result).some(([key, value]) => {
+      return cookie[key] !== value;
+    });
+    if (!hasUpdate) {
+      console.info(`[cookie] no update: ${cookie.name} ${getUrl(cookie)}`);
+      return;
+    }
+    const details = {
+      url: undefined,
+      ...pick(cookie, [
+        'name',
+        'domain',
+        'path',
+        'httpOnly',
+        'sameSite',
+        'secure',
+        'storeId',
+        'value',
+      ]),
+      ...result,
+    };
+    details.url = getUrl(details);
+    // domain is used to construct url, so we reset it here
+    if (cookie.hostOnly) details.domain = undefined;
+    if (!cookie.session) details.expirationDate = cookie.expirationDate;
+    console.info(`[cookie] matched: ${details.name} ${details.url}`, details);
+    updates.set(
+      [details.storeId, details.url, details.name].join('\n'),
+      details
+    );
+    updateCookiesLater();
+  }
+});
+
+const updateCookiesLater = debounce(updateCookies, 100);
+
+async function updateCookies() {
+  if (processing) return;
+  processing = true;
+  const items = Array.from(updates.values());
+  updates.clear();
+  for (const item of items) {
+    console.info(`[cookie] set: ${item.name} ${item.url}`, item);
+    try {
+      await browser.cookies.set(item);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  processing = false;
+}

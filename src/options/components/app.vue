@@ -2,10 +2,7 @@
   <div class="flex flex-col h-screen px-4">
     <div class="flex flex-1 min-h-0">
       <rule-nav></rule-nav>
-      <rule-body
-        v-if="store.route.group === 'lists'"
-        class="flex-1 min-w-0"
-      ></rule-body>
+      <rule-body v-if="isRoute('lists')" class="flex-1 min-w-0"></rule-body>
       <settings-interface v-if="isRoute('settings', 'general')" class="flex-1">
       </settings-interface>
     </div>

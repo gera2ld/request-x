@@ -108,17 +108,36 @@ import {
   nextTick,
   onMounted,
 } from 'vue';
-import { HttpHeaderItem, RuleData } from '#/types';
+import { HttpHeaderItem, RequestData } from '#/types';
 import { isValidMethod, isValidPattern, isValidTarget, store } from '../util';
+
+function stringifyHeaders(headers?: HttpHeaderItem[]) {
+  return (
+    headers?.map(({ name, value }) => `${name}: ${value}`).join('\n') || ''
+  );
+}
+
+function parseHeaders(headers: string) {
+  return headers
+    .split('\n')
+    .filter(Boolean)
+    .map((line: string) => {
+      let i = line.indexOf(':');
+      if (i < 0) i = line.length;
+      const name = line.slice(0, i).trim();
+      const value = line.slice(i + 1).trim();
+      return { name, value };
+    });
+}
 
 export default defineComponent({
   props: {
     rule: {
-      type: Object as PropType<RuleData>,
+      type: Object as PropType<RequestData>,
     },
     editable: Boolean,
     editing: Boolean,
-    extra: {},
+    extra: Number,
   },
   emits: ['edit', 'remove', 'cancel', 'submit'],
   setup(props, context) {
@@ -134,8 +153,6 @@ export default defineComponent({
     const reset = () => {
       if (!props.editing) return;
       const { rule } = props;
-      const stringifyHeaders = (headers?: HttpHeaderItem[]) =>
-        headers?.map(({ name, value }) => `${name}: ${value}`).join('\n') || '';
       Object.assign(input, {
         method: rule.method,
         url: rule.url,
@@ -189,7 +206,13 @@ export default defineComponent({
       if (Object.values(errors.value).some(Boolean)) return;
       context.emit('submit', {
         extra: props.extra,
-        input,
+        rule: {
+          method: input.method,
+          url: input.url,
+          target: input.target,
+          requestHeaders: parseHeaders(input.reqHeaders),
+          responseHeaders: parseHeaders(input.resHeaders),
+        } as RequestData,
       });
     };
 
