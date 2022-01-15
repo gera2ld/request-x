@@ -176,7 +176,7 @@ const commands = {
     });
   },
   UpdateList: async (data: Partial<ListData> & { type: ListData['type'] }) => {
-    const group = lists[data.type || 'request'];
+    const group = lists[data.type];
     if (!group) return -1;
     let list: RequestList | CookieList;
     if (data.id) {

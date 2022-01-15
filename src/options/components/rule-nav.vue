@@ -62,6 +62,7 @@ export default defineComponent({
       const blob = await loadFile();
       const text = await blob2Text(blob);
       const data = JSON.parse(text);
+      data.type ??= 'request';
       dump(pick(data, ['name', 'type', 'rules']));
     };
 
