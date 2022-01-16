@@ -6,7 +6,7 @@
       <settings-interface v-if="isRoute('settings', 'general')" class="flex-1">
       </settings-interface>
     </div>
-    <footer class="flex py-2">
+    <footer class="footer">
       <div class="flex-1">&copy; Gerald</div>
       <div>
         Links:
