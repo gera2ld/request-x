@@ -37,7 +37,6 @@
           <template #title>Cookie Interception</template>
           <template #unsupported>
             <div class="unsupported">Not supported in this browser.</div>
-            <button @click="onGrantCookies">Grant permission</button>
           </template>
         </ListSection>
       </section>
@@ -50,7 +49,7 @@ import { defineComponent } from 'vue';
 import { pick } from 'lodash-es';
 import VlDropdown from 'vueleton/lib/dropdown';
 import browser from '#/common/browser';
-import { store, dump, loadFile, blob2Text, isRoute, getData } from '../util';
+import { store, dump, loadFile, blob2Text, isRoute } from '../util';
 import ListSection from './list-section.vue';
 
 export default defineComponent({
@@ -87,16 +86,6 @@ export default defineComponent({
       browser.runtime.sendMessage({ cmd: 'FetchLists' });
     };
 
-    const onGrantCookies = async () => {
-      const granted = await browser.permissions.request({
-        permissions: ['cookies'],
-      });
-      if (granted) {
-        await browser.runtime.sendMessage({ cmd: 'SetUpCookies' });
-        await getData();
-      }
-    };
-
     return {
       store,
       isRoute,
@@ -104,7 +93,6 @@ export default defineComponent({
       onListImport,
       onListSubscribe,
       onListFetchAll,
-      onGrantCookies,
     };
   },
 });

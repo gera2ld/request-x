@@ -220,9 +220,6 @@ const commands = {
       count: 0,
     });
   },
-  SetUpCookies() {
-    setUpCookies();
-  },
 };
 browser.runtime.onMessage.addListener(async (req, src) => {
   const func = commands[req.cmd];
