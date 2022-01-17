@@ -200,7 +200,9 @@ export class CookieRule extends BaseRule<CookieData> {
       }
       if (ttl != null) {
         // If ttl is 0, set to undefined to mark the cookie as a session cookie
-        update.expirationDate = ttl ? Date.now() + ttl : undefined;
+        update.expirationDate = ttl
+          ? Math.floor(Date.now() / 1000 + ttl)
+          : undefined;
       }
       if (update.sameSite === 'no_restriction') update.secure = true;
       return update;
