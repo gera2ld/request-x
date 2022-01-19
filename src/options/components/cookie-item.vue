@@ -157,7 +157,7 @@ export default defineComponent({
       Object.assign(input, {
         url: rule.url,
         name: rule.name,
-        sameSite: rule.sameSite || 'unspecified',
+        sameSite: rule.sameSite || '',
         httpOnly: bool2str(rule.httpOnly),
         secure: bool2str(rule.secure),
         ttl: rule.ttl,
