@@ -2,7 +2,7 @@ name: Request X
 version: __VERSION__
 minimum_chrome_version: '50'
 manifest_version: 2
-description: Block or redirect unexpected requests based on methods and URLs.
+description: Intercept requests and cookies by flexible rules.
 author:
   name: Gerald
   url: 'https://gerald.top'

@@ -2,7 +2,10 @@
   <div id="app">
     <div class="flex p-4 items-center text-lg">
       <img class="w-8 mr-4" src="/public/images/icon_48.png" />
-      <div class="flex-1">Request X</div>
+      <div class="flex-1">
+        Request X
+        <span class="version" v-text="version"></span>
+      </div>
       <a class="text-xs" @click.prevent="openDashboard">Dashboard</a>
     </div>
     <div class="card" v-if="store.count">
@@ -29,6 +32,8 @@
 import browser from '#/common/browser';
 import { store } from './util';
 
+const manifest = browser.runtime.getManifest();
+
 export default {
   setup() {
     const openDashboard = () => {
@@ -38,6 +43,7 @@ export default {
     return {
       store,
       openDashboard,
+      version: manifest.version,
     };
   },
 };
