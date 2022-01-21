@@ -8,6 +8,20 @@ import './style.css';
 browser.runtime.sendMessage({ cmd: 'GetLists' }).then((data) => {
   store.lists = data;
   updateRoute();
+  if (isRoute('install')) {
+    const extra: { [key: string]: string } = Array.from(
+      new URLSearchParams(store.route[2] || '').entries()
+    ).reduce((res, [key, value]) => {
+      res[key] = value;
+      return res;
+    }, {});
+    store.editList = {
+      name: '',
+      type: (extra.type as ListData['type']) || 'request',
+      subscribeUrl: store.route[1],
+      isSubscribed: true,
+    };
+  }
   if (!isRoute('lists') && !isRoute('settings')) {
     setRoute();
   }

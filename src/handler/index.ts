@@ -105,7 +105,14 @@ function getRequestHandler(type: string) {
 }
 
 browser.webRequest.onBeforeRequest.addListener(
-  getRequestHandler('onBeforeRequest'),
+  ((handler) => (details) => {
+    const { url } = details;
+    if (url.includes('#:request-x:')) {
+      subscribeUrl(url);
+      return { redirectUrl: 'javascript:void 0' };
+    }
+    return handler(details);
+  })(getRequestHandler('onBeforeRequest')),
   {
     urls: ['<all_urls>'],
   },
@@ -319,4 +326,18 @@ async function updateCookies() {
     }
   }
   processing = false;
+}
+
+function subscribeUrl(url: string) {
+  const [jsonUrl, hash] = url.split('#');
+  const tabUrl = browser.runtime.getURL(
+    '/options/index.html#install/' +
+      [jsonUrl, hash.split('?')[1]]
+        .filter(Boolean)
+        .map(encodeURIComponent)
+        .join('/')
+  );
+  browser.tabs.create({
+    url: tabUrl,
+  });
 }

@@ -22,7 +22,11 @@ export const store = reactive({
 window.addEventListener('hashchange', updateRoute);
 
 export function updateRoute() {
-  store.route = window.location.hash.slice(1).split('/').filter(Boolean);
+  store.route = window.location.hash
+    .slice(1)
+    .split('/')
+    .filter(Boolean)
+    .map(decodeURIComponent);
 }
 
 export function setRoute(value = 'settings/general') {
