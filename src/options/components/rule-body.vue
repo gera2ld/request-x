@@ -2,10 +2,10 @@
   <div class="flex flex-col" v-if="current">
     <div class="rule-list-header">
       <button v-if="!current.subscribeUrl" @click.prevent="onNew">
-        Add new rule
+        + Add new rule
       </button>
       <div v-else class="text-gray-600">
-        You may fork this list before making changes to it
+        You must fork this list before making changes to it
       </div>
       <div class="flex-1"></div>
       <div class="input ml-2 mr-2">
@@ -29,9 +29,7 @@
           <div @click.prevent="onListFetch" v-if="current.subscribeUrl">
             Fetch
           </div>
-          <div @click.prevent="onListFork" v-if="current.subscribeUrl">
-            Fork
-          </div>
+          <div @click.prevent="onListFork">Fork</div>
           <div @click.prevent="onListExport">Export</div>
           <div class="sep"></div>
           <div @click.prevent="onListRemove">Remove</div>
@@ -47,11 +45,24 @@
         :extra="index"
         :editable="editable"
         :editing="editing === rule"
-        @edit="onEdit(rule)"
-        @remove="onRemove(index)"
         @submit="onSubmit"
         @cancel="onCancel"
-      />
+      >
+        <template #buttons>
+          <div class="ml-1" v-if="editable">
+            <button class="py-0 mr-1" @click="onEdit(rule)">Edit</button>
+            <VlDropdown align="right" :closeAfterClick="true">
+              <template v-slot:toggle>
+                <button class="py-0">&mldr;</button>
+              </template>
+              <div class="dropdown-menu w-24">
+                <div @click.prevent="onDuplicate(index)">Duplicate</div>
+                <div @click.prevent="onRemove(index)">Remove</div>
+              </div>
+            </VlDropdown>
+          </div>
+        </template>
+      </component>
       <component
         :is="RuleItem"
         v-if="newRule"
@@ -153,6 +164,13 @@ export default defineComponent({
 
     const onCancel = () => {
       onEdit();
+    };
+
+    const onDuplicate = (index: number) => {
+      const rules = current.value.rules as RuleData[];
+      const rule = { ...rules[index] } as RuleData;
+      rules.splice(index, 0, rule);
+      save();
     };
 
     const onRemove = (index: number) => {
@@ -273,6 +291,7 @@ export default defineComponent({
       onNew,
       onEdit,
       onCancel,
+      onDuplicate,
       onRemove,
       onListEdit,
       onListSubmit,

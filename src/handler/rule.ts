@@ -165,7 +165,7 @@ export class RequestRule extends BaseRule<RequestData> {
     return {
       method: '*',
       url: '*://*/*',
-      target: '',
+      target: '=',
       ...this.data,
     };
   }

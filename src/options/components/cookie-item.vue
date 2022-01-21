@@ -70,10 +70,7 @@
         v-text="badge"
         :key="badge"
       ></div>
-      <div class="ml-1" v-if="editable">
-        <button class="mr-1" @click="onEdit">Edit</button>
-        <button @click="onRemove">Remove</button>
-      </div>
+      <slot name="buttons"></slot>
     </div>
   </div>
 </template>
@@ -135,11 +132,10 @@ export default defineComponent({
     rule: {
       type: Object as PropType<CookieData>,
     },
-    editable: Boolean,
     editing: Boolean,
     extra: Number,
   },
-  emits: ['edit', 'remove', 'cancel', 'submit'],
+  emits: ['cancel', 'submit'],
   setup(props, context) {
     const input = reactive<{
       url?: string;
@@ -179,14 +175,6 @@ export default defineComponent({
       ].filter(Boolean);
     });
 
-    const onEdit = () => {
-      context.emit('edit');
-    };
-
-    const onRemove = () => {
-      context.emit('remove');
-    };
-
     const onCancel = () => {
       context.emit('cancel');
     };
@@ -216,8 +204,6 @@ export default defineComponent({
       badges,
       refMethod,
       sameSiteOptions,
-      onEdit,
-      onRemove,
       onCancel,
       onSubmit,
     };

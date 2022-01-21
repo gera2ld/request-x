@@ -89,10 +89,7 @@
         v-text="badge"
         :key="badge"
       ></div>
-      <div class="ml-1" v-if="editable">
-        <button class="mr-1" @click="onEdit">Edit</button>
-        <button @click="onRemove">Remove</button>
-      </div>
+      <slot name="buttons"></slot>
     </div>
   </div>
 </template>
@@ -137,11 +134,10 @@ export default defineComponent({
     rule: {
       type: Object as PropType<RequestData>,
     },
-    editable: Boolean,
     editing: Boolean,
     extra: Number,
   },
-  emits: ['edit', 'remove', 'cancel', 'submit'],
+  emits: ['cancel', 'submit'],
   setup(props, context) {
     const input = reactive<{
       method?: string;
@@ -158,7 +154,7 @@ export default defineComponent({
       Object.assign(input, {
         method: rule.method,
         url: rule.url,
-        target: rule.target,
+        target: rule.target || '=',
         reqHeaders: stringifyHeaders(rule.requestHeaders),
         resHeaders: stringifyHeaders(rule.responseHeaders),
       });
@@ -172,9 +168,8 @@ export default defineComponent({
         method: !isValidMethod(input.method),
         url: !input.url || !isValidPattern(input.url),
         target:
-          input.target &&
-          !['-', '='].includes(input.target) &&
-          !isValidTarget(input.target),
+          !input.target ||
+          (!['-', '='].includes(input.target) && !isValidTarget(input.target)),
       };
     });
 
@@ -190,14 +185,6 @@ export default defineComponent({
 
     const onMethodInput = (e: InputEvent) => {
       input.method = (e.target as HTMLInputElement).value.toUpperCase();
-    };
-
-    const onEdit = () => {
-      context.emit('edit');
-    };
-
-    const onRemove = () => {
-      context.emit('remove');
     };
 
     const onCancel = () => {
@@ -229,8 +216,6 @@ export default defineComponent({
       refMethod,
       methodList,
       onMethodInput,
-      onEdit,
-      onRemove,
       onCancel,
       onSubmit,
     };
