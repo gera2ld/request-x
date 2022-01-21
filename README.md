@@ -35,6 +35,22 @@ Supported browsers:
 - Change `SameSite` for old services to work on latest browsers
 - ...
 
+## Click and Subscribe
+
+Click on URLs with a magic hash `#:request-x:` to subscribe it:
+
+```
+<a href="https://example.com/path/to/rules.json#:request-x:">Subscribe</a>
+```
+
+Set subscription type as search params within the magic hash:
+
+```
+<a href="https://example.com/path/to/rules.json#:request-x:?type=request">Subscribe My List</a>
+```
+
+Here is an example: [Subscribe](https://gist.github.com/gera2ld/5730305dc9081ec93ccab7a1c7ece5b3/raw/power.json#:request-x:?name=Default&type=request)
+
 ## Screenshots
 
 <img width="331" src="https://user-images.githubusercontent.com/3139113/86558920-4066e300-bf8d-11ea-84d1-29140bdcbeca.png">
