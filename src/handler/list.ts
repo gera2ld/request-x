@@ -163,8 +163,7 @@ export abstract class BaseListManager<
     const i = this.data.indexOf(list);
     this.data.splice(i, 1);
     await removeData(list.key());
-    const ids = this.data.map((item) => item.id);
-    await dumpExactData('lists', ids);
+    dumpLists();
   }
 
   get() {
@@ -189,9 +188,6 @@ export abstract class BaseListManager<
       list.load(item);
       return list;
     });
-    if (!this.data.length) {
-      await this.create({ name: 'Default' });
-    }
   }
 }
 
@@ -221,6 +217,13 @@ export const lists = {
   request: new RequestListManager(),
   cookie: new CookieListManager(),
 };
+
+export async function dumpLists() {
+  const ids = Object.values(lists).flatMap((list) =>
+    list.data.map((item: RequestList | CookieList) => item.id)
+  );
+  await dumpExactData('lists', ids);
+}
 
 export async function loadLists() {
   const ids = await getExactData<number[]>('lists');
