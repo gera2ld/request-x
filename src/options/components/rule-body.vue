@@ -76,17 +76,14 @@
     <footer>
       <div class="mb-1 truncate text-gray-500" v-if="current.subscribeUrl">
         Subscribed from:
-        <span class="text-gray-900" v-text="current.subscribeUrl"></span>
+        <span v-text="current.subscribeUrl"></span>
       </div>
       <div
         class="mb-1 text-gray-500"
         v-if="current.subscribeUrl && current.lastUpdated"
       >
         Last updated at:
-        <span
-          class="text-gray-900"
-          v-text="new Date(current.lastUpdated).toLocaleString()"
-        ></span>
+        <span v-text="new Date(current.lastUpdated).toLocaleString()"></span>
       </div>
       <div>
         <div class="rule-label" v-if="current.subscribeUrl">Subscribed</div>
