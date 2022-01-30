@@ -2,6 +2,7 @@ import { reactive } from 'vue';
 import { pick } from 'lodash-es';
 import { ListData, ConfigStorage, FeatureToggles } from '#/types';
 import browser from '#/common/browser';
+import { reorderList } from '#/common/util';
 
 export const store = reactive({
   lists: {},
@@ -123,4 +124,22 @@ export async function getData() {
   });
   store.config = config;
   store.features = features;
+}
+
+export async function moveList(
+  type: ListData['type'],
+  fromIndex: number,
+  toIndex: number
+) {
+  const offset = toIndex - fromIndex;
+  if (fromIndex < 0 || !offset) return;
+  await browser.runtime.sendMessage({
+    cmd: 'MoveList',
+    data: {
+      type,
+      index: fromIndex,
+      offset,
+    },
+  });
+  reorderList(store.lists[type], fromIndex, offset);
 }

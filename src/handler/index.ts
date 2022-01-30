@@ -183,6 +183,18 @@ const commands = {
       data: { type, id },
     });
   },
+  MoveList: async ({
+    type,
+    index,
+    offset,
+  }: {
+    type: ListData['type'];
+    index: number;
+    offset: number;
+  }) => {
+    const list = lists[type];
+    list.move(index, offset);
+  },
   UpdateList: async (data: Partial<ListData> & { type: ListData['type'] }) => {
     const group = lists[data.type];
     if (!group) return -1;

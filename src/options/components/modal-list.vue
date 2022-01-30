@@ -1,6 +1,11 @@
 <template>
   <VlModal :show="!!store.editList" @close="onListCancel" transition="fade">
-    <form class="modal" v-if="store.editList" @submit.prevent="onListSave">
+    <form
+      class="modal"
+      v-if="store.editList"
+      @submit.prevent="onListSave"
+      ref="el"
+    >
       <h3 class="font-bold mb-2" v-text="modalTitle" />
       <div class="modal-group" v-if="!store.editList.id">
         <div>Type:</div>
@@ -53,7 +58,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from 'vue';
+import { computed, defineComponent, ref, watchEffect } from 'vue';
 import { pick } from 'lodash-es';
 import VlModal from 'vueleton/lib/modal';
 import { store, isValidURL, dump } from '../util';
@@ -63,6 +68,8 @@ export default defineComponent({
     VlModal,
   },
   setup() {
+    const el = ref<Element>();
+
     const modalTitle = computed(() => {
       if (!store.editList) return null;
       if (store.editList.editing) return 'Edit list';
@@ -90,7 +97,20 @@ export default defineComponent({
 
     const formatType = (type: string) => type[0].toUpperCase() + type.slice(1);
 
+    watchEffect(
+      () => {
+        if (store.editList && el.value) {
+          const input = el.value.querySelector(
+            'input[type=text]'
+          ) as HTMLInputElement;
+          input.focus();
+        }
+      },
+      { flush: 'post' }
+    );
+
     return {
+      el,
       store,
       errors,
       modalTitle,

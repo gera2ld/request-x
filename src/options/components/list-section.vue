@@ -15,9 +15,17 @@
         :class="{
           active: isRoute('lists', type, item.id),
           enabled: item.enabled,
+          dragging: dragging.start === index,
+          'dragging-over': dragging.over === index,
+          'dragging-below':
+            dragging.over === index && dragging.over > dragging.start,
         }"
         :href="`#lists/${type}/${item.id}`"
         :title="getName(item)"
+        @dragstart="onDragStart($event, index)"
+        @dragover="onDragOver($event, index)"
+        @dragleave="onDragLeave($event, index)"
+        @dragend="onDragEnd"
       >
         <span
           class="list-section-status"
@@ -36,9 +44,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, PropType, reactive } from 'vue';
 import { ListData } from '#/types';
-import { getName, isRoute, setStatus } from '../util';
+import { getName, isRoute, moveList, setStatus } from '../util';
 
 export default defineComponent({
   props: {
@@ -46,21 +54,56 @@ export default defineComponent({
       type: Object as PropType<ListData[]>,
     },
     type: {
-      type: String,
+      type: String as PropType<ListData['type']>,
     },
     unsupported: {
       type: Boolean,
     },
   },
-  setup() {
+  setup(props) {
     const switchStatus = (item: ListData) => {
       setStatus(item, !item.enabled);
     };
 
+    const dragging = reactive<{
+      start: number;
+      over: number;
+    }>({
+      start: -1,
+      over: -1,
+    });
+
+    const onDragStart = (_event: DragEvent, index: number) => {
+      dragging.start = index;
+      dragging.over = -1;
+    };
+
+    const onDragOver = (event: DragEvent, index: number) => {
+      if (dragging.start >= 0) event.preventDefault();
+      dragging.over =
+        dragging.start < 0 || dragging.start === index ? -1 : index;
+    };
+
+    const onDragLeave = (event: DragEvent, index: number) => {
+      if (dragging.start >= 0) event.preventDefault();
+      if (dragging.over === index) dragging.over = -1;
+    };
+
+    const onDragEnd = () => {
+      moveList(props.type, dragging.start, dragging.over);
+      dragging.start = -1;
+      dragging.over = -1;
+    };
+
     return {
+      dragging,
       getName,
       isRoute,
       switchStatus,
+      onDragStart,
+      onDragOver,
+      onDragLeave,
+      onDragEnd,
     };
   },
 });

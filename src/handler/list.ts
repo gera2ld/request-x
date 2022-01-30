@@ -1,4 +1,5 @@
 import browser from '#/common/browser';
+import { reorderList } from '#/common/util';
 import {
   CookieData,
   CookieDetails,
@@ -164,6 +165,10 @@ export abstract class BaseListManager<
     this.data.splice(i, 1);
     await removeData(list.key());
     dumpLists();
+  }
+
+  move(index: number, offset: number) {
+    if (reorderList(this.data, index, offset)) dumpLists();
   }
 
   get() {

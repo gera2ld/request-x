@@ -170,3 +170,19 @@ textarea {
     }
   }
 }
+
+.dragging {
+  @apply opacity-60;
+  &-over {
+    @apply relative;
+    &::before {
+      content: '';
+      @apply absolute top-0 left-0 right-0 h-0.5 bg-yellow-700;
+    }
+  }
+  &-below {
+    &::before {
+      @apply top-auto bottom-0;
+    }
+  }
+}
