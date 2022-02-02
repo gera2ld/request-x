@@ -23,8 +23,11 @@ svg {
 
 button {
   @apply p-1 rounded border border-gray-400 bg-gray-100 cursor-pointer dark:bg-gray-800 dark:border-gray-600;
-  &:hover {
+  &:not(:disabled):hover {
     @apply border-gray-500 bg-gray-200 dark:bg-gray-600 dark:border-gray-400;
+  }
+  &:disabled {
+    @apply bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed;
   }
 }
 
@@ -106,6 +109,9 @@ textarea {
   &:hover {
     @apply border-gray-300 dark:border-gray-600;
   }
+  &-selected {
+    @apply bg-gray-200 dark:bg-gray-800;
+  }
 }
 
 .rule-label {
@@ -167,6 +173,9 @@ textarea {
     }
     &.sep {
       @apply p-0 border-b border-gray-400 dark:border-gray-600;
+    }
+    > .shortcut {
+      @apply ml-4 text-gray-400 dark:text-gray-600;
     }
   }
 }

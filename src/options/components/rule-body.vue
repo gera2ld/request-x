@@ -1,9 +1,37 @@
 <template>
   <div class="flex flex-col" v-if="current">
     <div class="rule-list-header">
-      <button v-if="!current.subscribeUrl" @click.prevent="onNew">
-        + Add new rule
-      </button>
+      <template v-if="!current.subscribeUrl">
+        <button class="mr-2" @click.prevent="onNew">+ Add new rule</button>
+        <VlDropdown align="right" :closeAfterClick="true">
+          <template v-slot:toggle>
+            <button :disabled="!selection.count">Rule Actions &#8227;</button>
+          </template>
+          <div class="dropdown-menu">
+            <div class="flex" @click.prevent="onSelCopy">
+              <div class="flex-1">Copy</div>
+              <div class="shortcut" v-text="shortcutTextMap.copy"></div>
+            </div>
+            <div class="flex" @click.prevent="onSelCut">
+              <div class="flex-1">Cut</div>
+              <div class="shortcut" v-text="shortcutTextMap.cut"></div>
+            </div>
+            <div class="flex" @click.prevent="onSelPaste">
+              <div class="flex-1">Paste</div>
+              <div class="shortcut" v-text="shortcutTextMap.paste"></div>
+            </div>
+            <div class="flex" @click.prevent="onSelDuplicate">
+              <div class="flex-1">Duplicate</div>
+              <div class="shortcut" v-text="shortcutTextMap.duplicate"></div>
+            </div>
+            <div class="sep"></div>
+            <div class="flex" @click.prevent="onSelRemove">
+              <div class="flex-1">Remove</div>
+              <div class="shortcut" v-text="shortcutTextMap.remove"></div>
+            </div>
+          </div>
+        </VlDropdown>
+      </template>
       <div v-else class="text-gray-600">
         You must fork this list before making changes to it
       </div>
@@ -18,7 +46,7 @@
       </div>
       <VlDropdown align="right" :closeAfterClick="true">
         <template v-slot:toggle>
-          <button>Actions &#8227;</button>
+          <button>List Actions &#8227;</button>
         </template>
         <div class="dropdown-menu">
           <div
@@ -36,30 +64,22 @@
         </div>
       </VlDropdown>
     </div>
-    <div class="flex-1 pt-1 overflow-y-auto">
+    <div class="flex-1 pt-1 overflow-y-auto" @mousedown="onSelClear">
       <component
-        v-for="(rule, index) in filteredRules"
+        v-for="(rule, index) in current.rules"
         :is="RuleItem"
         :key="index"
         :rule="rule"
-        :extra="index"
-        :editable="editable"
         :editing="editing === rule"
-        @submit="onSubmit"
+        v-show="filtered[index]"
+        :selected="selection.selected[index]"
+        @submit="onSubmit(index, $event)"
         @cancel="onCancel"
+        @toggleSelect="onSelToggle(index, $event)"
       >
         <template #buttons>
           <div class="ml-1" v-if="editable">
             <button class="py-0 mr-1" @click="onEdit(rule)">Edit</button>
-            <VlDropdown align="right" :closeAfterClick="true">
-              <template v-slot:toggle>
-                <button class="py-0">&mldr;</button>
-              </template>
-              <div class="dropdown-menu w-24">
-                <div @click.prevent="onDuplicate(index)">Duplicate</div>
-                <div @click.prevent="onRemove(index)">Remove</div>
-              </div>
-            </VlDropdown>
           </div>
         </template>
       </component>
@@ -68,8 +88,7 @@
         v-if="newRule"
         :rule="newRule"
         :editing="true"
-        :extra="-1"
-        @submit="onSubmit"
+        @submit="onSubmit(-1, $event)"
         @cancel="onCancel"
       />
     </div>
@@ -101,10 +120,12 @@ import {
   watch,
   watchEffect,
   onMounted,
+  reactive,
 } from 'vue';
 import { debounce, pick } from 'lodash-es';
 import VlDropdown from 'vueleton/lib/dropdown';
 import browser from '#/common/browser';
+import { keyboardService, isMacintosh, reprShortcut } from '#/common/keyboard';
 import { RuleData, ListData } from '#/types';
 import { store, dump, remove, getName, setRoute, setStatus } from '../util';
 import RequestItem from './request-item.vue';
@@ -115,13 +136,45 @@ const ruleItemMap = {
   cookie: CookieItem,
 };
 
+const PROVIDER = 'Request X';
+
+const shortcutMap = {
+  copy: 'ctrlcmd-c',
+  cut: 'ctrlcmd-x',
+  paste: 'ctrlcmd-v',
+  duplicate: 'ctrlcmd-d',
+  remove: isMacintosh ? 'm-backspace' : 's-delete',
+};
+const shortcutTextMap = Object.entries(shortcutMap).reduce(
+  (map, [key, value]) => {
+    map[key] = reprShortcut(value);
+    return map;
+  },
+  {}
+);
+
+interface ClipboardRuleData {
+  provider: string;
+  type: ListData['type'];
+  rules: RuleData[];
+}
+
 export default defineComponent({
   components: {
     VlDropdown,
   },
   setup() {
     const filter = ref('');
-    const filteredRules = ref<RuleData[]>([]);
+    const filtered = reactive<boolean[]>([]);
+    const selection = reactive<{
+      last: number;
+      count: number;
+      selected: boolean[];
+    }>({
+      last: -1,
+      count: 0,
+      selected: [],
+    });
 
     const type = computed<ListData['type']>(
       () => store.route[1] as ListData['type']
@@ -129,7 +182,7 @@ export default defineComponent({
 
     const RuleItem = computed(() => ruleItemMap[type.value]);
 
-    const current = computed(() => {
+    const current = computed<ListData>(() => {
       const [page, , sid] = store.route;
       if (page !== 'lists') return null;
       const id = +sid;
@@ -163,25 +216,12 @@ export default defineComponent({
       onEdit();
     };
 
-    const onDuplicate = (index: number) => {
+    const onSubmit = (index: number, { rule }: { rule: RuleData }) => {
       const rules = current.value.rules as RuleData[];
-      const rule = { ...rules[index] } as RuleData;
-      rules.splice(index, 0, rule);
-      save();
-    };
-
-    const onRemove = (index: number) => {
-      const { rules } = current.value;
-      rules.splice(index, 1);
-      save();
-    };
-
-    const onSubmit = ({ extra, rule }: { extra: number; rule: RuleData }) => {
-      const rules = current.value.rules as RuleData[];
-      if (extra < 0) {
+      if (index < 0) {
         rules.push(rule);
       } else {
-        rules[extra] = rule;
+        rules[index] = rule;
       }
       save();
       onCancel();
@@ -255,12 +295,119 @@ export default defineComponent({
       setStatus(current.value, !current.value.enabled);
     };
 
-    const updateList = () => {
-      let rules = current.value?.rules as RuleData[];
-      if (rules && filter.value) {
-        rules = rules.filter((rule) => rule.url?.includes(filter.value));
+    const onSelToggle = (
+      index: number,
+      event: { cmdCtrl: boolean; shift: boolean }
+    ) => {
+      if (event.shift && selection.last >= 0) {
+        selection.selected = [];
+        const start = Math.min(selection.last, index);
+        const end = Math.max(selection.last, index);
+        for (let i = start; i <= end; i += 1) {
+          selection.selected[i] = true;
+        }
+        selection.count = end - start + 1;
+        return;
       }
-      filteredRules.value = rules;
+      if (event.cmdCtrl) {
+        if ((selection.selected[index] = !selection.selected[index])) {
+          selection.count += 1;
+        } else {
+          selection.count -= 1;
+        }
+      } else {
+        selection.selected = [];
+        selection.selected[index] = true;
+        selection.count = 1;
+      }
+      selection.last = index;
+    };
+
+    const onSelClear = () => {
+      selection.last = -1;
+      selection.count = 0;
+      selection.selected.length = 0;
+    };
+
+    const onSelRemove = () => {
+      current.value.rules = (current.value.rules as RuleData[]).filter(
+        (_, index) => !selection.selected[index]
+      ) as ListData['rules'];
+      onSelClear();
+      save();
+    };
+
+    const onSelDuplicate = () => {
+      const rules: RuleData[] = [];
+      const selected: boolean[] = [];
+      let offset = 0;
+      current.value.rules.forEach((rule: RuleData, index: number) => {
+        rules.push(rule);
+        if (selection.selected[index]) {
+          rules.push(rule);
+          selected[index + offset] = true;
+          offset += 1;
+          selected[index + offset] = true;
+        }
+      });
+      current.value.rules = rules as ListData['rules'];
+      save();
+      selection.count = offset * 2;
+      selection.selected = selected;
+      updateList();
+    };
+
+    const onSelCopy = () => {
+      if (!selection.count) return;
+      const rules = (current.value?.rules as RuleData[])?.filter(
+        (_, index) => selection.selected[index]
+      );
+      if (!rules?.length) return;
+      const data: ClipboardRuleData = {
+        provider: PROVIDER,
+        type: type.value,
+        rules,
+      };
+      navigator.clipboard.writeText(JSON.stringify(data));
+    };
+
+    const onSelCut = () => {
+      onSelCopy();
+      onSelRemove();
+    };
+
+    const onSelPaste = async () => {
+      let data: ClipboardRuleData;
+      try {
+        const raw = await navigator.clipboard.readText();
+        data = raw && JSON.parse(raw);
+      } catch {
+        return;
+      }
+      if (data.provider !== PROVIDER || !data.type || !data.rules?.length)
+        throw new Error('Invalid clipboard data');
+      if (data.type !== type.value) throw new Error('Incompatible rule type');
+      const rules = current.value.rules as RuleData[];
+      rules.splice(
+        selection.last < 0 ? rules.length : selection.last,
+        0,
+        ...(data.rules as RuleData[])
+      );
+      save();
+    };
+
+    const updateList = () => {
+      const rules = current.value?.rules as RuleData[];
+      if (!rules) return;
+      filtered.length = rules.length;
+      selection.last = -1;
+      selection.count = 0;
+      selection.selected.length = rules.length;
+      rules.forEach((rule, index) => {
+        filtered[index] = !filter.value || rule.url?.includes(filter.value);
+        if (!filtered[index]) selection.selected[index] = false;
+        if (selection.selected[index]) selection.count += 1;
+      });
     };
     const updateListLater = debounce(updateList, 200);
 
@@ -272,12 +419,35 @@ export default defineComponent({
     });
     watch(filter, updateListLater);
 
-    onMounted(updateList);
+    onMounted(() => {
+      updateList();
+      const noInput = {
+        condition: '!inputFocus',
+      };
+      const disposeList = [
+        keyboardService.register(shortcutMap.copy, onSelCopy, noInput),
+        keyboardService.register(shortcutMap.cut, onSelCut, noInput),
+        keyboardService.register(shortcutMap.paste, onSelPaste, noInput),
+        keyboardService.register(
+          shortcutMap.duplicate,
+          onSelDuplicate,
+          noInput
+        ),
+        keyboardService.register(shortcutMap.remove, onSelRemove, noInput),
+      ];
+      keyboardService.enable();
+      return () => {
+        disposeList.forEach((dispose) => dispose());
+        keyboardService.disable();
+      };
+    });
 
     return {
       RuleItem,
+      shortcutTextMap,
       filter,
-      filteredRules,
+      filtered,
+      selection,
       store,
       type,
       current,
@@ -288,8 +458,6 @@ export default defineComponent({
       onNew,
       onEdit,
       onCancel,
-      onDuplicate,
-      onRemove,
       onListEdit,
       onListSubmit,
       onListFetch,
@@ -298,6 +466,12 @@ export default defineComponent({
       onListFork,
       onSubmit,
       onToggle,
+      onSelToggle,
+      onSelClear,
+      onSelRemove,
+      onSelCopy,
+      onSelCut,
+      onSelDuplicate,
     };
   },
 });
