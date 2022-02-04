@@ -65,7 +65,7 @@
     <div class="flex items-center" v-else>
       <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
       <div
-        class="p-1 text-xs text-gray-600 uppercase"
+        class="p-1 text-xs text-zinc-600 uppercase"
         v-for="badge in badges"
         v-text="badge"
         :key="badge"

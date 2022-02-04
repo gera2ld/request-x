@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 body {
-  @apply text-gray-800 dark:bg-gray-900 dark:text-gray-200;
+  @apply text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200;
 }
 
 .request-list {
-  @apply flex flex-col border dark:border-gray-500 h-screen;
+  @apply flex flex-col border dark:border-zinc-500 h-screen;
 }
 
 .solid {
-  @apply border-b bg-gray-100 dark:bg-gray-700 dark:border-gray-500;
+  @apply border-b bg-zinc-100 dark:bg-zinc-700 dark:border-zinc-500;
 }
 
 .toolbar {
@@ -19,14 +19,14 @@ body {
 }
 
 .icon {
-  @apply w-4 h-4 mr-2 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200;
+  @apply w-4 h-4 mr-2 cursor-pointer text-zinc-600 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200;
   fill: currentColor;
 }
 
 .row {
   @apply flex;
   > * {
-    @apply border-r dark:border-gray-500 px-1 min-w-0;
+    @apply border-r dark:border-zinc-500 px-1 min-w-0;
     &:last-child {
       border-right: 0;
     }
@@ -41,7 +41,7 @@ body {
     }
   }
   &:nth-child(even) {
-    @apply bg-gray-50 dark:bg-gray-800;
+    @apply bg-zinc-50 dark:bg-zinc-800;
   }
   &.active {
     @apply bg-blue-600 text-white;
@@ -49,14 +49,14 @@ body {
 }
 
 .panel {
-  @apply absolute top-0 bottom-0 right-0 w-2/3 bg-white dark:bg-gray-800 border-l border-gray-300 dark:border-gray-500 break-all overflow-y-auto;
+  @apply absolute top-0 bottom-0 right-0 w-2/3 bg-white dark:bg-zinc-800 border-l border-zinc-300 dark:border-zinc-500 break-all overflow-y-auto;
   &-close {
     @apply fixed top-0 right-0 m-1 cursor-pointer z-10;
   }
 }
 
 .section-title {
-  @apply sticky top-0 bg-gray-200 dark:bg-gray-600 font-bold p-1;
+  @apply sticky top-0 bg-zinc-200 dark:bg-zinc-600 font-bold p-1;
 }
 .section-body {
   @apply pl-4;

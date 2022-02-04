@@ -32,7 +32,7 @@
           </div>
         </VlDropdown>
       </template>
-      <div v-else class="text-gray-600">
+      <div v-else class="text-zinc-600">
         You must fork this list before making changes to it
       </div>
       <div class="flex-1"></div>
@@ -93,12 +93,12 @@
       />
     </div>
     <footer>
-      <div class="mb-1 truncate text-gray-500" v-if="current.subscribeUrl">
+      <div class="mb-1 truncate text-zinc-500" v-if="current.subscribeUrl">
         Subscribed from:
         <span v-text="current.subscribeUrl"></span>
       </div>
       <div
-        class="mb-1 text-gray-500"
+        class="mb-1 text-zinc-500"
         v-if="current.subscribeUrl && current.lastUpdated"
       >
         Last updated at:

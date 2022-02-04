@@ -33,7 +33,7 @@
         ></span>
         <span class="mx-1 flex-1 truncate" v-text="getName(item)"></span>
         <span
-          class="text-xs rounded border border-blue-400 text-blue-400 px-1 uppercase"
+          class="list-section-badge"
           v-if="item.subscribeUrl"
           title="Subscribed"
           >s</span

@@ -57,7 +57,7 @@
     <div>
       <textarea
         type="text"
-        :class="{ unsupported: !store.features.responseHeaders }"
+        :class="{ subtle: !store.features.responseHeaders }"
         v-model="input.resHeaders"
         placeholder="Modify response headers"
         rows="3"
@@ -88,7 +88,7 @@
     <div class="w-20 mr-1" v-text="rule.method"></div>
     <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
     <div
-      class="p-1 text-xs text-gray-600 uppercase"
+      class="p-1 text-xs text-zinc-600 uppercase"
       v-for="badge in badges"
       v-text="badge"
       :key="badge"

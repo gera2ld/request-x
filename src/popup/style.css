@@ -7,11 +7,11 @@ html {
 }
 
 body {
-  @apply text-gray-800 dark:text-gray-300 dark:bg-gray-900;
+  @apply text-zinc-800 dark:text-zinc-300 dark:bg-zinc-900;
 }
 
 .version {
-  @apply ml-4 text-sm text-gray-600 dark:text-gray-500;
+  @apply ml-4 text-sm text-zinc-600 dark:text-zinc-500;
 }
 
 #app {
