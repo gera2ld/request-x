@@ -25,6 +25,7 @@ Supported browsers:
 - Redirect requests
 - Modify headers
 - Modify cookie properties like `SameSite`
+- View interception logs in DevTools
 
 ## Use cases
 
@@ -49,12 +50,12 @@ Set subscription type as search params within the magic hash:
 <a href="https://example.com/path/to/rules.json#:request-x:?type=request">Subscribe My List</a>
 ```
 
-Here is an example: [Subscribe](https://gist.github.com/gera2ld/5730305dc9081ec93ccab7a1c7ece5b3/raw/power.json#:request-x:?name=Default&type=request)
+Here is an example: [Subscribe](https://gist.github.com/gera2ld/5730305dc9081ec93ccab7a1c7ece5b3/raw/power.json#:request-x:?type=request)
 
 ## Screenshots
 
-<img width="331" src="https://user-images.githubusercontent.com/3139113/86558920-4066e300-bf8d-11ea-84d1-29140bdcbeca.png">
+<img width="313" src="https://user-images.githubusercontent.com/3139113/153006528-ba5162e8-e991-4b3e-869e-b7af81b8c15a.png">
 
-<img width="1080" src="https://user-images.githubusercontent.com/3139113/147557528-b503fc54-6099-4af5-9f3b-e95752e3524c.png">
+<img width="1080" src="https://user-images.githubusercontent.com/3139113/153009736-83173b5e-34df-409a-bd0b-6fcf85a4666f.png">
 
 <img width="1080" src="https://user-images.githubusercontent.com/3139113/147549923-44a2194d-1fd3-4384-94fb-6e2eb0e0add0.png">
