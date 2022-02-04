@@ -1,8 +1,6 @@
 import browser from '#/common/browser';
 import {
-  GlobalStorage,
   ConfigStorage,
-  LogItem,
   ListData,
   InterceptionData,
   PortMessage,
@@ -12,10 +10,9 @@ import {
 } from '#/types';
 import { debounce, omit, pick } from 'lodash-es';
 import { RequestList, lists, loadLists, CookieList, fetchLists } from './list';
-import { getActiveTab, getUrl, ObjectStorage } from './util';
+import { getUrl, ObjectStorage } from './util';
 
-const logs: { [key: number]: LogItem } = {};
-const global = new ObjectStorage<GlobalStorage>('global', { count: 0 });
+// const global = new ObjectStorage<GlobalStorage>('global', { count: 0 });
 const config = new ObjectStorage<ConfigStorage>('config', {
   badge: '',
 });
@@ -28,31 +25,6 @@ loadLists();
 
 function pushLog(details: RequestDetails, result?: RequestMatchResult) {
   const { tabId, method, url, requestId } = details;
-  let log = logs[tabId];
-  if (!log) {
-    log = {
-      count: {
-        page: 0,
-        tab: 0,
-      },
-      requestIds: new Set(),
-    };
-    logs[tabId] = log;
-  }
-  const matched = log.requestIds.has(requestId);
-  if (result && !matched) {
-    // intercept request
-    log.count.page += 1;
-    log.count.tab += 1;
-    global.set((data) => ({
-      count: (data.count || 0) + 1,
-    }));
-    log.requestIds.add(requestId);
-    updateBadge(tabId);
-  } else if (!result && matched) {
-    // request end
-    log.requestIds.delete(requestId);
-  }
   ports.get(tabId)?.postMessage({
     type: 'interception',
     data: {
@@ -62,28 +34,6 @@ function pushLog(details: RequestDetails, result?: RequestMatchResult) {
       result,
     },
   } as PortMessage<InterceptionData>);
-}
-
-async function updateBadge(tabId: number) {
-  const log = logs[tabId];
-  browser.browserAction.setBadgeBackgroundColor({
-    color: '#808',
-    tabId,
-  });
-  const configBadge = await config.get('badge');
-  let count: number | undefined;
-  if (configBadge === 'page') {
-    count = log?.count?.page;
-  } else if (configBadge === 'tab') {
-    count = log?.count?.tab;
-  } else if (configBadge === 'total') {
-    count = await global.get('count');
-  }
-  const countStr = `${count || ''}`;
-  browser.browserAction.setBadgeText({
-    text: countStr,
-    tabId,
-  });
 }
 
 const matchedRequestIds = new Set<string>();
@@ -154,21 +104,6 @@ browser.webRequest.onCompleted.addListener(handleRequestEnd, {
   urls: ['<all_urls>'],
 });
 
-browser.tabs.onRemoved.addListener((tabId) => {
-  delete logs[tabId];
-});
-browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === 'loading') {
-    const count = logs[tabId]?.count;
-    if (count) count.page = 0;
-    updateBadge(tabId);
-  }
-});
-browser.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
-  logs[addedTabId] = logs[removedTabId];
-  delete logs[removedTabId];
-});
-
 const commands = {
   GetLists: () => {
     return {
@@ -210,13 +145,6 @@ const commands = {
   FetchLists: () => fetchLists(),
   FetchList: ({ type, id }: { type: ListData['type']; id: number }) =>
     lists[type]?.find(id)?.fetch(),
-  async GetCount() {
-    const tab = await getActiveTab();
-    return {
-      ...logs[tab.id]?.count,
-      global: await global.get('count'),
-    };
-  },
   async GetData() {
     return {
       config: await config.getAll(),
@@ -232,11 +160,6 @@ const commands = {
   }) {
     config.set({
       [key]: value,
-    });
-  },
-  async ResetCount() {
-    return global.set({
-      count: 0,
     });
   },
 };

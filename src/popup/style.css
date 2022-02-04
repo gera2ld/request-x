@@ -24,20 +24,3 @@ a {
     @apply text-blue-600 underline dark:text-blue-300;
   }
 }
-
-.card {
-  @apply border-t border-b border-gray-400 p-2 bg-gray-200 text-center dark:bg-gray-700 dark:border-gray-500;
-  &-title {
-    @apply text-xl font-medium mb-1;
-  }
-}
-
-.cell {
-  @apply flex-1 mx-1 rounded border border-gray-400 p-2 bg-white dark:bg-gray-800 dark:border-gray-500;
-  &-title {
-    @apply text-xl font-medium;
-  }
-  &-desc {
-    @apply text-gray-600 dark:text-gray-500;
-  }
-}

@@ -1,15 +1,9 @@
 <template>
   <div class="nav">
     <div class="flex-1 overflow-y-auto">
-      <section class="nav-section">
-        <div class="nav-section-title">Settings</div>
-        <a
-          class="nav-item"
-          :class="{ active: isRoute('settings', 'general') }"
-          href="#settings/general"
-        >
-          General
-        </a>
+      <section class="nav-section mb-4">
+        <span class="text-xl">Request X</span>
+        <span class="ml-4" v-text="`v${version}`"></span>
       </section>
       <section class="nav-section">
         <div class="flex">
@@ -36,7 +30,7 @@
         >
           <template #title>Cookie Interception</template>
           <template #unsupported>
-            <div class="unsupported">Not supported in this browser.</div>
+            <div class="subtle">Not supported in this browser.</div>
           </template>
         </ListSection>
       </section>
@@ -51,6 +45,8 @@ import VlDropdown from 'vueleton/lib/dropdown';
 import browser from '#/common/browser';
 import { store, dump, loadFile, blob2Text, isRoute } from '../util';
 import ListSection from './list-section.vue';
+
+const manifest = browser.runtime.getManifest();
 
 export default defineComponent({
   components: {
@@ -89,6 +85,7 @@ export default defineComponent({
     return {
       store,
       isRoute,
+      version: manifest.version,
       onListNew,
       onListImport,
       onListSubscribe,
