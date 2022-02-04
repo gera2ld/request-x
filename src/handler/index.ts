@@ -10,12 +10,8 @@ import {
 } from '#/types';
 import { debounce, omit, pick } from 'lodash-es';
 import { RequestList, lists, loadLists, CookieList, fetchLists } from './list';
-import { getUrl, ObjectStorage } from './util';
+import { getUrl, configStorage as config } from './util';
 
-// const global = new ObjectStorage<GlobalStorage>('global', { count: 0 });
-const config = new ObjectStorage<ConfigStorage>('config', {
-  badge: '',
-});
 const features: FeatureToggles = {
   responseHeaders: false,
   cookies: false,

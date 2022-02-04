@@ -1,4 +1,5 @@
 import browser from '#/common/browser';
+import { ConfigStorage } from '#/types';
 
 export const getData = browser.storage.local.get;
 export const dumpData = browser.storage.local.set;
@@ -77,3 +78,8 @@ export function getUrl(cookie: {
   ].join('');
   return url;
 }
+
+// export const globalStorage = new ObjectStorage<GlobalStorage>('global', {});
+export const configStorage = new ObjectStorage<ConfigStorage>('config', {
+  badge: '',
+});

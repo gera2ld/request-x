@@ -13,6 +13,8 @@ import { groupBy } from 'lodash-es';
 import { BaseRule, RequestRule, CookieRule } from './rule';
 import { getExactData, dumpExactData, getData, removeData } from './util';
 
+let lastId = 0;
+
 export function getKey(id: number) {
   return `list:${id}`;
 }
@@ -144,14 +146,13 @@ export abstract class BaseListManager<
   abstract createList(id: number): T;
 
   async create(data: Partial<ListData>) {
-    const ids = (await getExactData<number[]>('lists')) || [];
-    const newId = (ids[ids.length - 1] || 0) + 1;
-    ids.push(newId);
-    await dumpExactData('lists', ids);
+    lastId += 1;
+    const newId = lastId;
     const list = this.createList(newId);
-    this.data.push(list);
     await list.update(data);
     await list.fetch();
+    this.data.push(list);
+    dumpLists();
     return list;
   }
 
@@ -189,6 +190,7 @@ export abstract class BaseListManager<
 
   async load(items: ListData[]) {
     this.data = items.map((item) => {
+      lastId = Math.max(lastId, item.id);
       const list = this.createList(item.id);
       list.load(item);
       return list;

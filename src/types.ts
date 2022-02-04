@@ -1,6 +1,4 @@
-export interface GlobalStorage {
-  count: number;
-}
+export interface GlobalStorage {}
 
 export interface ConfigStorage {
   badge: '' | 'page' | 'tab' | 'total';
