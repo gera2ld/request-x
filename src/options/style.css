@@ -173,7 +173,7 @@ textarea {
   @apply bg-white rounded border border-zinc-400 dark:bg-zinc-900 dark:border-zinc-600;
   > div {
     @apply px-2 py-1 cursor-pointer;
-    &:hover {
+    &:not(.disabled):hover {
       @apply bg-zinc-200 dark:bg-zinc-800;
     }
     &.sep {
@@ -181,6 +181,9 @@ textarea {
     }
     > .shortcut {
       @apply ml-4 text-zinc-400 dark:text-zinc-600;
+    }
+    &.disabled {
+      @apply cursor-not-allowed text-zinc-400 dark:text-zinc-600;
     }
   }
 }

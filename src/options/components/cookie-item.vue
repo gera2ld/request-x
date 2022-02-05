@@ -1,78 +1,91 @@
 <template>
-  <div class="rule-item">
-    <form
-      class="grid grid-cols-[auto_auto_auto_min-content] gap-2"
-      v-if="editing"
-      @submit.prevent="onSubmit"
-    >
-      <div class="col-span-3" :class="{ error: errors.url }">
-        <input type="text" v-model="input.url" placeholder="URL" />
-        <div class="form-hint">
-          A
-          <a
-            target="_blank"
-            href="https://developer.chrome.com/extensions/match_patterns"
-            >match pattern</a
-          >
-          or a RegExp (e.g. <code>/^https:/</code>).
-        </div>
+  <form
+    class="rule-item grid grid-cols-[auto_auto_auto_min-content] gap-2"
+    v-if="showDetail"
+    @submit.prevent="onSubmit"
+  >
+    <div class="col-span-3" :class="{ error: errors.url }">
+      <input
+        type="text"
+        v-model="input.url"
+        placeholder="URL"
+        :readonly="!editable"
+      />
+      <div class="form-hint">
+        A
+        <a
+          target="_blank"
+          href="https://developer.chrome.com/extensions/match_patterns"
+          >match pattern</a
+        >
+        or a RegExp (e.g. <code>/^https:/</code>).
       </div>
-      <div class="row-span-3 whitespace-nowrap">
-        <button class="mr-1" type="submit">Save</button>
-        <button type="reset" @click="onCancel">Cancel</button>
-      </div>
-      <div class="col-span-3">
-        <input type="text" v-model="input.name" placeholder="Name" />
-        <div class="form-hint">
-          Name of cookie, a string for exact match or a RegExp like
-          <code>/^mycookie/</code>.
-        </div>
-      </div>
-      <div>
-        <select v-model="input.sameSite">
-          <option
-            v-for="{ label, value } in sameSiteOptions"
-            :key="value"
-            v-text="label"
-            :value="value"
-          />
-        </select>
-        <div class="form-hint">SameSite</div>
-      </div>
-      <div>
-        <select v-model="input.httpOnly">
-          <option value="">Noop</option>
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select>
-        <div class="form-hint">HttpOnly</div>
-      </div>
-      <div>
-        <select v-model="input.secure">
-          <option value="">Noop</option>
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select>
-        <div class="form-hint">Secure</div>
-      </div>
-      <div class="col-span-3">
-        <input type="number" v-model="input.ttl" placeholder="TTL" />
-        <div class="form-hint">
-          TTL in seconds, -1 for removing, 0 for session cookie.
-        </div>
-      </div>
-    </form>
-    <div class="flex items-center" v-else>
-      <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
-      <div
-        class="p-1 text-xs text-zinc-600 uppercase"
-        v-for="badge in badges"
-        v-text="badge"
-        :key="badge"
-      ></div>
-      <slot name="buttons"></slot>
     </div>
-  </div>
+    <div class="row-span-3 whitespace-nowrap">
+      <button class="mr-1" type="submit" v-if="editable">Save</button>
+      <button
+        type="reset"
+        @click="onCancel"
+        v-text="editable ? 'Cancel' : 'Close'"
+      ></button>
+    </div>
+    <div class="col-span-3">
+      <input
+        type="text"
+        v-model="input.name"
+        placeholder="Name"
+        :readonly="!editable"
+      />
+      <div class="form-hint">
+        Name of cookie, a string for exact match or a RegExp like
+        <code>/^mycookie/</code>.
+      </div>
+    </div>
+    <div>
+      <select v-model="input.sameSite" :readonly="!editable">
+        <option
+          v-for="{ label, value } in sameSiteOptions"
+          :key="value"
+          v-text="label"
+          :value="value"
+        />
+      </select>
+      <div class="form-hint">SameSite</div>
+    </div>
+    <div>
+      <select v-model="input.httpOnly" :readonly="!editable">
+        <option value="">Noop</option>
+        <option value="true">true</option>
+        <option value="false">false</option>
+      </select>
+      <div class="form-hint">HttpOnly</div>
+    </div>
+    <div>
+      <select v-model="input.secure" :readonly="!editable">
+        <option value="">Noop</option>
+        <option value="true">true</option>
+        <option value="false">false</option>
+      </select>
+      <div class="form-hint">Secure</div>
+    </div>
+    <div class="col-span-3">
+      <input
+        type="number"
+        v-model="input.ttl"
+        placeholder="TTL"
+        :readonly="!editable"
+      />
+      <div class="form-hint">
+        TTL in seconds, -1 for removing, 0 for session cookie.
+      </div>
+    </div>
+  </form>
+  <RuleItemView v-else :selected="selected" :badges="badges" @select="onSelect">
+    <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
+    <template #buttons>
+      <slot name="buttons"></slot>
+    </template>
+  </RuleItemView>
 </template>
 
 <script lang="ts">
@@ -87,6 +100,7 @@ import {
 } from 'vue';
 import { CookieData, SameSiteStatus } from '#/types';
 import { isValidPattern, store } from '../util';
+import RuleItemView from './rule-item-view.vue';
 
 const sameSiteOptions = [
   {
@@ -128,14 +142,18 @@ function str2num(value: string) {
 }
 
 export default defineComponent({
+  components: {
+    RuleItemView,
+  },
   props: {
     rule: {
       type: Object as PropType<CookieData>,
     },
-    editing: Boolean,
-    extra: Number,
+    showDetail: Boolean,
+    editable: Boolean,
+    selected: Boolean,
   },
-  emits: ['cancel', 'submit'],
+  emits: ['cancel', 'submit', 'select'],
   setup(props, context) {
     const input = reactive<{
       url?: string;
@@ -148,7 +166,7 @@ export default defineComponent({
     const refMethod = ref(null);
 
     const reset = () => {
-      if (!props.editing) return;
+      if (!props.showDetail) return;
       const { rule } = props;
       Object.assign(input, {
         url: rule.url,
@@ -182,7 +200,6 @@ export default defineComponent({
     const onSubmit = () => {
       if (Object.values(errors.value).some(Boolean)) return;
       context.emit('submit', {
-        extra: props.extra,
         rule: {
           url: input.url,
           name: input.name,
@@ -194,7 +211,11 @@ export default defineComponent({
       });
     };
 
-    watch(() => props.editing, reset);
+    const onSelect = (e: any) => {
+      context.emit('select', e);
+    };
+
+    watch(() => props.showDetail, reset);
     onMounted(reset);
 
     return {
@@ -206,6 +227,7 @@ export default defineComponent({
       sameSiteOptions,
       onCancel,
       onSubmit,
+      onSelect,
     };
   },
 });

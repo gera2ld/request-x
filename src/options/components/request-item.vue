@@ -1,16 +1,17 @@
 <template>
   <form
-    v-if="editing"
+    v-if="showDetail"
     class="rule-item grid grid-cols-[5rem_auto_min-content] gap-2"
     @submit.prevent="onSubmit"
   >
     <div class="row-span-5" :class="{ error: errors.method }">
       <input
+        ref="method"
         type="text"
         :value="input.method"
         @input="onMethodInput"
         placeholder="Method"
-        ref="method"
+        :readonly="!editable"
       />
       <div class="form-hint">
         <div
@@ -18,12 +19,17 @@
           v-for="method in methodList"
           :key="method"
           v-text="method"
-          @click="input.method = method"
+          @click="editable && (input.method = method)"
         ></div>
       </div>
     </div>
     <div :class="{ error: errors.url }">
-      <input type="text" v-model="input.url" placeholder="URL" />
+      <input
+        type="text"
+        v-model="input.url"
+        placeholder="URL"
+        :readonly="!editable"
+      />
       <div class="form-hint">
         A
         <a
@@ -35,11 +41,20 @@
       </div>
     </div>
     <div class="row-span-2 whitespace-nowrap">
-      <button class="mr-1" type="submit">Save</button>
-      <button type="reset" @click="onCancel">Cancel</button>
+      <button class="mr-1" type="submit" v-if="editable">Save</button>
+      <button
+        type="reset"
+        @click="onCancel"
+        v-text="editable ? 'Cancel' : 'Close'"
+      ></button>
     </div>
     <div :class="{ error: errors.target }">
-      <input type="text" v-model="input.target" placeholder="Target" />
+      <input
+        type="text"
+        v-model="input.target"
+        placeholder="Target"
+        :readonly="!editable"
+      />
       <div class="form-hint">
         Set to <code>-</code> for blocking the request, <code>=</code> for
         keeping the original, or a new URL to redirect.
@@ -51,6 +66,7 @@
         v-model="input.reqHeaders"
         placeholder="Modify request headers"
         rows="3"
+        :readonly="!editable"
       ></textarea>
     </div>
     <div class="mt-1">Request headers</div>
@@ -61,6 +77,7 @@
         v-model="input.resHeaders"
         placeholder="Modify response headers"
         rows="3"
+        :readonly="!editable"
       ></textarea>
     </div>
     <div class="mt-1">
@@ -79,24 +96,13 @@
       </div>
     </div>
   </form>
-  <div
-    v-else
-    class="rule-item flex items-center"
-    :class="{ 'rule-item-selected': selected }"
-    @mousedown="onToggleSelect"
-  >
+  <RuleItemView v-else :selected="selected" :badges="badges" @select="onSelect">
     <div class="w-20 mr-1" v-text="rule.method"></div>
     <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
-    <div
-      class="p-1 text-xs text-zinc-600 uppercase"
-      v-for="badge in badges"
-      v-text="badge"
-      :key="badge"
-    ></div>
-    <div ref="refButtons">
+    <template #buttons>
       <slot name="buttons"></slot>
-    </div>
-  </div>
+    </template>
+  </RuleItemView>
 </template>
 
 <script lang="ts">
@@ -111,8 +117,8 @@ import {
   onMounted,
 } from 'vue';
 import { HttpHeaderItem, RequestData } from '#/types';
-import { isMacintosh } from '#/common/keyboard';
 import { isValidMethod, isValidPattern, isValidTarget, store } from '../util';
+import RuleItemView from './rule-item-view.vue';
 
 const methodList = ['*', 'GET', 'POST', 'HEAD', 'PUT', 'PATCH', 'DELETE'];
 
@@ -136,14 +142,18 @@ function parseHeaders(headers: string) {
 }
 
 export default defineComponent({
+  components: {
+    RuleItemView,
+  },
   props: {
     rule: {
       type: Object as PropType<RequestData>,
     },
-    editing: Boolean,
+    showDetail: Boolean,
     selected: Boolean,
+    editable: Boolean,
   },
-  emits: ['cancel', 'submit', 'toggleSelect'],
+  emits: ['cancel', 'submit', 'select'],
   setup(props, context) {
     const input = reactive<{
       method?: string;
@@ -156,7 +166,7 @@ export default defineComponent({
     const refButtons = ref(null);
 
     const reset = () => {
-      if (!props.editing) return;
+      if (!props.showDetail) return;
       const { rule } = props;
       Object.assign(input, {
         method: rule.method,
@@ -211,19 +221,11 @@ export default defineComponent({
       });
     };
 
-    const onToggleSelect = (e: MouseEvent) => {
-      if (props.editing) return;
-      if (e.altKey) return;
-      if (refButtons.value?.contains(e.target)) return;
-      e.preventDefault();
-      e.stopPropagation();
-      context.emit('toggleSelect', {
-        cmdCtrl: isMacintosh ? e.metaKey : e.ctrlKey,
-        shift: e.shiftKey,
-      });
+    const onSelect = (e: any) => {
+      context.emit('select', e);
     };
 
-    watch(() => props.editing, reset);
+    watch(() => props.showDetail, reset);
     onMounted(reset);
 
     return {
@@ -237,7 +239,7 @@ export default defineComponent({
       onMethodInput,
       onCancel,
       onSubmit,
-      onToggleSelect,
+      onSelect,
     };
   },
 });

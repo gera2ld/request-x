@@ -1,40 +1,60 @@
 <template>
   <div class="flex flex-col" v-if="current">
     <div class="rule-list-header">
-      <template v-if="!current.subscribeUrl">
+      <template v-if="editable">
         <button class="mr-2" @click.prevent="onNew">+ Add new rule</button>
-        <VlDropdown align="right" :closeAfterClick="true">
-          <template v-slot:toggle>
-            <button :disabled="!selection.count">Rule Actions &#8227;</button>
-          </template>
-          <div class="dropdown-menu">
-            <div class="flex" @click.prevent="onSelCopy">
-              <div class="flex-1">Copy</div>
-              <div class="shortcut" v-text="shortcutTextMap.copy"></div>
-            </div>
-            <div class="flex" @click.prevent="onSelCut">
-              <div class="flex-1">Cut</div>
-              <div class="shortcut" v-text="shortcutTextMap.cut"></div>
-            </div>
-            <div class="flex" @click.prevent="onSelPaste">
-              <div class="flex-1">Paste</div>
-              <div class="shortcut" v-text="shortcutTextMap.paste"></div>
-            </div>
-            <div class="flex" @click.prevent="onSelDuplicate">
-              <div class="flex-1">Duplicate</div>
-              <div class="shortcut" v-text="shortcutTextMap.duplicate"></div>
-            </div>
-            <div class="sep"></div>
-            <div class="flex" @click.prevent="onSelRemove">
-              <div class="flex-1">Remove</div>
-              <div class="shortcut" v-text="shortcutTextMap.remove"></div>
-            </div>
-          </div>
-        </VlDropdown>
       </template>
-      <div v-else class="text-zinc-600">
+      <div v-else class="text-zinc-600 mr-2">
         You must fork this list before making changes to it
       </div>
+      <VlDropdown align="right" :closeAfterClick="true">
+        <template v-slot:toggle>
+          <button>Rule Actions &#8227;</button>
+        </template>
+        <div class="dropdown-menu">
+          <div
+            class="flex"
+            :class="{ disabled: !selection.count }"
+            @click.prevent="onSelCopy"
+          >
+            <div class="flex-1">Copy</div>
+            <div class="shortcut" v-text="shortcutTextMap.copy"></div>
+          </div>
+          <div
+            class="flex"
+            :class="{ disabled: !editable || !selection.count }"
+            @click.prevent="onSelCut"
+          >
+            <div class="flex-1">Cut</div>
+            <div class="shortcut" v-text="shortcutTextMap.cut"></div>
+          </div>
+          <div
+            class="flex"
+            :class="{ disabled: !editable }"
+            @click.prevent="onSelPaste"
+          >
+            <div class="flex-1">Paste</div>
+            <div class="shortcut" v-text="shortcutTextMap.paste"></div>
+          </div>
+          <div
+            class="flex"
+            :class="{ disabled: !editable || !selection.count }"
+            @click.prevent="onSelDuplicate"
+          >
+            <div class="flex-1">Duplicate</div>
+            <div class="shortcut" v-text="shortcutTextMap.duplicate"></div>
+          </div>
+          <div class="sep"></div>
+          <div
+            class="flex"
+            :class="{ disabled: !editable || !selection.count }"
+            @click.prevent="onSelRemove"
+          >
+            <div class="flex-1">Remove</div>
+            <div class="shortcut" v-text="shortcutTextMap.remove"></div>
+          </div>
+        </div>
+      </VlDropdown>
       <div class="flex-1"></div>
       <div class="input ml-2 mr-2">
         <input type="search" v-model="filter" />
@@ -70,16 +90,21 @@
         :is="RuleItem"
         :key="index"
         :rule="rule"
-        :editing="editing === rule"
+        :showDetail="editing === rule"
+        :editable="editable"
         v-show="filtered[index]"
         :selected="selection.selected[index]"
         @submit="onSubmit(index, $event)"
         @cancel="onCancel"
-        @toggleSelect="onSelToggle(index, $event)"
+        @select="onSelToggle(index, $event)"
       >
         <template #buttons>
-          <div class="ml-1" v-if="editable">
-            <button class="py-0 mr-1" @click="onEdit(rule)">Edit</button>
+          <div class="ml-1">
+            <button
+              class="py-0 mr-1"
+              @click="onEdit(rule)"
+              v-text="editable ? 'Edit' : 'View'"
+            ></button>
           </div>
         </template>
       </component>
@@ -87,7 +112,8 @@
         :is="RuleItem"
         v-if="newRule"
         :rule="newRule"
-        :editing="true"
+        :showDetail="true"
+        :editable="true"
         @submit="onSubmit(-1, $event)"
         @cancel="onCancel"
       />
@@ -330,6 +356,7 @@ export default defineComponent({
     };
 
     const onSelRemove = () => {
+      if (!editable.value) return;
       current.value.rules = (current.value.rules as RuleData[]).filter(
         (_, index) => !selection.selected[index]
       ) as ListData['rules'];
@@ -338,6 +365,7 @@ export default defineComponent({
     };
 
     const onSelDuplicate = () => {
+      if (!editable.value) return;
       const rules: RuleData[] = [];
       const selected: boolean[] = [];
       let offset = 0;
@@ -345,7 +373,6 @@ export default defineComponent({
         rules.push(rule);
         if (selection.selected[index]) {
           rules.push(rule);
-          selected[index + offset] = true;
           offset += 1;
           selected[index + offset] = true;
         }
@@ -372,11 +399,13 @@ export default defineComponent({
     };
 
     const onSelCut = () => {
+      if (!editable.value) return;
       onSelCopy();
       onSelRemove();
     };
 
     const onSelPaste = async () => {
+      if (!editable.value) return;
       let data: ClipboardRuleData;
       try {
         const raw = await navigator.clipboard.readText();
@@ -413,9 +442,10 @@ export default defineComponent({
 
     watchEffect(onCancel);
 
-    watch(current, () => {
+    watch(current, (cur, prev) => {
       onCancel();
       updateList();
+      if (cur?.id !== prev?.id) onSelClear();
     });
     watch(filter, updateListLater);
 
@@ -471,6 +501,7 @@ export default defineComponent({
       onSelRemove,
       onSelCopy,
       onSelCut,
+      onSelPaste,
       onSelDuplicate,
     };
   },
