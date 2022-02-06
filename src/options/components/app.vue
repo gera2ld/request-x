@@ -10,7 +10,8 @@
         <ul class="list-disc leading-8 text-lg">
           <li>Create or choose a list from side menu to get started</li>
           <li>
-            Select rules for batch operations, also try <kbd>Cmd</kbd> /
+            Select rules for batch operations, also try
+            <kbd v-text="isMacintosh ? 'Cmd' : 'Ctrl'"></kbd> /
             <kbd>Shift</kbd> + click
           </li>
         </ul>
@@ -35,6 +36,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { isMacintosh } from '#/common/keyboard';
 import { store, isRoute } from '../util';
 import RuleNav from './rule-nav.vue';
 import RuleBody from './rule-body.vue';
@@ -50,6 +52,7 @@ export default defineComponent({
     return {
       store,
       isRoute,
+      isMacintosh,
     };
   },
 });
