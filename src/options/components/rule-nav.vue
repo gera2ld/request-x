@@ -12,7 +12,7 @@
             <template v-slot:toggle>
               <button class="py-0">&mldr;</button>
             </template>
-            <div class="dropdown-menu w-24">
+            <div class="dropdown-menu">
               <div @click.prevent="onListNew">Create new</div>
               <div @click.prevent="onListImport">Import</div>
               <div @click.prevent="onListSubscribe">Subscribe</div>

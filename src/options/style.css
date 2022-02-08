@@ -3,10 +3,11 @@
 @tailwind utilities;
 
 html {
+  font-size: 12px;
 }
 
 body {
-  @apply text-zinc-800 max-w-screen-xl mx-auto dark:bg-zinc-900 dark:text-zinc-300;
+  @apply text-zinc-800 max-w-screen-xl mx-auto dark:bg-zinc-900 dark:text-zinc-300 text-base;
   min-width: 768px;
 }
 
@@ -173,7 +174,7 @@ textarea {
 .dropdown-menu {
   @apply bg-white rounded border border-zinc-400 dark:bg-zinc-900 dark:border-zinc-600;
   > div {
-    @apply px-2 py-1 cursor-pointer;
+    @apply px-2 py-1 cursor-pointer whitespace-nowrap;
     &:not(.disabled):hover {
       @apply bg-zinc-200 dark:bg-zinc-800;
     }

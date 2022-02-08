@@ -6,7 +6,7 @@
         Request X
         <span class="version" v-text="version"></span>
       </div>
-      <a class="text-xs" @click.prevent="openDashboard">Dashboard</a>
+      <a class="text-sm" @click.prevent="openDashboard">Dashboard</a>
     </div>
   </div>
 </template>
