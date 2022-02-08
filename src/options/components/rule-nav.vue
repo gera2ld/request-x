@@ -2,7 +2,7 @@
   <div class="nav">
     <div class="flex-1 overflow-y-auto">
       <section class="nav-section mb-4">
-        <span class="text-xl">Request X</span>
+        <a href="#" class="text-xl">Request X</a>
         <span class="ml-4" v-text="`v${version}`"></span>
       </section>
       <section class="nav-section">

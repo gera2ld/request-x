@@ -14,6 +14,19 @@
         <div class="dropdown-menu">
           <div
             class="flex"
+            :class="{
+              disabled:
+                selection.active < 0 ||
+                selection.active >= current.rules.length,
+            }"
+            @click.prevent="onSelEdit"
+          >
+            <div class="flex-1">Edit / View detail</div>
+            <div class="shortcut" v-text="shortcutTextMap.edit"></div>
+          </div>
+          <div class="sep"></div>
+          <div
+            class="flex"
             :class="{ disabled: !selection.count }"
             @click.prevent="onSelCopy"
           >
@@ -84,30 +97,23 @@
         </div>
       </VlDropdown>
     </div>
-    <div class="flex-1 pt-1 overflow-y-auto" @mousedown="onSelClear">
+    <div class="flex-1 pt-1 overflow-y-auto">
       <component
         v-for="(rule, index) in current.rules"
         :is="RuleItem"
         :key="index"
         :rule="rule"
-        :showDetail="editing === rule"
+        :showDetail="editing === index"
         :editable="editable"
         v-show="filtered[index]"
         :selected="selection.selected[index]"
         @submit="onSubmit(index, $event)"
         @cancel="onCancel"
         @select="onSelToggle(index, $event)"
-      >
-        <template #buttons>
-          <div class="ml-1">
-            <button
-              class="py-0 mr-1"
-              @click="onEdit(rule)"
-              v-text="editable ? 'Edit' : 'View'"
-            ></button>
-          </div>
-        </template>
-      </component>
+        @dblclick="onEdit(index)"
+        class="rule-item"
+        :class="{ 'rule-item-active': index === selection.active }"
+      />
       <component
         :is="RuleItem"
         v-if="newRule"
@@ -144,7 +150,6 @@ import {
   defineComponent,
   ref,
   watch,
-  watchEffect,
   onMounted,
   reactive,
 } from 'vue';
@@ -170,6 +175,7 @@ const shortcutMap = {
   paste: 'ctrlcmd-v',
   duplicate: 'ctrlcmd-d',
   remove: isMacintosh ? 'm-backspace' : 's-delete',
+  edit: 'e',
 };
 const shortcutTextMap = Object.entries(shortcutMap).reduce(
   (map, [key, value]) => {
@@ -193,11 +199,11 @@ export default defineComponent({
     const filter = ref('');
     const filtered = reactive<boolean[]>([]);
     const selection = reactive<{
-      last: number;
+      active: number;
       count: number;
       selected: boolean[];
     }>({
-      last: -1,
+      active: -1,
       count: 0,
       selected: [],
     });
@@ -226,20 +232,23 @@ export default defineComponent({
 
     const newRule = ref<Partial<RuleData>>(null);
 
-    const editing = ref<RuleData>(null);
+    const editing = ref<number>(-1);
 
     const onNew = () => {
       newRule.value = {};
-      editing.value = newRule.value as RuleData;
+      editing.value = current.value.rules.length;
     };
 
-    const onEdit = (rule?: RuleData) => {
+    const onEdit = (index = -1) => {
       newRule.value = null;
-      editing.value = rule;
+      editing.value = index;
+      onSelClear();
     };
 
     const onCancel = () => {
+      const active = editing.value;
       onEdit();
+      selection.active = active;
     };
 
     const onSubmit = (index: number, { rule }: { rule: RuleData }) => {
@@ -325,10 +334,10 @@ export default defineComponent({
       index: number,
       event: { cmdCtrl: boolean; shift: boolean }
     ) => {
-      if (event.shift && selection.last >= 0) {
+      if (event.shift && selection.active >= 0) {
         selection.selected = [];
-        const start = Math.min(selection.last, index);
-        const end = Math.max(selection.last, index);
+        const start = Math.min(selection.active, index);
+        const end = Math.max(selection.active, index);
         for (let i = start; i <= end; i += 1) {
           selection.selected[i] = true;
         }
@@ -346,11 +355,11 @@ export default defineComponent({
         selection.selected[index] = true;
         selection.count = 1;
       }
-      selection.last = index;
+      selection.active = index;
     };
 
     const onSelClear = () => {
-      selection.last = -1;
+      selection.active = -1;
       selection.count = 0;
       selection.selected.length = 0;
     };
@@ -418,18 +427,37 @@ export default defineComponent({
       if (data.type !== type.value) throw new Error('Incompatible rule type');
       const rules = current.value.rules as RuleData[];
       rules.splice(
-        selection.last < 0 ? rules.length : selection.last,
+        selection.active < 0 ? rules.length : selection.active,
         0,
         ...(data.rules as RuleData[])
       );
       save();
     };
 
+    const onKeyUp = () => {
+      selection.active = Math.max(0, selection.active - 1);
+    };
+
+    const onKeyDown = () => {
+      selection.active = Math.min(
+        current.value.rules.length - 1,
+        selection.active + 1
+      );
+    };
+
+    const onKeySpace = () => {
+      onSelToggle(selection.active, { cmdCtrl: true, shift: false });
+    };
+
+    const onSelEdit = () => {
+      onEdit(selection.active);
+    };
+
     const updateList = () => {
       const rules = current.value?.rules as RuleData[];
       if (!rules) return;
       filtered.length = rules.length;
-      selection.last = -1;
+      selection.active = -1;
       selection.count = 0;
       selection.selected.length = rules.length;
       rules.forEach((rule, index) => {
@@ -440,19 +468,22 @@ export default defineComponent({
     };
     const updateListLater = debounce(updateList, 200);
 
-    watchEffect(onCancel);
-
     watch(current, (cur, prev) => {
-      onCancel();
       updateList();
-      if (cur?.id !== prev?.id) onSelClear();
+      if (cur?.id !== prev?.id) onCancel();
     });
     watch(filter, updateListLater);
+    watch(editing, () => {
+      keyboardService.setContext('editRule', editing.value >= 0);
+    });
 
     onMounted(() => {
       updateList();
       const noInput = {
         condition: '!inputFocus',
+      };
+      const noEdit = {
+        condition: '!editRule',
       };
       const disposeList = [
         keyboardService.register(shortcutMap.copy, onSelCopy, noInput),
@@ -464,6 +495,12 @@ export default defineComponent({
           noInput
         ),
         keyboardService.register(shortcutMap.remove, onSelRemove, noInput),
+        keyboardService.register('up', onKeyUp, noEdit),
+        keyboardService.register('down', onKeyDown, noEdit),
+        keyboardService.register('space', onKeySpace, noEdit),
+        keyboardService.register(shortcutMap.edit, onSelEdit, noEdit),
+        keyboardService.register('esc', onSelClear, noEdit),
+        keyboardService.register('esc', onCancel, { condition: 'editRule' }),
       ];
       keyboardService.enable();
       return () => {
@@ -503,6 +540,7 @@ export default defineComponent({
       onSelCut,
       onSelPaste,
       onSelDuplicate,
+      onSelEdit,
     };
   },
 });

@@ -1,6 +1,6 @@
 <template>
   <form
-    class="rule-item grid grid-cols-[auto_auto_auto_min-content] gap-2"
+    class="grid grid-cols-[auto_auto_auto_min-content] gap-2"
     v-if="showDetail"
     @submit.prevent="onSubmit"
     ref="refForm"
@@ -83,9 +83,6 @@
   </form>
   <RuleItemView v-else :selected="selected" :badges="badges" @select="onSelect">
     <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
-    <template #buttons>
-      <slot name="buttons"></slot>
-    </template>
   </RuleItemView>
 </template>
 

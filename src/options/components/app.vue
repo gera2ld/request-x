@@ -14,6 +14,7 @@
             <kbd v-text="isMacintosh ? 'Cmd' : 'Ctrl'"></kbd> /
             <kbd>Shift</kbd> + click
           </li>
+          <li>Double click or press <kbd>E</kbd> to edit a rule</li>
         </ul>
       </div>
     </div>

@@ -111,6 +111,7 @@ textarea {
 
 .rule-item {
   @apply px-2 py-1 rounded border border-transparent;
+  &-active,
   &:hover {
     @apply border-zinc-300 dark:border-zinc-600;
   }
