@@ -1,8 +1,8 @@
 <template>
   <div
-    class="rule-item flex items-center"
+    class="flex items-center select-none"
     :class="{ 'rule-item-selected': selected }"
-    @mousedown="onSelect"
+    @click="onSelect"
   >
     <slot></slot>
     <div

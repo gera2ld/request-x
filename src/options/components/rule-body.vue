@@ -1,17 +1,19 @@
 <template>
   <div class="flex flex-col" v-if="current">
     <div class="rule-list-header">
-      <template v-if="editable">
-        <button class="mr-2" @click.prevent="onNew">+ Add new rule</button>
-      </template>
-      <div v-else class="text-zinc-600 mr-2">
-        You must fork this list before making changes to it
-      </div>
       <VlDropdown align="right" :closeAfterClick="true">
         <template v-slot:toggle>
           <button>Rule Actions &#8227;</button>
         </template>
         <div class="dropdown-menu">
+          <div
+            class="flex"
+            :class="{ disabled: !editable }"
+            @click.prevent="onNew"
+          >
+            <div class="flex-1">Add new</div>
+            <div class="shortcut" v-text="shortcutTextMap.add"></div>
+          </div>
           <div
             class="flex"
             :class="{
@@ -68,6 +70,9 @@
           </div>
         </div>
       </VlDropdown>
+      <div v-if="!editable" class="text-zinc-600 mx-2">
+        You must fork this list before making changes to it
+      </div>
       <div class="flex-1"></div>
       <div class="input ml-2 mr-2">
         <input type="search" v-model="filter" />
@@ -97,7 +102,7 @@
         </div>
       </VlDropdown>
     </div>
-    <div class="flex-1 pt-1 overflow-y-auto">
+    <div class="flex-1 pt-1 overflow-y-auto" @click="onSelClear">
       <component
         v-for="(rule, index) in current.rules"
         :is="RuleItem"
@@ -175,6 +180,7 @@ const shortcutMap = {
   paste: 'ctrlcmd-v',
   duplicate: 'ctrlcmd-d',
   remove: isMacintosh ? 'm-backspace' : 's-delete',
+  add: 'a',
   edit: 'e',
 };
 const shortcutTextMap = Object.entries(shortcutMap).reduce(
@@ -237,6 +243,7 @@ export default defineComponent({
     const onNew = () => {
       newRule.value = {};
       editing.value = current.value.rules.length;
+      onSelClear();
     };
 
     const onEdit = (index = -1) => {
@@ -495,6 +502,7 @@ export default defineComponent({
           noInput
         ),
         keyboardService.register(shortcutMap.remove, onSelRemove, noInput),
+        keyboardService.register(shortcutMap.add, onNew, noInput),
         keyboardService.register('up', onKeyUp, noEdit),
         keyboardService.register('down', onKeyDown, noEdit),
         keyboardService.register('space', onKeySpace, noEdit),

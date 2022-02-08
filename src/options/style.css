@@ -172,7 +172,7 @@ textarea {
 }
 
 .dropdown-menu {
-  @apply bg-white rounded border border-zinc-400 dark:bg-zinc-900 dark:border-zinc-600;
+  @apply select-none bg-white rounded border border-zinc-400 dark:bg-zinc-900 dark:border-zinc-600;
   > div {
     @apply px-2 py-1 cursor-pointer whitespace-nowrap;
     &:not(.disabled):hover {
