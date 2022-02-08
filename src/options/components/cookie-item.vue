@@ -3,6 +3,7 @@
     class="rule-item grid grid-cols-[auto_auto_auto_min-content] gap-2"
     v-if="showDetail"
     @submit.prevent="onSubmit"
+    ref="refForm"
   >
     <div class="col-span-3" :class="{ error: errors.url }">
       <input
@@ -93,9 +94,10 @@ import {
   PropType,
   computed,
   defineComponent,
+  nextTick,
   reactive,
-  watch,
   ref,
+  watch,
   onMounted,
 } from 'vue';
 import { CookieData, SameSiteStatus } from '#/types';
@@ -163,7 +165,7 @@ export default defineComponent({
       secure?: '' | 'true' | 'false';
       ttl?: string;
     }>({});
-    const refMethod = ref(null);
+    const refForm = ref(null);
 
     const reset = () => {
       if (!props.showDetail) return;
@@ -175,6 +177,11 @@ export default defineComponent({
         httpOnly: bool2str(rule.httpOnly),
         secure: bool2str(rule.secure),
         ttl: rule.ttl,
+      });
+      nextTick(() => {
+        if (props.editable) {
+          refForm.value?.querySelector('input,select')?.focus();
+        }
       });
     };
 
@@ -223,7 +230,7 @@ export default defineComponent({
       input,
       errors,
       badges,
-      refMethod,
+      refForm,
       sameSiteOptions,
       onCancel,
       onSubmit,

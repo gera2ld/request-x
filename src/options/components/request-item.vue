@@ -3,10 +3,10 @@
     v-if="showDetail"
     class="rule-item grid grid-cols-[5rem_auto_min-content] gap-2"
     @submit.prevent="onSubmit"
+    ref="refForm"
   >
     <div class="row-span-5" :class="{ error: errors.method }">
       <input
-        ref="method"
         type="text"
         :value="input.method"
         @input="onMethodInput"
@@ -162,8 +162,7 @@ export default defineComponent({
       reqHeaders?: string;
       resHeaders?: string;
     }>({});
-    const refMethod = ref(null);
-    const refButtons = ref(null);
+    const refForm = ref(null);
 
     const reset = () => {
       if (!props.showDetail) return;
@@ -176,7 +175,9 @@ export default defineComponent({
         resHeaders: stringifyHeaders(rule.responseHeaders),
       });
       nextTick(() => {
-        refMethod.value?.focus();
+        if (props.editable) {
+          refForm.value?.querySelector('input,select')?.focus();
+        }
       });
     };
 
@@ -233,8 +234,7 @@ export default defineComponent({
       input,
       errors,
       badges,
-      refMethod,
-      refButtons,
+      refForm,
       methodList,
       onMethodInput,
       onCancel,
