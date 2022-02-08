@@ -55,6 +55,26 @@ body {
   }
 }
 
+.header-add,
+.header-remove {
+  @apply relative pl-4;
+  &::before {
+    @apply absolute top-0 left-0;
+  };
+}
+.header-add {
+  @apply text-green-500;
+  &::before {
+    content: '+';
+  }
+}
+.header-remove {
+  @apply text-red-500;
+  &::before {
+    content: '-';
+  }
+}
+
 .section-title {
   @apply sticky top-0 bg-zinc-200 dark:bg-zinc-600 font-bold p-1;
 }

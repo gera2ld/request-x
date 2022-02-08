@@ -30,18 +30,18 @@
           </template>
           <template v-if="action.type === 'headers'">
             <div
-              class="text-red-500"
+              class="header-remove"
               v-for="(header, j) in action.headers?.removed"
               :key="j"
             >
-              - {{ header.name }}: {{ header.value }}
+              {{ header.name }}: {{ header.value }}
             </div>
             <div
-              class="text-green-500"
+              class="header-add"
               v-for="(header, j) in action.headers?.added"
               :key="j"
             >
-              + {{ header.name }}: {{ header.value }}
+              {{ header.name }}: {{ header.value }}
             </div>
           </template>
         </div>
