@@ -44,13 +44,7 @@ Click on URLs with a magic hash `#:request-x:` to subscribe it:
 <a href="https://example.com/path/to/rules.json#:request-x:">Subscribe</a>
 ```
 
-Set subscription type as search params within the magic hash:
-
-```
-<a href="https://example.com/path/to/rules.json#:request-x:?type=request">Subscribe My List</a>
-```
-
-Here is an example: [Subscribe](https://gist.github.com/gera2ld/5730305dc9081ec93ccab7a1c7ece5b3/raw/power.json#:request-x:?type=request)
+Here is an example: [Subscribe](https://gist.github.com/gera2ld/5730305dc9081ec93ccab7a1c7ece5b3/raw/power.json#:request-x:)
 
 ## Screenshots
 
