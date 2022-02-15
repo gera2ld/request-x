@@ -125,6 +125,7 @@
         :rule="newRule"
         :showDetail="true"
         :editable="true"
+        class="rule-item rule-item-active"
         @submit="onSubmit(-1, $event)"
         @cancel="onCancel"
       />
@@ -163,7 +164,15 @@ import VlDropdown from 'vueleton/lib/dropdown';
 import browser from '#/common/browser';
 import { keyboardService, isMacintosh, reprShortcut } from '#/common/keyboard';
 import { RuleData, ListData } from '#/types';
-import { store, dump, remove, getName, setRoute, setStatus, editList } from '../util';
+import {
+  store,
+  dump,
+  remove,
+  getName,
+  setRoute,
+  setStatus,
+  editList,
+} from '../util';
 import RequestItem from './request-item.vue';
 import CookieItem from './cookie-item.vue';
 
@@ -241,6 +250,7 @@ export default defineComponent({
     const editing = ref<number>(-1);
 
     const onNew = () => {
+      if (!editable.value) return;
       newRule.value = {};
       editing.value = current.value.rules.length;
       onSelClear();
