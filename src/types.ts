@@ -20,7 +20,6 @@ export interface LogItem {
 export interface ListMeta {
   id: number;
   name: string;
-  title: string;
   subscribeUrl: string;
   lastUpdated: number;
   enabled: boolean;
@@ -121,6 +120,10 @@ export interface InterceptionData {
   method: string;
   url: string;
   result?: RequestMatchResult;
+}
+
+export interface SubscriptionData {
+  url: string;
 }
 
 export interface PortMessage<T> {

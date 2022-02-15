@@ -43,7 +43,7 @@ import { defineComponent } from 'vue';
 import { pick } from 'lodash-es';
 import VlDropdown from 'vueleton/lib/dropdown';
 import browser from '#/common/browser';
-import { store, dump, loadFile, blob2Text, isRoute } from '../util';
+import { store, dump, loadFile, blob2Text, isRoute, editList } from '../util';
 import ListSection from './list-section.vue';
 
 const manifest = browser.runtime.getManifest();
@@ -70,12 +70,10 @@ export default defineComponent({
     };
 
     const onListSubscribe = () => {
-      store.editList = {
-        name: '',
-        type: 'request',
+      editList({
         subscribeUrl: '',
         isSubscribed: true,
-      };
+      });
     };
 
     const onListFetchAll = () => {

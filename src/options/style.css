@@ -58,6 +58,10 @@ textarea {
   }
 }
 
+.text-error {
+  @apply text-red-500 dark:text-red-500;
+}
+
 .subtle {
   @apply text-zinc-400 dark:text-zinc-500;
 }

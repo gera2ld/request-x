@@ -26,6 +26,7 @@
         @dragover="onDragOver($event, index)"
         @dragleave="onDragLeave($event, index)"
         @dragend="onDragEnd"
+        @dblclick="onEdit(index)"
       >
         <span
           class="list-section-status"
@@ -46,7 +47,7 @@
 <script lang="ts">
 import { defineComponent, PropType, reactive } from 'vue';
 import { ListData } from '#/types';
-import { getName, isRoute, moveList, setStatus } from '../util';
+import { getName, isRoute, moveList, setStatus, editList } from '../util';
 
 export default defineComponent({
   props: {
@@ -95,6 +96,10 @@ export default defineComponent({
       dragging.over = -1;
     };
 
+    const onEdit = (index: number) => {
+      editList(props.lists[index]);
+    };
+
     return {
       dragging,
       getName,
@@ -104,6 +109,7 @@ export default defineComponent({
       onDragOver,
       onDragLeave,
       onDragEnd,
+      onEdit,
     };
   },
 });

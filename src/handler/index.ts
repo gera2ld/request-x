@@ -1,16 +1,25 @@
 import browser from '#/common/browser';
+import { defer } from '#/common/util';
 import {
   ConfigStorage,
   ListData,
   InterceptionData,
+  SubscriptionData,
   PortMessage,
   RequestMatchResult,
   RequestDetails,
   FeatureToggles,
 } from '#/types';
 import { debounce, omit, pick } from 'lodash-es';
-import { RequestList, lists, loadLists, CookieList, fetchLists } from './list';
-import { getUrl, configStorage as config } from './util';
+import {
+  RequestList,
+  lists,
+  loadLists,
+  CookieList,
+  fetchLists,
+  fetchListData,
+} from './list';
+import { getUrl, configStorage as config, hookInstall } from './util';
 
 const features: FeatureToggles = {
   responseHeaders: false,
@@ -53,7 +62,7 @@ function getRequestHandler(type: string) {
 browser.webRequest.onBeforeRequest.addListener(
   ((handler) => (details) => {
     const { url } = details;
-    if (url.includes('#:request-x:')) {
+    if (hookInstall.get() && url.includes('#:request-x:')) {
       subscribeUrl(url);
       return { redirectUrl: 'javascript:void 0' };
     }
@@ -141,6 +150,7 @@ const commands = {
   FetchLists: () => fetchLists(),
   FetchList: ({ type, id }: { type: ListData['type']; id: number }) =>
     lists[type]?.find(id)?.fetch(),
+  FetchListData: (url: string) => fetchListData(url),
   async GetData() {
     return {
       config: await config.getAll(),
@@ -175,8 +185,20 @@ browser.alarms.onAlarm.addListener(() => {
 });
 
 const ports = new Map<number, browser.Runtime.Port>();
+const dashboardPorts = new Set<browser.Runtime.Port>();
+
+const deferPort = () => defer<browser.Runtime.Port>();
+let dashboardDeferred: ReturnType<typeof deferPort>;
 
 browser.runtime.onConnect.addListener((port) => {
+  if (port.name === 'dashboard') {
+    dashboardPorts.add(port);
+    dashboardDeferred?.resolve(port);
+    port.onDisconnect.addListener(() => {
+      dashboardPorts.delete(port);
+    });
+    return;
+  }
   const tabId = port.name.startsWith('inspect-') && +port.name.slice(8);
   if (tabId) {
     ports.set(tabId, port);
@@ -259,16 +281,22 @@ async function updateCookies() {
   processing = false;
 }
 
-function subscribeUrl(url: string) {
-  const [jsonUrl, hash] = url.split('#');
-  const tabUrl = browser.runtime.getURL(
-    '/options/index.html#install/' +
-      [jsonUrl, hash.split('?')[1]]
-        .filter(Boolean)
-        .map(encodeURIComponent)
-        .join('/')
-  );
-  browser.tabs.create({
-    url: tabUrl,
+async function subscribeUrl(url: string) {
+  const [jsonUrl] = url.split('#');
+  if (!dashboardPorts.size) {
+    dashboardDeferred = defer<browser.Runtime.Port>();
+  }
+  await browser.runtime.openOptionsPage();
+  if (!dashboardPorts.size) {
+    await dashboardDeferred.promise;
+    dashboardDeferred = undefined;
+  }
+  dashboardPorts.forEach((port) => {
+    port.postMessage({
+      type: 'subscription',
+      data: {
+        url: jsonUrl,
+      },
+    } as PortMessage<SubscriptionData>);
   });
 }

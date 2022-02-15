@@ -1,6 +1,12 @@
 import { reactive } from 'vue';
 import { pick } from 'lodash-es';
-import { ListData, ConfigStorage, FeatureToggles } from '#/types';
+import {
+  ListData,
+  ConfigStorage,
+  FeatureToggles,
+  PortMessage,
+  SubscriptionData,
+} from '#/types';
 import browser from '#/common/browser';
 import { reorderList } from '#/common/util';
 
@@ -13,7 +19,6 @@ export const store = reactive({
 } as {
   lists: { [key: string]: ListData[] };
   editList: {
-    editing?: boolean;
     isSubscribed?: boolean;
   } & Partial<ListData>;
   route: string[];
@@ -30,7 +35,7 @@ export function updateRoute() {
     .map(decodeURIComponent);
 }
 
-export function setRoute(value = 'settings/general') {
+export function setRoute(value = '') {
   window.location.hash = value;
 }
 
@@ -143,3 +148,23 @@ export async function moveList(
   });
   reorderList(store.lists[type], fromIndex, offset);
 }
+
+export function editList(list: typeof store['editList']) {
+  store.editList = {
+    isSubscribed: !!list.subscribeUrl,
+    ...list,
+  };
+}
+
+const port = browser.runtime.connect({
+  name: 'dashboard',
+});
+port.onMessage.addListener((message: PortMessage<any>) => {
+  if (message.type === 'subscription') {
+    const data = message.data as SubscriptionData;
+    editList({
+      subscribeUrl: data.url,
+      isSubscribed: true,
+    });
+  }
+});

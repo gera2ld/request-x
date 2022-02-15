@@ -163,7 +163,7 @@ import VlDropdown from 'vueleton/lib/dropdown';
 import browser from '#/common/browser';
 import { keyboardService, isMacintosh, reprShortcut } from '#/common/keyboard';
 import { RuleData, ListData } from '#/types';
-import { store, dump, remove, getName, setRoute, setStatus } from '../util';
+import { store, dump, remove, getName, setRoute, setStatus, editList } from '../util';
 import RequestItem from './request-item.vue';
 import CookieItem from './cookie-item.vue';
 
@@ -274,23 +274,7 @@ export default defineComponent({
     };
 
     const onListEdit = () => {
-      store.editList = {
-        type: type.value,
-        ...current.value,
-        editing: true,
-      };
-    };
-
-    const onListSubmit = ({ title, subscribeUrl }) => {
-      Object.assign(current.value, {
-        title,
-        subscribeUrl,
-      });
-      dump({
-        id: current.value.id,
-        title,
-        subscribeUrl,
-      });
+      editList(current.value);
     };
 
     const onListFetch = () => {
@@ -534,7 +518,6 @@ export default defineComponent({
       onEdit,
       onCancel,
       onListEdit,
-      onListSubmit,
       onListFetch,
       onListRemove,
       onListExport,

@@ -1,4 +1,5 @@
 import browser from '#/common/browser';
+import { createGetterSetter } from '#/common/util';
 import { ConfigStorage } from '#/types';
 
 export const getData = browser.storage.local.get;
@@ -83,3 +84,5 @@ export function getUrl(cookie: {
 export const configStorage = new ObjectStorage<ConfigStorage>('config', {
   badge: '',
 });
+
+export const hookInstall = createGetterSetter<boolean>(true);

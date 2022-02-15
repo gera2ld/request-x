@@ -11,7 +11,13 @@ import {
 } from '#/types';
 import { groupBy } from 'lodash-es';
 import { BaseRule, RequestRule, CookieRule } from './rule';
-import { getExactData, dumpExactData, getData, removeData } from './util';
+import {
+  getExactData,
+  dumpExactData,
+  getData,
+  removeData,
+  hookInstall,
+} from './util';
 
 let lastId = 0;
 
@@ -21,7 +27,6 @@ export function getKey(id: number) {
 
 export abstract class BaseList<T extends BaseRule<U>, D, M, U> {
   protected name = 'No name';
-  protected title = '';
   protected subscribeUrl = '';
   protected lastUpdated = 0;
   protected enabled = true;
@@ -41,11 +46,9 @@ export abstract class BaseList<T extends BaseRule<U>, D, M, U> {
     const key = this.key();
     data ??= await getExactData(key);
     if (data) {
-      ['name', 'title', 'subscribeUrl', 'lastUpdated', 'enabled'].forEach(
-        (ikey) => {
-          if (data[ikey] != null) this[ikey] = data[ikey];
-        }
-      );
+      ['name', 'subscribeUrl', 'lastUpdated', 'enabled'].forEach((ikey) => {
+        if (data[ikey] != null) this[ikey] = data[ikey];
+      });
       this.name ||= 'No name';
       if (data.rules) {
         this.rules = data.rules.map((rule) => this.createRule(rule));
@@ -63,7 +66,6 @@ export abstract class BaseList<T extends BaseRule<U>, D, M, U> {
       id: this.id,
       type: this.type,
       name: this.name,
-      title: this.title,
       enabled: this.enabled,
       subscribeUrl: this.subscribeUrl,
       lastUpdated: this.lastUpdated,
@@ -78,13 +80,9 @@ export abstract class BaseList<T extends BaseRule<U>, D, M, U> {
 
   async doFetch() {
     try {
-      const res = await fetch(this.subscribeUrl);
-      const data = await res.json();
-      this.update({
-        name: data.name || '',
-        rules: data.rules,
-        lastUpdated: Date.now(),
-      });
+      const data = await fetchListData(this.subscribeUrl);
+      if (data.type !== this.type) throw new Error('Type mismatch');
+      this.update(data);
     } finally {
       this.fetching = undefined;
     }
@@ -246,4 +244,24 @@ export async function loadLists() {
 
 export async function fetchLists() {
   return Object.values(lists).map((list) => list.fetch());
+}
+
+let count = 0;
+
+export async function fetchListData(url: string) {
+  count += 1;
+  hookInstall.set(false);
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    return {
+      type: data.type,
+      name: data.name || '',
+      rules: data.rules,
+      lastUpdated: Date.now(),
+    } as Partial<ListData>;
+  } finally {
+    count -= 1;
+    if (!count) hookInstall.set(true);
+  }
 }
