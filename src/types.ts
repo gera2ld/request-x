@@ -130,3 +130,9 @@ export interface PortMessage<T> {
   type: string;
   data: T;
 }
+
+export interface ClipboardRuleData {
+  provider: string;
+  type: ListData['type'];
+  rules: RuleData[];
+}

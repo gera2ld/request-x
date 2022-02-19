@@ -114,7 +114,8 @@ import {
   onMounted,
 } from 'vue';
 import { HttpHeaderItem, RequestData } from '#/types';
-import { isValidMethod, isValidPattern, isValidTarget, store } from '../util';
+import { store } from '../store';
+import { isValidMethod, isValidPattern, isValidTarget } from '../util';
 import RuleItemView from './rule-item-view.vue';
 
 const methodList = ['*', 'GET', 'POST', 'HEAD', 'PUT', 'PATCH', 'DELETE'];

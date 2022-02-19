@@ -89,7 +89,7 @@ textarea {
   @apply w-1/2 min-w-[16rem] mx-auto p-2 bg-white dark:bg-zinc-900;
 }
 .vl-modal-backdrop {
-  @apply dark:bg-white/10;
+  @apply dark:bg-black/70;
 }
 
 .modal-group {
@@ -121,7 +121,10 @@ textarea {
     @apply border-zinc-300 dark:border-zinc-600;
   }
   &-selected {
-    @apply bg-zinc-200 dark:bg-zinc-800;
+    @apply bg-zinc-200 dark:bg-zinc-700;
+  }
+  &-badge {
+    @apply p-1 text-xs uppercase text-zinc-500 dark:text-zinc-400;
   }
 }
 
@@ -175,23 +178,36 @@ textarea {
   }
 }
 
-.dropdown-menu {
-  @apply select-none bg-white rounded border border-zinc-400 dark:bg-zinc-900 dark:border-zinc-600;
-  > div {
-    @apply px-2 py-1 cursor-pointer whitespace-nowrap;
-    &:not(.disabled):hover {
-      @apply bg-zinc-200 dark:bg-zinc-800;
-    }
-    &.sep {
-      @apply p-0 border-b border-zinc-400 dark:border-zinc-600;
-    }
-    > .shortcut {
-      @apply ml-4 text-zinc-400 dark:text-zinc-600;
-    }
-    &.disabled {
-      @apply cursor-not-allowed text-zinc-400 dark:text-zinc-600;
-    }
+.menu-bar {
+  @apply flex flex-1;
+}
+.menu-group {
+  @apply uppercase text-xs px-4 py-1 bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 border-t border-zinc-300 dark:border-zinc-600 text-center;
+}
+.menu-toggle {
+  @apply px-2 py-1 cursor-pointer rounded;
+  &:hover,
+  &.active {
+    @apply bg-zinc-200 dark:bg-zinc-700;
   }
+}
+.menu-sep {
+  @apply p-0 border-b border-zinc-200 dark:border-zinc-800;
+}
+.menu-item {
+  @apply flex px-2 py-1 cursor-pointer whitespace-nowrap;
+  &.disabled {
+    @apply cursor-not-allowed text-zinc-400 dark:text-zinc-600;
+  }
+  &:not(.disabled):hover {
+    @apply bg-zinc-200 dark:bg-zinc-700;
+  }
+}
+.menu-shortcut {
+  @apply ml-4 text-zinc-400 dark:text-zinc-600;
+}
+.menu-dropdown {
+  @apply select-none bg-white rounded border border-zinc-400 dark:bg-zinc-900 dark:border-zinc-600;
 }
 
 .dragging {
@@ -208,4 +224,8 @@ textarea {
       @apply top-auto bottom-0;
     }
   }
+}
+
+.header {
+  @apply flex items-center py-1 border-b border-zinc-200 dark:border-zinc-600;
 }

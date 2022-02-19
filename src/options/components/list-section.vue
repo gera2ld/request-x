@@ -26,11 +26,11 @@
         @dragover="onDragOver($event, index)"
         @dragleave="onDragLeave($event, index)"
         @dragend="onDragEnd"
-        @dblclick="onEdit(index)"
+        @dblclick="onEdit(item)"
       >
         <span
           class="list-section-status"
-          @click.prevent.stop="switchStatus(item)"
+          @click.prevent.stop="onToggle(item)"
         ></span>
         <span class="mx-1 flex-1 truncate" v-text="getName(item)"></span>
         <span
@@ -47,7 +47,8 @@
 <script lang="ts">
 import { defineComponent, PropType, reactive } from 'vue';
 import { ListData } from '#/types';
-import { getName, isRoute, moveList, setStatus, editList } from '../util';
+import { getName, isRoute, moveList } from '../util';
+import { listActions } from '../actions';
 
 export default defineComponent({
   props: {
@@ -62,10 +63,6 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const switchStatus = (item: ListData) => {
-      setStatus(item, !item.enabled);
-    };
-
     const dragging = reactive<{
       start: number;
       over: number;
@@ -96,20 +93,16 @@ export default defineComponent({
       dragging.over = -1;
     };
 
-    const onEdit = (index: number) => {
-      editList(props.lists[index]);
-    };
-
     return {
       dragging,
       getName,
       isRoute,
-      switchStatus,
       onDragStart,
       onDragOver,
       onDragLeave,
       onDragEnd,
-      onEdit,
+      onEdit: listActions.edit,
+      onToggle: listActions.toggle,
     };
   },
 });

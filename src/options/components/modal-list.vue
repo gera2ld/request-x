@@ -76,7 +76,8 @@ import { debounce, pick } from 'lodash-es';
 import VlModal from 'vueleton/lib/modal';
 import browser from '#/common/browser';
 import { ListData } from '#/types';
-import { store, isValidURL, dump } from '../util';
+import { store } from '../store';
+import { isValidURL, dump } from '../util';
 
 export default defineComponent({
   components: {

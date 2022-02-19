@@ -1,30 +1,9 @@
-import { reactive } from 'vue';
 import { pick } from 'lodash-es';
-import {
-  ListData,
-  ConfigStorage,
-  FeatureToggles,
-  PortMessage,
-  SubscriptionData,
-} from '#/types';
+import { ListData, PortMessage, SubscriptionData } from '#/types';
 import browser from '#/common/browser';
 import { reorderList } from '#/common/util';
+import { store } from './store';
 
-export const store = reactive({
-  lists: {},
-  editList: null,
-  route: [],
-  config: null,
-  features: {},
-} as {
-  lists: { [key: string]: ListData[] };
-  editList: {
-    isSubscribed?: boolean;
-  } & Partial<ListData>;
-  route: string[];
-  config: ConfigStorage;
-  features: FeatureToggles;
-});
 window.addEventListener('hashchange', updateRoute);
 
 export function updateRoute() {

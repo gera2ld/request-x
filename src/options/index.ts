@@ -1,7 +1,8 @@
 import { createApp } from 'vue';
 import browser from '#/common/browser';
 import { ListData } from '#/types';
-import { store, setRoute, isRoute, updateRoute, getData } from './util';
+import { store } from './store';
+import { setRoute, isRoute, updateRoute, getData } from './util';
 import App from './components/app.vue';
 import './style.css';
 

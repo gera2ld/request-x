@@ -6,7 +6,7 @@
   >
     <slot></slot>
     <div
-      class="p-1 text-xs text-zinc-600 uppercase"
+      class="rule-item-badge"
       v-for="badge in badges"
       v-text="badge"
       :key="badge"

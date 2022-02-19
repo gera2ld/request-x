@@ -98,7 +98,8 @@ import {
   onMounted,
 } from 'vue';
 import { CookieData, SameSiteStatus } from '#/types';
-import { isValidPattern, store } from '../util';
+import { store } from '../store';
+import { isValidPattern } from '../util';
 import RuleItemView from './rule-item-view.vue';
 
 const sameSiteOptions = [
