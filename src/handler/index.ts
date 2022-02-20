@@ -125,15 +125,17 @@ const commands = {
   },
   MoveList: async ({
     type,
-    index,
-    offset,
+    selection,
+    target,
+    downward,
   }: {
     type: ListData['type'];
-    index: number;
-    offset: number;
+    selection: number[];
+    target: number;
+    downward: boolean;
   }) => {
     const list = lists[type];
-    list.move(index, offset);
+    list.move(selection, target, downward);
   },
   UpdateList: async (data: Partial<ListData> & { type: ListData['type'] }) => {
     const group = lists[data.type];

@@ -43,6 +43,18 @@ export const ruleSelection = reactive<{
   selected: [],
 });
 
+export const listSelection = reactive<{
+  activeType: ListData['type'];
+  activeIndex: number;
+  count: number;
+  selected: boolean[];
+}>({
+  activeType: 'request',
+  activeIndex: -1,
+  count: 0,
+  selected: [],
+});
+
 export const ruleState = reactive<{
   newRule: Partial<RuleData>;
   editing: number;

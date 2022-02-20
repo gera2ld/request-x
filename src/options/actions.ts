@@ -9,6 +9,7 @@ import {
   currentList,
   listEditable,
   ruleState,
+  listSelection,
 } from './store';
 import {
   dump,
@@ -19,6 +20,7 @@ import {
   setStatus,
   remove,
   getName,
+  isRoute,
 } from './util';
 import { shortcutMap } from './shortcut';
 
@@ -93,6 +95,43 @@ export const listActions = {
     };
     const id = await dump(data as Partial<ListData>);
     setRoute(`lists/${id}`);
+  },
+  selClear() {
+    listSelection.activeIndex = -1;
+    listSelection.count = 0;
+    listSelection.selected.length = 0;
+  },
+  selToggle(
+    type: ListData['type'],
+    index: number,
+    event: { cmdCtrl: boolean; shift: boolean }
+  ) {
+    if (listSelection.activeType !== type) {
+      listSelection.activeType = type;
+      listActions.selClear();
+    }
+    if (event.shift && listSelection.activeIndex >= 0) {
+      listSelection.selected = [];
+      const start = Math.min(listSelection.activeIndex, index);
+      const end = Math.max(listSelection.activeIndex, index);
+      for (let i = start; i <= end; i += 1) {
+        listSelection.selected[i] = true;
+      }
+      listSelection.count = end - start + 1;
+      return;
+    }
+    if (event.cmdCtrl) {
+      if ((listSelection.selected[index] = !listSelection.selected[index])) {
+        listSelection.count += 1;
+      } else {
+        listSelection.count -= 1;
+      }
+    } else {
+      listSelection.selected = [];
+      listSelection.selected[index] = true;
+      listSelection.count = 1;
+    }
+    listSelection.activeIndex = index;
   },
 };
 
@@ -268,6 +307,22 @@ watch(
   () => ruleState.editing,
   (editing) => {
     keyboardService.setContext('editRule', editing >= 0);
+  }
+);
+watch(
+  () => store.route,
+  () => {
+    if (isRoute('lists')) {
+      const index = currentList.value
+        ? store.lists[currentList.value.type].indexOf(currentList.value)
+        : -1;
+      if (index >= 0) {
+        listActions.selToggle(currentList.value.type, index, {
+          cmdCtrl: false,
+          shift: false,
+        });
+      }
+    }
   }
 );
 

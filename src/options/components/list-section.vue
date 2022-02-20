@@ -9,19 +9,27 @@
     <template v-else>
       <div v-if="!lists?.length" class="list-section-empty">Empty</div>
       <a
-        class="nav-item"
         v-for="(item, index) in lists"
         :key="index"
+        class="list-item"
         :class="{
-          active: isRoute('lists', type, item.id),
+          active:
+            listSelection.activeType === type &&
+            listSelection.activeIndex === index,
+          'list-item-selected':
+            listSelection.activeType === type && listSelection.selected[index],
           enabled: item.enabled,
-          dragging: dragging.start === index,
+          dragging:
+            dragging.start >= 0 &&
+            listSelection.activeType === type &&
+            listSelection.selected[index],
           'dragging-over': dragging.over === index,
           'dragging-below':
             dragging.over === index && dragging.over > dragging.start,
         }"
-        :href="`#lists/${type}/${item.id}`"
+        :href="getHash(item)"
         :title="getName(item)"
+        @click.prevent="onSelToggle(index, $event)"
         @dragstart="onDragStart($event, index)"
         @dragover="onDragOver($event, index)"
         @dragleave="onDragLeave($event, index)"
@@ -47,8 +55,9 @@
 <script lang="ts">
 import { defineComponent, PropType, reactive } from 'vue';
 import { ListData } from '#/types';
-import { getName, isRoute, moveList } from '../util';
+import { getName, isRoute, moveList, getModifiers } from '../util';
 import { listActions } from '../actions';
+import { listSelection } from '../store';
 
 export default defineComponent({
   props: {
@@ -72,6 +81,12 @@ export default defineComponent({
     });
 
     const onDragStart = (_event: DragEvent, index: number) => {
+      if (
+        listSelection.activeType !== props.type ||
+        !listSelection.selected[index]
+      ) {
+        onSelToggle(index, {} as any);
+      }
       dragging.start = index;
       dragging.over = -1;
     };
@@ -88,19 +103,37 @@ export default defineComponent({
     };
 
     const onDragEnd = () => {
-      moveList(props.type, dragging.start, dragging.over);
+      const selection = listSelection.selected.map((value, i) => value ? i : -1).filter(i => i >= 0);
+      moveList(props.type, selection, dragging.over, dragging.over > dragging.start);
       dragging.start = -1;
       dragging.over = -1;
+    };
+
+    const getHash = (item: ListData) => {
+      return `#lists/${item.type}/${item.id}`;
+    };
+
+    const onSelToggle = (index: number, event: MouseEvent) => {
+      listActions.selToggle(props.type, index, getModifiers(event));
+      if (
+        listSelection.count === 1 &&
+        listSelection.selected[listSelection.activeIndex]
+      ) {
+        window.location.hash = getHash(props.lists[index]);
+      }
     };
 
     return {
       dragging,
       getName,
+      getHash,
       isRoute,
+      listSelection,
       onDragStart,
       onDragOver,
       onDragLeave,
       onDragEnd,
+      onSelToggle,
       onEdit: listActions.edit,
       onToggle: listActions.toggle,
     };

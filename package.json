@@ -12,7 +12,8 @@
     "clean": "gulp clean",
     "dev": "gulp dev",
     "prebuild": "npm run lint",
-    "build": "cross-env NODE_ENV=production gulp build"
+    "build": "cross-env NODE_ENV=production gulp build",
+    "test": "jest test"
   },
   "engines": {
     "node": ">=12"
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@gera2ld/plaid": "~2.5.0",
     "@gera2ld/plaid-common-ts": "~2.5.0",
+    "@gera2ld/plaid-test": "^2.5.0",
     "@gera2ld/plaid-webpack": "~2.5.0",
     "@gera2ld/plaid-webpack-vue3": "~2.5.0",
     "@types/chrome": "^0.0.176",

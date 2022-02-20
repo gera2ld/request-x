@@ -168,13 +168,14 @@ textarea {
   }
 }
 
-.nav-item {
-  @apply flex items-center px-2 py-1 rounded cursor-pointer;
-  &:hover {
-    @apply bg-zinc-100 dark:bg-zinc-800;
-  }
-  &.active {
+.list-item {
+  @apply flex items-center px-2 py-1 rounded cursor-pointer border border-transparent;
+  &-selected {
     @apply bg-zinc-200 dark:bg-zinc-700;
+  }
+  &:hover,
+  &.active {
+    @apply border-zinc-300 dark:border-zinc-600;
   }
 }
 

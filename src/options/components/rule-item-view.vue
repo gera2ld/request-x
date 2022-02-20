@@ -20,6 +20,7 @@
 <script lang="ts">
 import { defineComponent, PropType, ref } from 'vue';
 import { isMacintosh } from '#/common/keyboard';
+import { getModifiers } from '../util';
 
 export default defineComponent({
   props: {
@@ -35,10 +36,7 @@ export default defineComponent({
       if (refButtons.value?.contains(e.target)) return;
       e.preventDefault();
       e.stopPropagation();
-      context.emit('select', {
-        cmdCtrl: isMacintosh ? e.metaKey : e.ctrlKey,
-        shift: e.shiftKey,
-      });
+      context.emit('select', getModifiers(e));
     };
 
     return {

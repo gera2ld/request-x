@@ -166,8 +166,12 @@ export abstract class BaseListManager<
     dumpLists();
   }
 
-  move(index: number, offset: number) {
-    if (reorderList(this.data, index, offset)) dumpLists();
+  move(selection: number[], target: number, downward: boolean) {
+    const reordered = reorderList(this.data, selection, target, downward);
+    if (reordered) {
+      this.data = reordered;
+      dumpLists();
+    }
   }
 
   get() {

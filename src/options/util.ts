@@ -1,6 +1,7 @@
 import { pick } from 'lodash-es';
 import { ListData, PortMessage, SubscriptionData } from '#/types';
 import browser from '#/common/browser';
+import { isMacintosh } from '#/common/keyboard';
 import { reorderList } from '#/common/util';
 import { store } from './store';
 
@@ -112,26 +113,36 @@ export async function getData() {
 
 export async function moveList(
   type: ListData['type'],
-  fromIndex: number,
-  toIndex: number
+  selection: number[],
+  target: number,
+  downward: boolean
 ) {
-  const offset = toIndex - fromIndex;
-  if (fromIndex < 0 || !offset) return;
   await browser.runtime.sendMessage({
     cmd: 'MoveList',
     data: {
       type,
-      index: fromIndex,
-      offset,
+      selection,
+      target,
+      downward,
     },
   });
-  reorderList(store.lists[type], fromIndex, offset);
+  const reordered = reorderList(store.lists[type], selection, target, downward);
+  if (reordered) {
+    store.lists[type] = reordered;
+  }
 }
 
 export function editList(list: typeof store['editList']) {
   store.editList = {
     isSubscribed: !!list.subscribeUrl,
     ...list,
+  };
+}
+
+export function getModifiers(e: MouseEvent) {
+  return {
+    cmdCtrl: isMacintosh ? e.metaKey : e.ctrlKey,
+    shift: e.shiftKey,
   };
 }
 

@@ -1,19 +1,17 @@
 export function reorderList<T = any>(
   array: T[],
-  index: number,
-  offset: number
+  selection: number[],
+  target: number,
+  downward: boolean
 ) {
-  if (
-    !offset ||
-    index < 0 ||
-    index >= array.length ||
-    index + offset < 0 ||
-    index + offset >= array.length
-  )
-    return false;
-  const items = array.splice(index, 1);
-  array.splice(index + offset, 0, ...items);
-  return true;
+  if (!selection.length || target < 0 || target >= array.length) return;
+  const selectedItems = selection.map((i) => array[i]);
+  const clone = [...array];
+  selection.forEach((i) => {
+    clone[i] = undefined;
+  });
+  clone.splice(target + +downward, 0, ...selectedItems);
+  return clone.filter((item) => item != null);
 }
 
 export function createGetterSetter<T>(initValue: T = undefined) {
