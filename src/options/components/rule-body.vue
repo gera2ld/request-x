@@ -1,6 +1,17 @@
 <template>
   <div class="flex flex-col" v-if="currentList">
-    <div class="flex-1 pt-1 overflow-y-auto" @click="onSelClear">
+    <div
+      v-if="!currentList.rules.length && !ruleState.newRule"
+      class="flex flex-1 items-center justify-center subtle text-lg"
+    >
+      <div>
+        No rules yet
+        <template v-if="listEditable">
+          , <a href="#" @click.prevent="onRuleAdd">add one</a>
+        </template>
+      </div>
+    </div>
+    <div v-else class="flex-1 pt-1 overflow-y-auto" @click="onSelClear">
       <component
         v-for="(rule, index) in currentList.rules"
         :is="RuleItem"
@@ -96,6 +107,7 @@ export default defineComponent({
       onSubmit: ruleActions.submit,
       onSelClear: ruleActions.selClear,
       onSelToggle: ruleActions.selToggle,
+      onRuleAdd: ruleActions.new,
     };
   },
 });
