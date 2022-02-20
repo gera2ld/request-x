@@ -2,7 +2,7 @@ import { watch } from 'vue';
 import { debounce, pick } from 'lodash-es';
 import browser from '#/common/browser';
 import { keyboardService } from '#/common/keyboard';
-import { ClipboardRuleData, ListData, RuleData } from '#/types';
+import { ListData, ListsDumpData, RuleData, RulesDumpData } from '#/types';
 import {
   store,
   ruleSelection,
@@ -21,6 +21,7 @@ import {
   remove,
   getName,
   isRoute,
+  downloadBlob,
 } from './util';
 import { shortcutMap } from './shortcut';
 
@@ -36,9 +37,12 @@ export const listActions = {
   async import() {
     const blob = await loadFile();
     const text = await blob2Text(blob);
-    const data = JSON.parse(text);
-    data.type ??= 'request';
-    dump(pick(data, ['name', 'type', 'rules']));
+    let data = JSON.parse(text);
+    if (!Array.isArray(data)) data = [data];
+    data.forEach((list: Partial<ListData>) => {
+      list.type ??= 'request';
+      dump(pick(list, ['name', 'type', 'rules']) as Partial<ListData>);
+    });
   },
   subscribe() {
     editList({
@@ -68,6 +72,7 @@ export const listActions = {
     item ||= currentList.value;
     remove(item.type, item.id);
   },
+  /*
   export(item?: ListData) {
     item ||= currentList.value;
     const data = {
@@ -79,13 +84,9 @@ export const listActions = {
     const blob = new Blob([JSON.stringify(data)], {
       type: 'application/json',
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.download = `${basename}.json`;
-    a.href = url;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url));
+    downloadBlob(blob, `${basename}.json`);
   },
+  */
   async fork(item?: ListData) {
     item ||= currentList.value;
     const data = {
@@ -132,6 +133,81 @@ export const listActions = {
       listSelection.count = 1;
     }
     listSelection.activeIndex = index;
+  },
+  selRemove() {
+    if (!listSelection.count) return;
+    store.lists[listSelection.activeType]?.forEach((item, i) => {
+      if (listSelection.selected[i]) listActions.remove(item);
+    });
+    listActions.selClear();
+  },
+  selCopy() {
+    if (!listSelection.count) return;
+    const lists = store.lists[listSelection.activeType]?.filter(
+      (_, index) => listSelection.selected[index]
+    );
+    if (!lists?.length) return;
+    const data: ListsDumpData = {
+      provider: PROVIDER,
+      category: 'lists',
+      data: lists,
+    };
+    navigator.clipboard.writeText(JSON.stringify(data));
+  },
+  selCut() {
+    if (!listSelection.count) return;
+    listActions.selCopy();
+    listActions.selRemove();
+  },
+  async selPaste() {
+    let data: ListsDumpData;
+    try {
+      const raw = await navigator.clipboard.readText();
+      data = raw && JSON.parse(raw);
+      if (data.provider !== PROVIDER || data.category !== 'lists')
+        throw new Error('Invalid clipboard data');
+    } catch {
+      return;
+    }
+    data.data.forEach((list) => {
+      dump(pick(list, ['name', 'type', 'rules']) as Partial<ListData>);
+    });
+  },
+  selExport() {
+    if (!listSelection.count) return;
+    const result = [];
+    store.lists[listSelection.activeType]?.forEach((item, i) => {
+      if (listSelection.selected[i]) {
+        result.push({
+          type: item.type,
+          name: getName(item),
+          rules: item.rules,
+        });
+      }
+    });
+    if (!result.length) return;
+    const basename =
+      result.length === 1
+        ? result[0].name.replace(/\s+/g, '-').toLowerCase()
+        : `request-x-export-${Date.now()}`;
+    const blob = new Blob(
+      [JSON.stringify(result.length === 1 ? result[0] : result)],
+      {
+        type: 'application/json',
+      }
+    );
+    downloadBlob(blob, `${basename}.json`);
+  },
+  selToggleStatus() {
+    if (!listSelection.count) return;
+    const lists = store.lists[listSelection.activeType];
+    const selected = lists.filter((_, i) => listSelection.selected[i]);
+    const enabled = selected.some((list) => !list.enabled);
+    selected.forEach((list) => {
+      if (list.enabled !== enabled) {
+        setStatus(list, enabled);
+      }
+    });
   },
 };
 
@@ -198,10 +274,13 @@ export const ruleActions = {
       (_, index) => ruleSelection.selected[index]
     );
     if (!rules?.length) return;
-    const data: ClipboardRuleData = {
+    const data: RulesDumpData = {
       provider: PROVIDER,
-      type: currentList.value.type,
-      rules,
+      category: 'rules',
+      data: {
+        type: currentList.value.type,
+        rules,
+      },
     };
     navigator.clipboard.writeText(JSON.stringify(data));
   },
@@ -212,22 +291,27 @@ export const ruleActions = {
   },
   async selPaste() {
     if (!listEditable.value) return;
-    let data: ClipboardRuleData;
+    let data: RulesDumpData;
     try {
       const raw = await navigator.clipboard.readText();
       data = raw && JSON.parse(raw);
+      if (
+        data.provider !== PROVIDER ||
+        data.category !== 'rules' ||
+        !data.data.type ||
+        !data.data.rules?.length
+      )
+        throw new Error('Invalid clipboard data');
     } catch {
       return;
     }
-    if (data.provider !== PROVIDER || !data.type || !data.rules?.length)
-      throw new Error('Invalid clipboard data');
-    if (data.type !== currentList.value.type)
+    if (data.data.type !== currentList.value.type)
       throw new Error('Incompatible rule type');
     const rules = currentList.value.rules as RuleData[];
     rules.splice(
       ruleSelection.active < 0 ? rules.length : ruleSelection.active,
       0,
-      ...(data.rules as RuleData[])
+      ...(data.data.rules as RuleData[])
     );
     ruleActions.save();
   },
@@ -322,6 +406,8 @@ watch(
           shift: false,
         });
       }
+    } else {
+      listActions.selClear();
     }
   }
 );

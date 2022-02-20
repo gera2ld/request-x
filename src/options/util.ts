@@ -146,6 +146,15 @@ export function getModifiers(e: MouseEvent) {
   };
 }
 
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.download = filename;
+  a.href = url;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url));
+}
+
 const port = browser.runtime.connect({
   name: 'dashboard',
 });

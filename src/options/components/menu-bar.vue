@@ -46,8 +46,14 @@
 import { computed, defineComponent, ref } from 'vue';
 import VlDropdown from 'vueleton/lib/dropdown';
 import { shortcutTextMap } from '../shortcut';
-import { currentList, listEditable, ruleSelection } from '../store';
+import {
+  currentList,
+  listEditable,
+  listSelection,
+  ruleSelection,
+} from '../store';
 import { listActions, ruleActions } from '../actions';
+import { store } from '../store';
 
 const menus = computed(() => [
   {
@@ -75,31 +81,25 @@ const menus = computed(() => [
       },
       {
         label: 'Export',
-        handler: listActions.export,
-        disabled: !currentList.value,
+        handler: listActions.selExport,
+        disabled: !listSelection.count,
       },
       {
-        label: 'Disable',
-      },
-      {
-        label: 'Enable',
+        label: 'Enable / Disable',
+        handler: listActions.selToggleStatus,
+        disabled: !listSelection.count,
       },
       {
         label: 'Remove',
-        handler: listActions.remove,
-        disabled: !currentList.value,
+        handler: listActions.selRemove,
+        disabled: !listSelection.count,
       },
       {
         type: 'group',
         label: 'Current list',
       },
       {
-        label: currentList.value?.enabled ? 'Disable' : 'Enable',
-        handler: listActions.toggle,
-        disabled: !currentList.value,
-      },
-      {
-        label: 'Edit',
+        label: 'Edit metadata',
         handler: listActions.edit,
         disabled: !currentList.value,
       },
@@ -148,22 +148,41 @@ const menus = computed(() => [
     label: 'Edit',
     items: [
       {
+        type: 'group',
+        label: store.activeArea === 'lists' ? 'Lists' : 'Rules',
+      },
+      {
         label: 'Cut',
         shortcut: shortcutTextMap.cut,
-        handler: ruleActions.selCut,
-        disabled: !ruleSelection.count || !listEditable.value,
+        handler:
+          store.activeArea === 'lists'
+            ? listActions.selCut
+            : ruleActions.selCut,
+        disabled:
+          store.activeArea === 'lists'
+            ? !listSelection.count
+            : !ruleSelection.count || !listEditable.value,
       },
       {
         label: 'Copy',
         shortcut: shortcutTextMap.copy,
-        handler: ruleActions.selCopy,
-        disabled: !ruleSelection.count,
+        handler:
+          store.activeArea === 'lists'
+            ? listActions.selCopy
+            : ruleActions.selCopy,
+        disabled:
+          store.activeArea === 'lists'
+            ? !listSelection.count
+            : !ruleSelection.count,
       },
       {
         label: 'Paste',
         shortcut: shortcutTextMap.paste,
-        handler: ruleActions.selPaste,
-        disabled: !listEditable.value,
+        handler:
+          store.activeArea === 'lists'
+            ? listActions.selPaste
+            : ruleActions.selPaste,
+        disabled: store.activeArea !== 'lists' && !listEditable.value,
       },
     ],
   },

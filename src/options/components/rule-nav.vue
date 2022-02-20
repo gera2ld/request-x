@@ -1,5 +1,9 @@
 <template>
-  <div class="nav">
+  <div
+    class="nav"
+    :class="{ 'active-area': store.activeArea === 'lists' }"
+    @mousedown="store.activeArea = 'lists'"
+  >
     <div class="flex-1 overflow-y-auto">
       <section class="nav-section">
         <ListSection type="request" :lists="store.lists.request">

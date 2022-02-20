@@ -1,5 +1,10 @@
 <template>
-  <div class="flex flex-col" v-if="currentList">
+  <div
+    v-if="currentList"
+    class="flex flex-col"
+    :class="{ 'active-area': store.activeArea === 'rules' }"
+    @mousedown="store.activeArea = 'rules'"
+  >
     <div
       v-if="!currentList.rules.length && !ruleState.newRule"
       class="flex flex-1 items-center justify-center subtle text-lg"
@@ -72,6 +77,7 @@ import {
   ruleSelection,
   ruleState,
   listEditable,
+  store,
 } from '../store';
 import { shortcutTextMap } from '../shortcut';
 import RequestItem from './request-item.vue';
@@ -102,6 +108,7 @@ export default defineComponent({
       shortcutTextMap,
       ruleSelection,
       ruleState,
+      store,
       onCancel: ruleActions.cancel,
       onEdit: ruleActions.edit,
       onSubmit: ruleActions.submit,

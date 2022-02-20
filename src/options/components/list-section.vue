@@ -103,8 +103,15 @@ export default defineComponent({
     };
 
     const onDragEnd = () => {
-      const selection = listSelection.selected.map((value, i) => value ? i : -1).filter(i => i >= 0);
-      moveList(props.type, selection, dragging.over, dragging.over > dragging.start);
+      const selection = listSelection.selected
+        .map((value, i) => (value ? i : -1))
+        .filter((i) => i >= 0);
+      moveList(
+        props.type,
+        selection,
+        dragging.over,
+        dragging.over > dragging.start
+      );
       dragging.start = -1;
       dragging.over = -1;
     };

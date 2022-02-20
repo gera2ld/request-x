@@ -7,7 +7,7 @@
       <div v-if="currentList && !listEditable" class="text-zinc-600 mx-2">
         You must fork this list before making changes to it
       </div>
-      <div class="input ml-2 mr-2">
+      <div class="input">
         <input type="search" v-model="ruleState.filter" />
         <svg class="input-icon" viewBox="0 0 24 24">
           <path
@@ -18,7 +18,10 @@
     </header>
     <div class="flex flex-1 min-h-0">
       <rule-nav></rule-nav>
-      <rule-body v-if="isRoute('lists')" class="flex-1 min-w-0"></rule-body>
+      <rule-body
+        v-if="isRoute('lists')"
+        class="flex-1 min-w-0 px-2"
+      ></rule-body>
       <div v-else class="subtle flex flex-1 items-center justify-center">
         <ul class="list-disc leading-8 text-lg">
           <li>Create or choose a list from side menu to get started</li>

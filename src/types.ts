@@ -131,8 +131,17 @@ export interface PortMessage<T> {
   data: T;
 }
 
-export interface ClipboardRuleData {
+export interface ListsDumpData {
   provider: string;
-  type: ListData['type'];
-  rules: RuleData[];
+  category: 'lists';
+  data: ListData[];
+}
+
+export interface RulesDumpData {
+  provider: string;
+  category: 'rules';
+  data: {
+    type: ListData['type'];
+    rules: RuleData[];
+  };
 }
