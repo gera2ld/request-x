@@ -90,11 +90,6 @@ const menus = computed(() => [
         disabled: !listSelection.count,
       },
       {
-        label: 'Remove',
-        handler: listActions.selRemove,
-        disabled: !listSelection.count,
-      },
-      {
         type: 'group',
         label: 'Current list',
       },
@@ -134,12 +129,6 @@ const menus = computed(() => [
         label: 'Duplicate',
         shortcut: shortcutTextMap.duplicate,
         handler: ruleActions.selDuplicate,
-        disabled: !ruleSelection.count || !listEditable.value,
-      },
-      {
-        label: 'Remove',
-        shortcut: shortcutTextMap.remove,
-        handler: ruleActions.selRemove,
         disabled: !ruleSelection.count || !listEditable.value,
       },
     ],
@@ -183,6 +172,21 @@ const menus = computed(() => [
             ? listActions.selPaste
             : ruleActions.selPaste,
         disabled: store.activeArea !== 'lists' && !listEditable.value,
+      },
+      {
+        type: 'sep',
+      },
+      {
+        label: 'Remove',
+        shortcut: shortcutTextMap.remove,
+        handler:
+          store.activeArea === 'lists'
+            ? listActions.selRemove
+            : ruleActions.selRemove,
+        disabled:
+          store.activeArea === 'lists'
+            ? !listSelection.count
+            : !ruleSelection.count || !listEditable.value,
       },
     ],
   },

@@ -19,7 +19,6 @@
 
 <script lang="ts">
 import { defineComponent, PropType, ref } from 'vue';
-import { isMacintosh } from '#/common/keyboard';
 import { getModifiers } from '../util';
 
 export default defineComponent({

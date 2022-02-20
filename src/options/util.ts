@@ -155,6 +155,16 @@ export function downloadBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url));
 }
 
+export function dumpList(item: ListData) {
+  return {
+    type: item.type,
+    name: getName(item),
+    subscribeUrl: item.subscribeUrl || undefined,
+    enabled: item.enabled,
+    rules: item.rules,
+  } as Partial<ListData>;
+}
+
 const port = browser.runtime.connect({
   name: 'dashboard',
 });

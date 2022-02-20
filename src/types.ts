@@ -134,7 +134,7 @@ export interface PortMessage<T> {
 export interface ListsDumpData {
   provider: string;
   category: 'lists';
-  data: ListData[];
+  data: Partial<ListData>[];
 }
 
 export interface RulesDumpData {

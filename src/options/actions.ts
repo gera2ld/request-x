@@ -19,9 +19,9 @@ import {
   setRoute,
   setStatus,
   remove,
-  getName,
   isRoute,
   downloadBlob,
+  dumpList,
 } from './util';
 import { shortcutMap } from './shortcut';
 
@@ -41,7 +41,14 @@ export const listActions = {
     if (!Array.isArray(data)) data = [data];
     data.forEach((list: Partial<ListData>) => {
       list.type ??= 'request';
-      dump(pick(list, ['name', 'type', 'rules']) as Partial<ListData>);
+      dump(
+        pick(list, [
+          'name',
+          'type',
+          'rules',
+          'subscribeUrl',
+        ]) as Partial<ListData>
+      );
     });
   },
   subscribe() {
@@ -61,6 +68,9 @@ export const listActions = {
     item ||= currentList.value;
     editList(item);
   },
+  cancel() {
+    store.editList = null;
+  },
   fetch(item?: ListData) {
     item ||= currentList.value;
     browser.runtime.sendMessage({
@@ -72,21 +82,6 @@ export const listActions = {
     item ||= currentList.value;
     remove(item.type, item.id);
   },
-  /*
-  export(item?: ListData) {
-    item ||= currentList.value;
-    const data = {
-      type: item.type,
-      name: getName(item),
-      rules: item.rules,
-    };
-    const basename = data.name.replace(/\s+/g, '-').toLowerCase();
-    const blob = new Blob([JSON.stringify(data)], {
-      type: 'application/json',
-    });
-    downloadBlob(blob, `${basename}.json`);
-  },
-  */
   async fork(item?: ListData) {
     item ||= currentList.value;
     const data = {
@@ -143,9 +138,9 @@ export const listActions = {
   },
   selCopy() {
     if (!listSelection.count) return;
-    const lists = store.lists[listSelection.activeType]?.filter(
-      (_, index) => listSelection.selected[index]
-    );
+    const lists = store.lists[listSelection.activeType]
+      ?.filter((_, index) => listSelection.selected[index])
+      .map(dumpList);
     if (!lists?.length) return;
     const data: ListsDumpData = {
       provider: PROVIDER,
@@ -170,7 +165,14 @@ export const listActions = {
       return;
     }
     data.data.forEach((list) => {
-      dump(pick(list, ['name', 'type', 'rules']) as Partial<ListData>);
+      dump(
+        pick(list, [
+          'name',
+          'type',
+          'rules',
+          'subscribeUrl',
+        ]) as Partial<ListData>
+      );
     });
   },
   selExport() {
@@ -178,11 +180,7 @@ export const listActions = {
     const result = [];
     store.lists[listSelection.activeType]?.forEach((item, i) => {
       if (listSelection.selected[i]) {
-        result.push({
-          type: item.type,
-          name: getName(item),
-          rules: item.rules,
-        });
+        result.push(dumpList(item));
       }
     });
     if (!result.length) return;
@@ -411,26 +409,45 @@ watch(
     }
   }
 );
+watch(
+  () => store.activeArea,
+  (activeArea) => {
+    keyboardService.setContext('listsRealm', activeArea === 'lists');
+  }
+);
+watch(
+  () => store.editList,
+  (editList) => {
+    keyboardService.setContext('listModal', !!editList);
+  }
+);
 
-const noInput = {
-  condition: '!inputFocus',
+const listsRealm = {
+  condition: '!inputFocus && listsRealm && !editRule',
 };
-const noEdit = {
-  condition: '!editRule',
+const rulesRealm = {
+  condition: '!inputFocus && !listsRealm && !editRule',
 };
-keyboardService.register(shortcutMap.copy, ruleActions.selCopy, noInput);
-keyboardService.register(shortcutMap.cut, ruleActions.selCut, noInput);
-keyboardService.register(shortcutMap.paste, ruleActions.selPaste, noInput);
+keyboardService.register(shortcutMap.copy, listActions.selCopy, listsRealm);
+keyboardService.register(shortcutMap.copy, ruleActions.selCopy, rulesRealm);
+keyboardService.register(shortcutMap.cut, listActions.selCut, listsRealm);
+keyboardService.register(shortcutMap.cut, ruleActions.selCut, rulesRealm);
+keyboardService.register(shortcutMap.paste, listActions.selPaste, listsRealm);
+keyboardService.register(shortcutMap.paste, ruleActions.selPaste, rulesRealm);
 keyboardService.register(
   shortcutMap.duplicate,
   ruleActions.selDuplicate,
-  noInput
+  rulesRealm
 );
-keyboardService.register(shortcutMap.remove, ruleActions.selRemove, noInput);
-keyboardService.register(shortcutMap.add, ruleActions.new, noInput);
-keyboardService.register('up', ruleKeys.up, noEdit);
-keyboardService.register('down', ruleKeys.down, noEdit);
-keyboardService.register('space', ruleKeys.space, noEdit);
-keyboardService.register(shortcutMap.edit, ruleActions.selEdit, noEdit);
-keyboardService.register('esc', ruleActions.selClear, noEdit);
+keyboardService.register(shortcutMap.remove, listActions.selRemove, listsRealm);
+keyboardService.register(shortcutMap.remove, ruleActions.selRemove, rulesRealm);
+keyboardService.register(shortcutMap.add, ruleActions.new, rulesRealm);
+keyboardService.register('up', ruleKeys.up, rulesRealm);
+keyboardService.register('down', ruleKeys.down, rulesRealm);
+keyboardService.register('space', ruleKeys.space, rulesRealm);
+keyboardService.register(shortcutMap.edit, ruleActions.selEdit, rulesRealm);
+keyboardService.register('esc', ruleActions.selClear, rulesRealm);
 keyboardService.register('esc', ruleActions.cancel, { condition: 'editRule' });
+keyboardService.register('esc', listActions.cancel, {
+  condition: 'listModal',
+});
