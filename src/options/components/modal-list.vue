@@ -111,7 +111,10 @@ export default defineComponent({
     });
 
     const canSubmit = computed(() => {
-      if (store.editList?.isSubscribed && !subscribeData.value.data)
+      if (
+        store.editList?.isSubscribed &&
+        (subscribeData.value.error || !subscribeData.value.data)
+      )
         return false;
       return !Object.values(errors.value).some(Boolean);
     });
@@ -136,11 +139,15 @@ export default defineComponent({
     const formatType = (type: string) =>
       type && type[0].toUpperCase() + type.slice(1);
 
-    const fetchData = debounce(async () => {
+    const resetSubscribedData = () => {
       const { value } = subscribeData;
       value.data = undefined;
       value.error = undefined;
+    };
+
+    const fetchData = debounce(async () => {
       if (!store.editList?.isSubscribed || errors.value.subscribeUrl) return;
+      const { value } = subscribeData;
       const session = value.session + 1;
       value.session = session;
       value.loading = true;
@@ -151,10 +158,11 @@ export default defineComponent({
           data: url,
         });
         if (session !== value.session) return;
-        if (store.editList.type && store.editList.type !== data.type) {
+        value.data = data;
+        if (!['request', 'cookie'].includes(data.type)) {
+          value.error = 'Invalid list type';
+        } else if (store.editList.type && store.editList.type !== data.type) {
           value.error = 'Type mismatch';
-        } else {
-          value.data = data;
         }
       } catch {
         value.error ||= 'Fail to load data';
@@ -162,7 +170,13 @@ export default defineComponent({
       value.loading = false;
     }, 200);
 
-    watch(() => store.editList?.subscribeUrl, fetchData);
+    watch(
+      () => store.editList?.subscribeUrl,
+      () => {
+        resetSubscribedData();
+        fetchData();
+      }
+    );
 
     watchEffect(
       () => {
