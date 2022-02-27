@@ -279,7 +279,7 @@ export async function fetchListData(url: string) {
     const res = await fetch(url);
     const data = await res.json();
     return {
-      type: data.type,
+      type: data.type ?? 'request',
       name: data.name || '',
       rules: data.rules,
       lastUpdated: Date.now(),
