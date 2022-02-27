@@ -38,6 +38,12 @@ const commands = {
       }
     }
   },
+  SetErrors(errors: Array<{ id: number; error: string }>) {
+    store.listErrors = errors.reduce((res, item) => {
+      res[item.id] = item.error;
+      return res;
+    }, {});
+  },
 };
 browser.runtime.onMessage.addListener((req, src) => {
   const func = commands[req.cmd];

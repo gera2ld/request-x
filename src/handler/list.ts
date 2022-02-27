@@ -178,8 +178,16 @@ export abstract class BaseListManager<
     return this.data.map((list) => list.get());
   }
 
-  fetch() {
-    return Promise.all(this.data.map((list) => list.fetch().catch(() => {})));
+  async fetch() {
+    const errors = await Promise.all(
+      this.data.map((list) =>
+        list.fetch().catch((error) => ({
+          id: list.id,
+          error: `${error}`,
+        }))
+      )
+    );
+    return errors.filter(Boolean);
   }
 
   match(...args: Parameters<T['match']>): void | M {
@@ -247,7 +255,11 @@ export async function loadLists() {
 }
 
 export async function fetchLists() {
-  return Object.values(lists).map((list) => list.fetch());
+  const listErrors = await Promise.all(
+    Object.values(lists).map((list) => list.fetch())
+  );
+  const errors = listErrors.flat();
+  browser.runtime.sendMessage({ cmd: 'SetErrors', data: errors });
 }
 
 let count = 0;

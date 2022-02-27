@@ -6,9 +6,9 @@
     <div class="list-section-unsupported" v-if="unsupported">
       <slot name="unsupported"></slot>
     </div>
-    <template v-else>
-      <div v-if="!lists?.length" class="list-section-empty">Empty</div>
-      <a
+    <div v-else-if="!lists?.length" class="list-section-empty">Empty</div>
+    <ul v-else>
+      <li
         v-for="(item, index) in lists"
         :key="index"
         class="list-item"
@@ -27,7 +27,6 @@
           'dragging-below':
             dragging.over === index && dragging.over > dragging.start,
         }"
-        :href="getHash(item)"
         :title="getName(item)"
         @click.prevent="onSelToggle(index, $event)"
         @dragstart="onDragStart($event, index)"
@@ -40,15 +39,25 @@
           class="list-section-status"
           @click.prevent.stop="onToggle(item)"
         ></span>
-        <span class="mx-1 flex-1 truncate" v-text="getName(item)"></span>
+        <a
+          class="mx-1 flex-1 truncate"
+          :href="getHash(item)"
+          v-text="getName(item)"
+        ></a>
         <span
           class="list-section-badge"
           v-if="item.subscribeUrl"
           title="Subscribed"
           >s</span
         >
-      </a>
-    </template>
+        <span
+          class="list-section-badge text-error"
+          v-if="store.listErrors[item.id]"
+          :title="store.listErrors[item.id]"
+          >!</span
+        >
+      </li>
+    </ul>
   </section>
 </template>
 
@@ -57,7 +66,7 @@ import { defineComponent, PropType, reactive } from 'vue';
 import { ListData } from '#/types';
 import { getName, isRoute, moveList, getModifiers } from '../util';
 import { listActions } from '../actions';
-import { listSelection } from '../store';
+import { store, listSelection } from '../store';
 
 export default defineComponent({
   props: {
@@ -136,6 +145,7 @@ export default defineComponent({
       getHash,
       isRoute,
       listSelection,
+      store,
       onDragStart,
       onDragOver,
       onDragLeave,

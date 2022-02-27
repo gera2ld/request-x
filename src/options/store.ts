@@ -1,4 +1,4 @@
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { ListData, ConfigStorage, FeatureToggles, RuleData } from '#/types';
 
 export const store = reactive({
@@ -8,6 +8,7 @@ export const store = reactive({
   config: null,
   features: {},
   activeArea: 'rules',
+  listErrors: {},
 } as {
   lists: { [key: string]: ListData[] };
   editList: {
@@ -17,6 +18,7 @@ export const store = reactive({
   config: ConfigStorage;
   features: FeatureToggles;
   activeArea: 'lists' | 'rules';
+  listErrors: { [id: number]: string };
 });
 
 export const currentType = computed<ListData['type']>(
