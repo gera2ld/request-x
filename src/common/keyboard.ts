@@ -36,4 +36,5 @@ function bindKeys() {
       condition: '!inputFocus',
     }
   );
+  keyboardService.enable();
 }

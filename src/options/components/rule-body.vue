@@ -70,7 +70,6 @@
 
 <script lang="ts">
 import { computed, defineComponent, onMounted } from 'vue';
-import { keyboardService } from '#/common/keyboard';
 import {
   currentList,
   currentType,
@@ -95,10 +94,6 @@ export default defineComponent({
 
     onMounted(() => {
       ruleActions.update();
-      keyboardService.enable();
-      return () => {
-        keyboardService.disable();
-      };
     });
 
     return {
