@@ -1,5 +1,4 @@
 import browser from '#/common/browser';
-import { defer } from '#/common/util';
 import {
   ConfigStorage,
   ListData,
@@ -19,6 +18,7 @@ import {
   fetchLists,
   fetchListData,
 } from './list';
+import { ensureDashboardPorts, getInspectPort } from './port';
 import { getUrl, configStorage as config, hookInstall } from './util';
 
 const features: FeatureToggles = {
@@ -30,7 +30,7 @@ loadLists();
 
 function pushLog(details: RequestDetails, result?: RequestMatchResult) {
   const { tabId, method, url, requestId } = details;
-  ports.get(tabId)?.postMessage({
+  getInspectPort(tabId)?.postMessage({
     type: 'interception',
     data: {
       requestId,
@@ -192,30 +192,6 @@ browser.alarms.onAlarm.addListener(() => {
   fetchLists();
 });
 
-const ports = new Map<number, browser.Runtime.Port>();
-const dashboardPorts = new Set<browser.Runtime.Port>();
-
-const deferPort = () => defer<browser.Runtime.Port>();
-let dashboardDeferred: ReturnType<typeof deferPort>;
-
-browser.runtime.onConnect.addListener((port) => {
-  if (port.name === 'dashboard') {
-    dashboardPorts.add(port);
-    dashboardDeferred?.resolve(port);
-    port.onDisconnect.addListener(() => {
-      dashboardPorts.delete(port);
-    });
-    return;
-  }
-  const tabId = port.name.startsWith('inspect-') && +port.name.slice(8);
-  if (tabId) {
-    ports.set(tabId, port);
-    port.onDisconnect.addListener(() => {
-      ports.delete(tabId);
-    });
-  }
-});
-
 let processing = false;
 const updates = new Map<string, browser.Cookies.SetDetailsType>();
 const updateCookiesLater = debounce(updateCookies, 100);
@@ -291,14 +267,8 @@ async function updateCookies() {
 
 async function subscribeUrl(url: string) {
   const [jsonUrl] = url.split('#');
-  if (!dashboardPorts.size) {
-    dashboardDeferred = defer<browser.Runtime.Port>();
-  }
   await browser.runtime.openOptionsPage();
-  if (!dashboardPorts.size) {
-    await dashboardDeferred.promise;
-    dashboardDeferred = undefined;
-  }
+  const dashboardPorts = await ensureDashboardPorts();
   dashboardPorts.forEach((port) => {
     port.postMessage({
       type: 'subscription',
