@@ -104,11 +104,12 @@ export function getName(list: ListData) {
 }
 
 export async function getData() {
-  const { config, features } = await browser.runtime.sendMessage({
+  const { config, features, listErrors } = await browser.runtime.sendMessage({
     cmd: 'GetData',
   });
   store.config = config;
   store.features = features;
+  store.listErrors = listErrors;
 }
 
 export async function moveList(

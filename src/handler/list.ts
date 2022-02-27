@@ -20,6 +20,7 @@ import {
 } from './util';
 
 let lastId = 0;
+let listErrors: { [id: number]: string } = {};
 
 export function getKey(id: number) {
   return `list:${id}`;
@@ -187,7 +188,7 @@ export abstract class BaseListManager<
         }))
       )
     );
-    return errors.filter(Boolean);
+    return errors.filter(Boolean) as Array<{ id: number; error: string }>;
   }
 
   match(...args: Parameters<T['match']>): void | M {
@@ -255,11 +256,18 @@ export async function loadLists() {
 }
 
 export async function fetchLists() {
-  const listErrors = await Promise.all(
+  const groupErrors = await Promise.all(
     Object.values(lists).map((list) => list.fetch())
   );
-  const errors = listErrors.flat();
-  browser.runtime.sendMessage({ cmd: 'SetErrors', data: errors });
+  listErrors = groupErrors.flat().reduce((res, item) => {
+    res[item.id] = item.error;
+    return res;
+  }, {});
+  browser.runtime.sendMessage({ cmd: 'SetErrors', data: listErrors });
+}
+
+export function getLastErrors() {
+  return listErrors;
 }
 
 let count = 0;

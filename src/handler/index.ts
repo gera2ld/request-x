@@ -17,6 +17,7 @@ import {
   CookieList,
   fetchLists,
   fetchListData,
+  getLastErrors,
 } from './list';
 import { ensureDashboardPorts, getInspectPort } from './port';
 import { getUrl, configStorage as config, hookInstall } from './util';
@@ -157,6 +158,7 @@ const commands = {
     return {
       config: await config.getAll(),
       features,
+      listErrors: getLastErrors(),
     };
   },
   SetConfig<K extends keyof ConfigStorage>({
