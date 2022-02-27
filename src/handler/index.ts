@@ -174,7 +174,13 @@ const commands = {
 browser.runtime.onMessage.addListener(async (req, src) => {
   const func = commands[req.cmd];
   if (!func) return;
-  return func(req.data, src);
+  try {
+    const result = await func(req.data, src);
+    return result;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 });
 
 browser.alarms.create({
