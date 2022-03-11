@@ -154,17 +154,8 @@ export const listActions = {
     listActions.selCopy();
     listActions.selRemove();
   },
-  async selPaste() {
-    let data: ListsDumpData;
-    try {
-      const raw = await navigator.clipboard.readText();
-      data = raw && JSON.parse(raw);
-      if (data.provider !== PROVIDER || data.category !== 'lists')
-        throw new Error('Invalid clipboard data');
-    } catch {
-      return;
-    }
-    data.data.forEach((list) => {
+  async selPaste({ data }: ListsDumpData) {
+    data.forEach((list) => {
       dump(
         pick(list, [
           'name',
@@ -287,29 +278,17 @@ export const ruleActions = {
     ruleActions.selCopy();
     ruleActions.selRemove();
   },
-  async selPaste() {
+  async selPaste({ data }: RulesDumpData) {
     if (!listEditable.value) return;
-    let data: RulesDumpData;
-    try {
-      const raw = await navigator.clipboard.readText();
-      data = raw && JSON.parse(raw);
-      if (
-        data.provider !== PROVIDER ||
-        data.category !== 'rules' ||
-        !data.data.type ||
-        !data.data.rules?.length
-      )
-        throw new Error('Invalid clipboard data');
-    } catch {
-      return;
-    }
-    if (data.data.type !== currentList.value.type)
+    if (!data.type || !data.rules?.length)
+      throw new Error('Invalid clipboard data');
+    if (data.type !== currentList.value.type)
       throw new Error('Incompatible rule type');
     const rules = currentList.value.rules as RuleData[];
     rules.splice(
       ruleSelection.active < 0 ? rules.length : ruleSelection.active,
       0,
-      ...(data.data.rules as RuleData[])
+      ...(data.rules as RuleData[])
     );
     ruleActions.save();
   },
@@ -379,6 +358,22 @@ export const ruleKeys = {
   },
 };
 
+export async function selPaste() {
+  let data: ListsDumpData | RulesDumpData;
+  try {
+    const raw = await navigator.clipboard.readText();
+    data = raw && JSON.parse(raw);
+    if (data.provider !== PROVIDER) throw new Error('Invalid clipboard data');
+  } catch {
+    return;
+  }
+  if (data.category === 'lists') {
+    listActions.selPaste(data as ListsDumpData);
+  } else if (data.category === 'rules' && listEditable.value) {
+    ruleActions.selPaste(data as RulesDumpData);
+  }
+}
+
 const updateListLater = debounce(ruleActions.update, 200);
 watch(() => ruleState.filter, updateListLater);
 watch(currentList, (cur, prev) => {
@@ -432,8 +427,9 @@ keyboardService.register(shortcutMap.copy, listActions.selCopy, listsRealm);
 keyboardService.register(shortcutMap.copy, ruleActions.selCopy, rulesRealm);
 keyboardService.register(shortcutMap.cut, listActions.selCut, listsRealm);
 keyboardService.register(shortcutMap.cut, ruleActions.selCut, rulesRealm);
-keyboardService.register(shortcutMap.paste, listActions.selPaste, listsRealm);
-keyboardService.register(shortcutMap.paste, ruleActions.selPaste, rulesRealm);
+keyboardService.register(shortcutMap.paste, selPaste, {
+  condition: '!inputFocus && !editRule',
+});
 keyboardService.register(
   shortcutMap.duplicate,
   ruleActions.selDuplicate,

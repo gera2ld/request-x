@@ -52,7 +52,7 @@ import {
   listSelection,
   ruleSelection,
 } from '../store';
-import { listActions, ruleActions } from '../actions';
+import { listActions, ruleActions, selPaste } from '../actions';
 import { store } from '../store';
 
 const menus = computed(() => [
@@ -138,7 +138,7 @@ const menus = computed(() => [
     items: [
       {
         type: 'group',
-        label: store.activeArea === 'lists' ? 'Lists' : 'Rules',
+        label: `${store.activeArea === 'lists' ? 'List' : 'Rule'} selection`,
       },
       {
         label: 'Cut',
@@ -165,12 +165,13 @@ const menus = computed(() => [
             : !ruleSelection.count,
       },
       {
+        type: 'group',
+        label: 'Selection',
+      },
+      {
         label: 'Paste',
         shortcut: shortcutTextMap.paste,
-        handler:
-          store.activeArea === 'lists'
-            ? listActions.selPaste
-            : ruleActions.selPaste,
+        handler: selPaste,
         disabled: store.activeArea !== 'lists' && !listEditable.value,
       },
       {
