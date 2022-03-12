@@ -142,16 +142,10 @@ textarea {
   }
 }
 
-.nav-section {
-  &-title {
-    @apply uppercase text-zinc-600 dark:text-zinc-400;
-  }
-}
-
 .list-section {
-  @apply mt-2;
+  @apply mb-2;
   &-title {
-    @apply mb-1 text-zinc-600 dark:text-zinc-400;
+    @apply sticky top-0 mb-1 py-2 text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900;
   }
   &-empty {
     @apply py-1 px-8 italic text-zinc-400 dark:text-zinc-600;
