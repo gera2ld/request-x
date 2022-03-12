@@ -1,6 +1,6 @@
 import browser from '#/common/browser';
 import { createGetterSetter } from '#/common/util';
-import { ConfigStorage } from '#/types';
+import type { ConfigStorage } from '#/types';
 
 export const getData = browser.storage.local.get;
 export const dumpData = browser.storage.local.set;
@@ -28,34 +28,26 @@ export async function getActiveTab() {
 export class ObjectStorage<T extends { [key: string]: any }> {
   ready: Promise<void> | undefined;
 
-  private data: T;
-
-  constructor(private key: string, private defaults: T) {
-    this.ready = this.load();
+  static async load<T>(key: string, defaults: T) {
+    const data = await getExactData<T>(key);
+    return new ObjectStorage<T>(key, data || defaults);
   }
 
-  async load() {
-    const data = await getExactData<T>(this.key);
-    this.data = data || this.defaults;
-    this.ready = undefined;
-  }
+  constructor(private key: string, private data: T) {}
 
   dump() {
     return dumpExactData(this.key, this.data);
   }
 
-  async get<K extends string>(path: K): Promise<T[K]> {
-    await this.ready;
+  get<K extends string>(path: K): Promise<T[K]> {
     return this.data[path];
   }
 
-  async getAll() {
-    await this.ready;
+  getAll() {
     return this.data;
   }
 
   async set(update: Partial<T> | ((data: T) => Partial<T>)) {
-    await this.ready;
     if (typeof update === 'function') {
       Object.assign(this.data, update(this.data));
     } else {
@@ -81,7 +73,7 @@ export function getUrl(cookie: {
 }
 
 // export const globalStorage = new ObjectStorage<GlobalStorage>('global', {});
-export const configStorage = new ObjectStorage<ConfigStorage>('config', {
+export const configPromise = ObjectStorage.load<ConfigStorage>('config', {
   badge: '',
 });
 

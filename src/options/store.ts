@@ -1,23 +1,30 @@
 import { computed, reactive } from 'vue';
-import { ListData, ConfigStorage, FeatureToggles, RuleData } from '#/types';
+import type {
+  ListData,
+  ConfigStorage,
+  FeatureToggles,
+  RuleData,
+} from '#/types';
 
 export const listTypes = ['request', 'cookie'];
 
 export const store = reactive({
   lists: {},
-  editList: null,
+  editList: undefined,
   route: [],
-  config: null,
+  config: undefined,
   features: {},
   activeArea: 'rules',
   listErrors: {},
 } as {
   lists: { [key: string]: ListData[] };
-  editList: {
-    isSubscribed?: boolean;
-  } & Partial<ListData>;
+  editList:
+    | ({
+        isSubscribed?: boolean;
+      } & Partial<ListData>)
+    | undefined;
   route: string[];
-  config: ConfigStorage;
+  config: ConfigStorage | undefined;
   features: FeatureToggles;
   activeArea: 'lists' | 'rules';
   listErrors: { [id: number]: string };
@@ -27,12 +34,12 @@ export const currentType = computed<ListData['type']>(
   () => store.route[1] as ListData['type']
 );
 
-export const currentList = computed<ListData>(() => {
+export const currentList = computed<ListData | undefined>(() => {
   const [page, , sid] = store.route;
-  if (page !== 'lists') return null;
+  if (page !== 'lists') return;
   const id = +sid;
   const list = store.lists[currentType.value]?.find((item) => item.id === id);
-  return list;
+  return list as ListData | undefined;
 });
 
 export const listEditable = computed(
@@ -63,12 +70,12 @@ export const listSelection = reactive<{
 });
 
 export const ruleState = reactive<{
-  newRule: Partial<RuleData>;
+  newRule: Partial<RuleData> | undefined;
   editing: number;
   filter: string;
   visible: boolean[];
 }>({
-  newRule: null,
+  newRule: undefined,
   editing: -1,
   filter: '',
   visible: [],

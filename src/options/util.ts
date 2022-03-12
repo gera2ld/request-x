@@ -1,5 +1,5 @@
 import { pick } from 'lodash-es';
-import { ListData, PortMessage, SubscriptionData } from '#/types';
+import type { ListData, PortMessage, SubscriptionData } from '#/types';
 import browser from '#/common/browser';
 import { isMacintosh } from '#/common/keyboard';
 import { reorderList } from '#/common/util';
@@ -73,7 +73,7 @@ export function loadFile() {
     input.addEventListener(
       'change',
       () => {
-        const file = input.files[0];
+        const file = input.files?.[0];
         if (file) {
           resolve(file);
         } else {
@@ -99,7 +99,7 @@ export function blob2Text(blob: Blob) {
   });
 }
 
-export function getName(list: ListData) {
+export function getName(list: Partial<ListData>) {
   return list.name || 'No name';
 }
 
@@ -135,7 +135,7 @@ export async function moveList(
 
 export function editList(list: typeof store['editList']) {
   store.editList = {
-    isSubscribed: !!list.subscribeUrl,
+    isSubscribed: !!list?.subscribeUrl,
     ...list,
   };
 }

@@ -39,7 +39,7 @@ function bindKeys() {
   document.addEventListener(
     'selectionchange',
     () => {
-      hasSelection = document.getSelection().type === 'Range';
+      hasSelection = document.getSelection()?.type === 'Range';
       updateInputFocus();
     },
     false

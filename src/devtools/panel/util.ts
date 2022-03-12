@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import browser from '#/common/browser';
-import { PortMessage, InterceptionData } from '#/types';
+import type { PortMessage, InterceptionData } from '#/types';
 
 export const store = reactive<{
   fields: Array<{ title: string; width: number }>;
@@ -44,7 +44,7 @@ port.onMessage.addListener((message: PortMessage<any>) => {
           ...oldData.result,
           ...result,
           payload: {
-            ...oldData.result.payload,
+            ...oldData.result?.payload,
             ...result.payload,
           },
         };

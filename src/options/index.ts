@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import browser from '#/common/browser';
-import { ListData } from '#/types';
+import type { ListData } from '#/types';
 import { store } from './store';
 import { setRoute, isRoute, updateRoute, getData } from './util';
 import App from './components/app.vue';
@@ -16,7 +16,9 @@ browser.runtime.sendMessage({ cmd: 'GetLists' }).then((data) => {
 
 getData();
 
-const commands = {
+const commands: {
+  [command: string]: (data: any, src: browser.Runtime.MessageSender) => void;
+} = {
   UpdatedList(data: ListData) {
     const group = store.lists[data.type];
     if (!group) return;
@@ -42,10 +44,12 @@ const commands = {
     store.listErrors = errors;
   },
 };
-browser.runtime.onMessage.addListener((req, src) => {
-  const func = commands[req.cmd];
-  if (!func) return;
-  return func(req.data, src);
-});
+browser.runtime.onMessage.addListener(
+  (req: { cmd: string; data: any }, src) => {
+    const func = commands[req.cmd];
+    if (!func) return;
+    return func(req.data, src);
+  }
+);
 
 createApp(App).mount(document.body);

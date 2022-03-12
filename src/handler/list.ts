@@ -1,16 +1,18 @@
 import browser from '#/common/browser';
 import { reorderList } from '#/common/util';
-import {
+import type {
   CookieData,
   CookieDetails,
   CookieMatchResult,
+  ListMeta,
   ListData,
   RequestData,
   RequestDetails,
   RequestMatchResult,
+  IRule,
 } from '#/types';
 import { groupBy } from 'lodash-es';
-import { BaseRule, RequestRule, CookieRule } from './rule';
+import { RequestRule, CookieRule } from './rule';
 import {
   getExactData,
   dumpExactData,
@@ -26,16 +28,23 @@ export function getKey(id: number) {
   return `list:${id}`;
 }
 
-export abstract class BaseList<T extends BaseRule<U>, D, M, U> {
-  protected name = 'No name';
-  protected subscribeUrl = '';
-  protected lastUpdated = 0;
-  protected enabled = true;
-  protected rules: T[] = [];
-  protected fetching: Promise<void> | undefined;
-  protected abstract type: ListData['type'];
+function setIfNotNull<T>(target: T, source: Partial<T>, key: keyof T) {
+  const value = source[key];
+  if (value != null) target[key] = value!;
+}
 
-  abstract createRule(rule: any): T;
+export abstract class BaseList<T, D, M> implements ListMeta {
+  name = 'No name';
+  subscribeUrl = '';
+  lastUpdated = 0;
+  enabled = true;
+
+  abstract rules: IRule<T, D, M>[];
+  abstract type: ListData['type'];
+
+  protected fetching: Promise<void> | undefined;
+
+  abstract createRule(rule: T): IRule<T, D, M>;
 
   constructor(public id: number) {}
 
@@ -47,12 +56,20 @@ export abstract class BaseList<T extends BaseRule<U>, D, M, U> {
     const key = this.key();
     data ??= await getExactData(key);
     if (data) {
-      ['name', 'subscribeUrl', 'lastUpdated', 'enabled'].forEach((ikey) => {
-        if (data[ikey] != null) this[ikey] = data[ikey];
+      const keys: (keyof ListMeta)[] = [
+        'name',
+        'subscribeUrl',
+        'lastUpdated',
+        'enabled',
+      ];
+      keys.forEach((ikey) => {
+        setIfNotNull<ListMeta>(this, data, ikey);
       });
       this.name ||= 'No name';
       if (data.rules) {
-        this.rules = data.rules.map((rule) => this.createRule(rule));
+        this.rules = data.rules.map((rule) =>
+          this.createRule(rule as unknown as T)
+        );
       }
     }
   }
@@ -102,44 +119,43 @@ export abstract class BaseList<T extends BaseRule<U>, D, M, U> {
   match(details: D, method: string): void | M {
     if (!this.enabled) return;
     for (const rule of this.rules) {
-      const target = rule[method](details);
+      const target = rule.matchers[method]?.(rule, details);
       if (target) return target;
     }
   }
 }
 
 export class RequestList extends BaseList<
-  RequestRule,
+  RequestData,
   RequestDetails,
-  RequestMatchResult,
-  RequestData
+  RequestMatchResult
 > {
   type: ListData['type'] = 'request';
 
-  createRule(rule: RequestData) {
+  rules: RequestRule[] = [];
+
+  createRule(
+    rule: RequestData
+  ): IRule<RequestData, RequestDetails, RequestMatchResult> {
     return new RequestRule(rule);
   }
 }
 
 export class CookieList extends BaseList<
-  CookieRule,
+  CookieData,
   CookieDetails,
-  CookieMatchResult,
-  CookieData
+  CookieMatchResult
 > {
   type: ListData['type'] = 'cookie';
+
+  rules: CookieRule[] = [];
 
   createRule(rule: CookieData) {
     return new CookieRule(rule);
   }
 }
 
-export abstract class BaseListManager<
-  T extends BaseList<BaseRule<U>, D, M, U>,
-  D,
-  M,
-  U
-> {
+export abstract class BaseListManager<T extends BaseList<any, any, any>> {
   data: T[] = [];
 
   abstract createList(id: number): T;
@@ -160,7 +176,7 @@ export abstract class BaseListManager<
   }
 
   async remove(id: number) {
-    const list = this.find(id);
+    const list = this.find(id)!;
     const i = this.data.indexOf(list);
     this.data.splice(i, 1);
     await removeData(list.key());
@@ -191,7 +207,7 @@ export abstract class BaseListManager<
     return errors.filter(Boolean) as Array<{ id: number; error: string }>;
   }
 
-  match(...args: Parameters<T['match']>): void | M {
+  match(...args: Parameters<T['match']>): void | ReturnType<T['match']> {
     for (const list of this.data) {
       const [details, type] = args;
       const target = list.match(details, type);
@@ -209,23 +225,13 @@ export abstract class BaseListManager<
   }
 }
 
-export class RequestListManager extends BaseListManager<
-  RequestList,
-  RequestDetails,
-  RequestMatchResult,
-  RequestData
-> {
+export class RequestListManager extends BaseListManager<RequestList> {
   createList(id: number) {
     return new RequestList(id);
   }
 }
 
-export class CookieListManager extends BaseListManager<
-  CookieList,
-  CookieDetails,
-  CookieMatchResult,
-  CookieData
-> {
+export class CookieListManager extends BaseListManager<CookieList> {
   createList(id: number) {
     return new CookieList(id);
   }
@@ -238,7 +244,7 @@ export const lists = {
 
 export async function dumpLists() {
   const ids = Object.values(lists).flatMap((list) =>
-    list.data.map((item: RequestList | CookieList) => item.id)
+    list.data.map((item) => item.id)
   );
   await dumpExactData('lists', ids);
 }
@@ -247,10 +253,15 @@ export async function loadLists() {
   const ids = await getExactData<number[]>('lists');
   if (ids) {
     const data = await getData(ids.map(getKey));
-    const items = ids.map((id) => data[getKey(id)]).filter(Boolean);
-    const resources = groupBy(items, (item) => item.type || 'request');
+    const items: ListData[] = ids.map((id) => data[getKey(id)]).filter(Boolean);
+    const resources = groupBy(
+      items,
+      (item) => item.type || 'request'
+    ) as unknown as {
+      [key in ListData['type']]: ListData[];
+    };
     Object.entries(resources).forEach(([key, data]) => {
-      lists[key]?.load(data);
+      lists[key as unknown as ListData['type']]?.load(data);
     });
   }
 }
@@ -262,7 +273,7 @@ export async function fetchLists() {
   listErrors = groupErrors.flat().reduce((res, item) => {
     res[item.id] = item.error;
     return res;
-  }, {});
+  }, {} as { [id: number]: string });
   browser.runtime.sendMessage({ cmd: 'SetErrors', data: listErrors });
 }
 

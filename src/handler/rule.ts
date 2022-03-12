@@ -1,10 +1,13 @@
-import {
+import type {
   CookieData,
   CookieDetails,
   CookieMatchResult,
+  HttpHeaderItem,
   RequestData,
   RequestDetails,
   RequestMatchResult,
+  RuleMatcher,
+  IRule,
 } from '#/types';
 import { pick } from 'lodash-es';
 import { getUrl } from './util';
@@ -57,56 +60,38 @@ function textTester(rule: string) {
   return new RegExp(`^${str2re(rule)}$`);
 }
 
-export abstract class BaseRule<T> {
-  constructor(protected data: T) {}
-
-  abstract dump(): T;
-}
-
-export class RequestRule extends BaseRule<RequestData> {
-  testMethod(method: string) {
-    return ['*', method].includes(this.data.method);
-  }
-
-  matchCallback(
-    details: RequestDetails,
-    callback: (matches: RegExpMatchArray) => void | RequestMatchResult
-  ) {
-    if (!this.testMethod(details.method)) return;
-    const matches = details.url.match(urlTester(this.data.url));
-    if (!matches) return;
-    (matches as any).method = details.method;
-    return callback(matches);
-  }
-
-  onBeforeRequest(details: RequestDetails) {
-    return this.matchCallback(details, (matches) => {
-      let { target } = this.data;
-      if (target === '=') return null;
+export const requestMatchers: RuleMatcher<
+  RequestRule,
+  RequestDetails,
+  RequestMatchResult
+> = {
+  onBeforeRequest(rule: RequestRule, details: RequestDetails) {
+    return rule.matchCallback(details, (matches) => {
+      let { target } = rule.data;
+      if (target === '=') return;
       if (!target || target === '-') return { cancel: true };
       target = fill(target, matches);
       return { redirectUrl: target };
     });
-  }
-
-  onBeforeSendHeaders(details: RequestDetails) {
-    return this.matchCallback(details, (matches) => {
-      const { requestHeaders } = this.data;
+  },
+  onBeforeSendHeaders(rule: RequestRule, details: RequestDetails) {
+    return rule.matchCallback(details, (matches) => {
+      const { requestHeaders } = rule.data;
       if (!requestHeaders) return;
-      const added = [];
-      const toRemove = {};
+      const added: HttpHeaderItem[] = [];
+      const toRemove: { [key: string]: boolean } = {};
       requestHeaders.forEach(({ name, value }) => {
         name = fill(name, matches).toLowerCase();
-        value = fill(value, matches);
+        value = fill(value || '', matches);
         if (name.startsWith(PREFIX_REMOVE)) {
           name = name.slice(PREFIX_REMOVE.length).trim();
         } else {
           added.push({ name, value });
         }
-        toRemove[name] = 1;
+        toRemove[name] = true;
       });
-      const removed = [];
-      const headers = [...details.requestHeaders]
+      const removed: HttpHeaderItem[] = [];
+      const headers = [...(details.requestHeaders || [])]
         .filter((item) => {
           if (toRemove[item.name.toLowerCase()]) {
             removed.push(item);
@@ -123,26 +108,25 @@ export class RequestRule extends BaseRule<RequestData> {
           },
         };
     });
-  }
-
-  onHeadersReceived(details: RequestDetails) {
-    return this.matchCallback(details, (matches) => {
-      const { responseHeaders } = this.data;
+  },
+  onHeadersReceived(rule: RequestRule, details: RequestDetails) {
+    return rule.matchCallback(details, (matches) => {
+      const { responseHeaders } = rule.data;
       if (!responseHeaders) return;
-      const added = [];
-      const toRemove = {};
+      const added: HttpHeaderItem[] = [];
+      const toRemove: { [key: string]: boolean } = {};
       responseHeaders.forEach(({ name, value }) => {
         name = fill(name, matches).toLowerCase();
-        value = fill(value, matches);
+        value = fill(value || '', matches);
         if (name.startsWith(PREFIX_REMOVE)) {
           name = name.slice(PREFIX_REMOVE.length).trim();
         } else {
           added.push({ name, value });
         }
-        toRemove[name] = 1;
+        toRemove[name] = true;
       });
-      const removed = [];
-      const headers = [...details.responseHeaders]
+      const removed: HttpHeaderItem[] = [];
+      const headers = [...(details.responseHeaders || [])]
         .filter((item) => {
           if (toRemove[item.name.toLowerCase()]) {
             removed.push(item);
@@ -159,19 +143,72 @@ export class RequestRule extends BaseRule<RequestData> {
           },
         };
     });
+  },
+};
+
+export const cookieMatchers: RuleMatcher<
+  CookieRule,
+  CookieDetails,
+  CookieMatchResult
+> = {
+  onCookieChange(rule: CookieRule, details: CookieDetails) {
+    return rule.matchCallback(details, () => {
+      const update: CookieMatchResult = pick(rule.data, [
+        'sameSite',
+        'httpOnly',
+        'secure',
+      ]);
+      const { ttl } = rule.data;
+      if (details.removed && !(ttl && ttl > 0)) {
+        // If cookie is removed and no positive ttl, ignore since change will not persist
+        return;
+      }
+      if (ttl != null) {
+        // If ttl is 0, set to undefined to mark the cookie as a session cookie
+        update.expirationDate = ttl
+          ? Math.floor(Date.now() / 1000 + ttl)
+          : undefined;
+      }
+      if (update.sameSite === 'no_restriction') update.secure = true;
+      return update;
+    });
+  },
+};
+
+export class RequestRule
+  implements IRule<RequestData, RequestDetails, RequestMatchResult>
+{
+  constructor(public data: RequestData) {}
+
+  matchers = requestMatchers;
+
+  testMethod(method: string) {
+    return ['*', method].includes(this.data.method);
+  }
+
+  matchCallback(
+    details: RequestDetails,
+    callback: (matches: RegExpMatchArray) => void | RequestMatchResult
+  ) {
+    if (!this.testMethod(details.method)) return;
+    const matches = details.url.match(urlTester(this.data.url));
+    if (!matches) return;
+    (matches as any).method = details.method;
+    return callback(matches);
   }
 
   dump(): RequestData {
-    return {
-      method: '*',
-      url: '*://*/*',
-      target: '=',
-      ...this.data,
-    };
+    return this.data;
   }
 }
 
-export class CookieRule extends BaseRule<CookieData> {
+export class CookieRule
+  implements IRule<CookieData, CookieDetails, CookieMatchResult>
+{
+  constructor(public data: CookieData) {}
+
+  matchers = cookieMatchers;
+
   matchCallback(
     details: CookieDetails,
     callback: (matches: RegExpMatchArray) => void | CookieMatchResult
@@ -186,33 +223,7 @@ export class CookieRule extends BaseRule<CookieData> {
     return callback(matches);
   }
 
-  onCookieChange(details: CookieDetails): void | CookieMatchResult {
-    return this.matchCallback(details, () => {
-      const update: CookieMatchResult = pick(this.data, [
-        'sameSite',
-        'httpOnly',
-        'secure',
-      ]);
-      const { ttl } = this.data;
-      if (details.removed && !(ttl > 0)) {
-        // If cookie is removed and no positive ttl, ignore since change will not persist
-        return;
-      }
-      if (ttl != null) {
-        // If ttl is 0, set to undefined to mark the cookie as a session cookie
-        update.expirationDate = ttl
-          ? Math.floor(Date.now() / 1000 + ttl)
-          : undefined;
-      }
-      if (update.sameSite === 'no_restriction') update.secure = true;
-      return update;
-    });
-  }
-
   dump(): CookieData {
-    return {
-      url: '*://*/*',
-      ...this.data,
-    };
+    return this.data;
   }
 }

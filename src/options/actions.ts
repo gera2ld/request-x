@@ -2,7 +2,7 @@ import { watch } from 'vue';
 import { debounce, pick } from 'lodash-es';
 import browser from '#/common/browser';
 import { keyboardService } from '#/common/keyboard';
-import { ListData, ListsDumpData, RuleData, RulesDumpData } from '#/types';
+import type { ListData, ListsDumpData, RuleData, RulesDumpData } from '#/types';
 import {
   store,
   ruleSelection,
@@ -19,6 +19,7 @@ import {
   loadFile,
   blob2Text,
   editList,
+  getName,
   setRoute,
   setStatus,
   remove,
@@ -66,28 +67,31 @@ export const listActions = {
   },
   toggle(item?: ListData) {
     item ||= currentList.value;
-    setStatus(item, !item.enabled);
+    if (item) setStatus(item, !item.enabled);
   },
   edit(item?: ListData) {
     item ||= currentList.value;
     editList(item);
   },
   cancel() {
-    store.editList = null;
+    store.editList = undefined;
   },
   fetch(item?: ListData) {
     item ||= currentList.value;
-    browser.runtime.sendMessage({
-      cmd: 'FetchList',
-      data: { type: item.type, id: item.id },
-    });
+    if (item) {
+      browser.runtime.sendMessage({
+        cmd: 'FetchList',
+        data: { type: item.type, id: item.id },
+      });
+    }
   },
   remove(item?: ListData) {
     item ||= currentList.value;
-    remove(item.type, item.id);
+    if (item) remove(item.type, item.id);
   },
   async fork(item?: ListData) {
     item ||= currentList.value;
+    if (!item) return;
     const data = {
       type: item.type,
       name: `${item.name || 'No name'} (forked)`,
@@ -134,7 +138,7 @@ export const listActions = {
           i === end[0] ? end[1] : store.lists[listTypes[i]]?.length ?? -1;
         const selection = {
           count: jEnd - jStart + 1,
-          selected: [],
+          selected: [] as boolean[],
         };
         for (let j = jStart; j <= jEnd; j += 1) {
           selection.selected[j] = true;
@@ -206,7 +210,7 @@ export const listActions = {
     if (!lists.length) return;
     const basename =
       lists.length === 1
-        ? lists[0].name.replace(/\s+/g, '-').toLowerCase()
+        ? getName(lists[0]).replace(/\s+/g, '-').toLowerCase()
         : `request-x-export-${Date.now()}`;
     const blob = new Blob(
       [JSON.stringify(lists.length === 1 ? lists[0] : lists)],
@@ -259,26 +263,30 @@ export const ruleActions = {
     ruleSelection.selected.length = 0;
   },
   selAll() {
+    const current = currentList.value;
+    if (!current) return;
     ruleSelection.selected.length = 0;
-    (currentList.value.rules as RuleData[]).forEach((_, i) => {
+    (current.rules as RuleData[]).forEach((_, i) => {
       ruleSelection.selected[i] = true;
     });
-    ruleSelection.count = currentList.value.rules.length;
+    ruleSelection.count = current.rules.length;
   },
   selRemove() {
-    if (!listEditable.value) return;
-    currentList.value.rules = (currentList.value.rules as RuleData[]).filter(
+    const current = currentList.value;
+    if (!current || !listEditable.value) return;
+    current.rules = (current.rules as RuleData[]).filter(
       (_, index) => !ruleSelection.selected[index]
     ) as ListData['rules'];
     ruleActions.selClear();
     ruleActions.save();
   },
   selDuplicate() {
-    if (!listEditable.value) return;
+    const current = currentList.value;
+    if (!current || !listEditable.value) return;
     const rules: RuleData[] = [];
     const selected: boolean[] = [];
     let offset = 0;
-    currentList.value.rules.forEach((rule: RuleData, index: number) => {
+    current.rules.forEach((rule: RuleData, index: number) => {
       rules.push(rule);
       if (ruleSelection.selected[index]) {
         rules.push(rule);
@@ -286,15 +294,16 @@ export const ruleActions = {
         selected[index + offset] = true;
       }
     });
-    currentList.value.rules = rules as ListData['rules'];
+    current.rules = rules as ListData['rules'];
     ruleActions.save();
     ruleSelection.count = offset * 2;
     ruleSelection.selected = selected;
     ruleActions.update();
   },
   selCopy() {
-    if (!ruleSelection.count) return;
-    const rules = (currentList.value?.rules as RuleData[])?.filter(
+    const current = currentList.value;
+    if (!current || !ruleSelection.count) return;
+    const rules = (current.rules as RuleData[])?.filter(
       (_, index) => ruleSelection.selected[index]
     );
     if (!rules?.length) return;
@@ -302,7 +311,7 @@ export const ruleActions = {
       provider: PROVIDER,
       category: 'rules',
       data: {
-        type: currentList.value.type,
+        type: current.type,
         rules,
       },
     };
@@ -314,12 +323,12 @@ export const ruleActions = {
     ruleActions.selRemove();
   },
   async selPaste({ data }: RulesDumpData) {
-    if (!listEditable.value) return;
+    const current = currentList.value;
+    if (!current || !listEditable.value) return;
     if (!data.type || !data.rules?.length)
       throw new Error('Invalid clipboard data');
-    if (data.type !== currentList.value.type)
-      throw new Error('Incompatible rule type');
-    const rules = currentList.value.rules as RuleData[];
+    if (data.type !== current.type) throw new Error('Incompatible rule type');
+    const rules = current.rules as RuleData[];
     rules.splice(
       ruleSelection.active < 0 ? rules.length : ruleSelection.active,
       0,
@@ -331,13 +340,14 @@ export const ruleActions = {
     ruleActions.edit(ruleSelection.active);
   },
   new() {
-    if (!listEditable.value) return;
+    const current = currentList.value;
+    if (!current || !listEditable.value) return;
     ruleState.newRule = {};
-    ruleState.editing = currentList.value.rules.length;
+    ruleState.editing = current.rules.length;
     ruleActions.selClear();
   },
   edit(index = -1) {
-    ruleState.newRule = null;
+    ruleState.newRule = undefined;
     ruleState.editing = index;
     ruleActions.selClear();
   },
@@ -350,7 +360,8 @@ export const ruleActions = {
     dump(pick(currentList.value, ['id', 'type', 'rules']) as Partial<ListData>);
   },
   submit(index: number, { rule }: { rule: RuleData }) {
-    const rules = currentList.value.rules as RuleData[];
+    const rules = currentList.value?.rules as RuleData[];
+    if (!rules) return;
     if (index < 0) {
       rules.push(rule);
     } else {
@@ -380,8 +391,10 @@ export const ruleKeys = {
     ruleSelection.active = Math.max(0, ruleSelection.active - 1);
   },
   down() {
+    const current = currentList.value;
+    if (!current) return;
     ruleSelection.active = Math.min(
-      currentList.value.rules.length - 1,
+      current.rules.length - 1,
       ruleSelection.active + 1
     );
   },
@@ -441,18 +454,13 @@ watch(
   () => store.route,
   () => {
     if (isRoute('lists')) {
-      const index = currentList.value
-        ? store.lists[currentList.value.type].indexOf(currentList.value)
-        : -1;
+      const current = currentList.value;
+      const index = current ? store.lists[current.type].indexOf(current) : -1;
       if (index >= 0) {
-        listActions.selToggle(
-          listTypes.indexOf(currentList.value.type),
-          index,
-          {
-            cmdCtrl: false,
-            shift: false,
-          }
-        );
+        listActions.selToggle(listTypes.indexOf(current!.type), index, {
+          cmdCtrl: false,
+          shift: false,
+        });
       }
     } else {
       listActions.selClear();

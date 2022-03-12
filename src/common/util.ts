@@ -6,16 +6,16 @@ export function reorderList<T = any>(
 ) {
   if (!selection.length || target < 0 || target >= array.length) return;
   const selectedItems = selection.map((i) => array[i]);
-  const clone = [...array];
+  const clone: Array<T | undefined> = [...array];
   selection.forEach((i) => {
     clone[i] = undefined;
   });
   clone.splice(target + +downward, 0, ...selectedItems);
-  return clone.filter((item) => item != null);
+  return clone.filter((item) => item != null) as T[];
 }
 
-export function createGetterSetter<T>(initValue: T = undefined) {
-  let value: T = initValue;
+export function createGetterSetter<T>(initValue: T | undefined = undefined) {
+  let value: T | undefined = initValue;
   return {
     get() {
       return value;
@@ -26,9 +26,11 @@ export function createGetterSetter<T>(initValue: T = undefined) {
   };
 }
 
+const noop = () => {};
+
 export function defer<T>() {
-  let resolve: (value: T) => void;
-  let reject: (err: any) => void;
+  let resolve: (value: T) => void = noop;
+  let reject: (err: any) => void = noop;
   const promise = new Promise<T>((res, rej) => {
     resolve = res;
     reject = rej;

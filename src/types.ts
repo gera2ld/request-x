@@ -145,3 +145,18 @@ export interface RulesDumpData {
     rules: RuleData[];
   };
 }
+
+export interface IRule<T, D, M> {
+  dump(): T;
+
+  matchCallback(
+    details: D,
+    callback: (matches: RegExpMatchArray) => void | M
+  ): void | M;
+
+  matchers: RuleMatcher<any, D, M>;
+}
+
+export interface RuleMatcher<R, D, M> {
+  [name: string]: (rule: R, details: D) => void | M;
+}

@@ -1,5 +1,5 @@
 import browser from '#/common/browser';
-import {
+import type {
   ConfigStorage,
   ListData,
   InterceptionData,
@@ -20,7 +20,7 @@ import {
   getLastErrors,
 } from './list';
 import { ensureDashboardPorts, getInspectPort } from './port';
-import { getUrl, configStorage as config, hookInstall } from './util';
+import { getUrl, configPromise, hookInstall } from './util';
 
 const features: FeatureToggles = {
   responseHeaders: false,
@@ -110,7 +110,12 @@ browser.webRequest.onCompleted.addListener(handleRequestEnd, {
   urls: ['<all_urls>'],
 });
 
-const commands = {
+const commands: {
+  [command: string]: (
+    data: any,
+    src: browser.Runtime.MessageSender
+  ) => Promise<any> | any;
+} = {
   GetLists: () => {
     return {
       request: lists.request.get(),
@@ -143,7 +148,7 @@ const commands = {
     if (!group) return -1;
     let list: RequestList | CookieList;
     if (data.id) {
-      list = group.find(data.id);
+      list = group.find(data.id)!;
       await list.update(data);
     } else {
       list = await group.create(data);
@@ -156,19 +161,19 @@ const commands = {
   FetchListData: (url: string) => fetchListData(url),
   async GetData() {
     return {
-      config: await config.getAll(),
+      config: (await configPromise).getAll(),
       features,
       listErrors: getLastErrors(),
     };
   },
-  SetConfig<K extends keyof ConfigStorage>({
+  async SetConfig<K extends keyof ConfigStorage>({
     key,
     value,
   }: {
     key: K;
     value: ConfigStorage[K];
   }) {
-    config.set({
+    (await configPromise).set({
       [key]: value,
     });
   },
@@ -218,17 +223,18 @@ function handleCookieChange(
   if (result) {
     const { cookie } = changeInfo;
     const hasUpdate = Object.entries(result).some(([key, value]) => {
-      return cookie[key] !== value;
+      return cookie[key as keyof browser.Cookies.Cookie] !== value;
     });
     if (!hasUpdate) {
       console.info(`[cookie] no update: ${cookie.name} ${getUrl(cookie)}`);
       return;
     }
-    const details = {
-      url: undefined,
+    const details: browser.Cookies.SetDetailsType = {
+      url: getUrl(pick(cookie, ['domain', 'path', 'secure'])),
+      domain: cookie.hostOnly ? undefined : cookie.domain,
+      expirationDate: cookie.session ? undefined : cookie.expirationDate,
       ...pick(cookie, [
         'name',
-        'domain',
         'path',
         'httpOnly',
         'sameSite',
@@ -238,10 +244,6 @@ function handleCookieChange(
       ]),
       ...result,
     };
-    details.url = getUrl(details);
-    // domain is used to construct url, so we reset it here
-    if (cookie.hostOnly) details.domain = undefined;
-    if (!cookie.session) details.expirationDate = cookie.expirationDate;
     console.info(`[cookie] matched: ${details.name} ${details.url}`, details);
     updates.set(
       [details.storeId, details.url, details.name].join('\n'),
