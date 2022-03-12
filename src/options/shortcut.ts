@@ -1,6 +1,7 @@
 import { isMacintosh, reprShortcut } from '#/common/keyboard';
 
 export const shortcutMap = {
+  new: 'c',
   copy: 'ctrlcmd-c',
   cut: 'ctrlcmd-x',
   paste: 'ctrlcmd-v',
@@ -8,6 +9,7 @@ export const shortcutMap = {
   remove: isMacintosh ? 'm-backspace' : 's-delete',
   add: 'a',
   edit: 'e',
+  selectAll: 'ctrlcmd-a',
 };
 
 export const shortcutTextMap = Object.entries(shortcutMap).reduce(

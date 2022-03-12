@@ -49,10 +49,16 @@ import { shortcutTextMap } from '../shortcut';
 import {
   currentList,
   listEditable,
-  listSelection,
   ruleSelection,
+  selectedLists,
 } from '../store';
-import { listActions, ruleActions, selPaste } from '../actions';
+import {
+  listActions,
+  ruleActions,
+  selPaste,
+  selectAll,
+  selEdit,
+} from '../actions';
 import { store } from '../store';
 
 const menus = computed(() => [
@@ -62,6 +68,7 @@ const menus = computed(() => [
       {
         label: 'Create new list',
         handler: listActions.new,
+        shortcut: shortcutTextMap.new,
       },
       {
         label: 'Import data',
@@ -82,21 +89,16 @@ const menus = computed(() => [
       {
         label: 'Export',
         handler: listActions.selExport,
-        disabled: !listSelection.count,
+        disabled: !selectedLists.value.length,
       },
       {
         label: 'Enable / Disable',
         handler: listActions.selToggleStatus,
-        disabled: !listSelection.count,
+        disabled: !selectedLists.value.length,
       },
       {
         type: 'group',
         label: 'Current list',
-      },
-      {
-        label: 'Edit metadata',
-        handler: listActions.edit,
-        disabled: !currentList.value,
       },
       {
         label: 'Fork',
@@ -112,14 +114,6 @@ const menus = computed(() => [
         label: 'Add new rule',
         shortcut: shortcutTextMap.add,
         handler: ruleActions.new,
-      },
-      {
-        label: 'Edit / View detail',
-        shortcut: shortcutTextMap.edit,
-        handler: ruleActions.selEdit,
-        disabled:
-          ruleSelection.active < 0 ||
-          ruleSelection.active >= currentList.value.rules.length,
       },
       {
         type: 'group',
@@ -138,7 +132,15 @@ const menus = computed(() => [
     items: [
       {
         type: 'group',
-        label: `${store.activeArea === 'lists' ? 'List' : 'Rule'} selection`,
+        label: `Realm: ${store.activeArea === 'lists' ? 'List' : 'Rule'}`,
+      },
+      {
+        label: 'Select All',
+        shortcut: shortcutTextMap.selectAll,
+        handler: selectAll,
+      },
+      {
+        type: 'sep',
       },
       {
         label: 'Cut',
@@ -149,7 +151,7 @@ const menus = computed(() => [
             : ruleActions.selCut,
         disabled:
           store.activeArea === 'lists'
-            ? !listSelection.count
+            ? !selectedLists.value.length
             : !ruleSelection.count || !listEditable.value,
       },
       {
@@ -161,12 +163,8 @@ const menus = computed(() => [
             : ruleActions.selCopy,
         disabled:
           store.activeArea === 'lists'
-            ? !listSelection.count
+            ? !selectedLists.value.length
             : !ruleSelection.count,
-      },
-      {
-        type: 'group',
-        label: 'Selection',
       },
       {
         label: 'Paste',
@@ -177,6 +175,21 @@ const menus = computed(() => [
       {
         type: 'sep',
       },
+      store.activeArea === 'lists'
+        ? {
+            label: 'Edit metadata',
+            shortcut: shortcutTextMap.edit,
+            handler: selEdit,
+            disabled: !currentList.value,
+          }
+        : {
+            label: 'Edit / View detail',
+            shortcut: shortcutTextMap.edit,
+            handler: selEdit,
+            disabled:
+              ruleSelection.active < 0 ||
+              ruleSelection.active >= currentList.value.rules.length,
+          },
       {
         label: 'Remove',
         shortcut: shortcutTextMap.remove,
@@ -186,7 +199,7 @@ const menus = computed(() => [
             : ruleActions.selRemove,
         disabled:
           store.activeArea === 'lists'
-            ? !listSelection.count
+            ? !selectedLists.value.length
             : !ruleSelection.count || !listEditable.value,
       },
     ],

@@ -11,7 +11,7 @@ import {
   ruleState,
   listSelection,
   listTypes,
-  getSelectedLists,
+  selectedLists,
   ensureGroupSelection,
 } from './store';
 import {
@@ -101,6 +101,17 @@ export const listActions = {
     listSelection.itemIndex = -1;
     listSelection.selection = [];
   },
+  selAll() {
+    listSelection.selection = [];
+    listTypes.forEach((type, i) => {
+      const selection = ensureGroupSelection(i);
+      const lists = store.lists[type];
+      lists.forEach((_, j) => {
+        selection.selected[j] = true;
+      });
+      selection.count = lists.length;
+    });
+  },
   selToggle(
     groupIndex: number,
     itemIndex: number,
@@ -163,7 +174,7 @@ export const listActions = {
     return count;
   },
   selCopy() {
-    const lists = getSelectedLists().map(dumpList);
+    const lists = selectedLists.value.map(dumpList);
     if (!lists?.length) return 0;
     const data: ListsDumpData = {
       provider: PROVIDER,
@@ -191,7 +202,7 @@ export const listActions = {
     });
   },
   selExport() {
-    const lists = getSelectedLists().map(dumpList);
+    const lists = selectedLists.value.map(dumpList);
     if (!lists.length) return;
     const basename =
       lists.length === 1
@@ -206,7 +217,7 @@ export const listActions = {
     downloadBlob(blob, `${basename}.json`);
   },
   selToggleStatus() {
-    const lists = getSelectedLists();
+    const lists = selectedLists.value;
     if (!lists.length) return;
     const enabled = lists.some((list) => !list.enabled);
     lists.forEach((list) => {
@@ -246,6 +257,13 @@ export const ruleActions = {
     ruleSelection.active = -1;
     ruleSelection.count = 0;
     ruleSelection.selected.length = 0;
+  },
+  selAll() {
+    ruleSelection.selected.length = 0;
+    (currentList.value.rules as RuleData[]).forEach((_, i) => {
+      ruleSelection.selected[i] = true;
+    });
+    ruleSelection.count = currentList.value.rules.length;
   },
   selRemove() {
     if (!listEditable.value) return;
@@ -391,6 +409,22 @@ export async function selPaste() {
   }
 }
 
+export async function selEdit() {
+  if (store.activeArea === 'lists') {
+    listActions.edit();
+  } else {
+    ruleActions.selEdit();
+  }
+}
+
+export function selectAll() {
+  if (store.activeArea === 'lists') {
+    listActions.selAll();
+  } else {
+    ruleActions.selAll();
+  }
+}
+
 const updateListLater = debounce(ruleActions.update, 200);
 watch(() => ruleState.filter, updateListLater);
 watch(currentList, (cur, prev) => {
@@ -444,13 +478,15 @@ const listsRealm = {
 const rulesRealm = {
   condition: '!inputFocus && !listsRealm && !editRule',
 };
+const noEdit = {
+  condition: '!inputFocus && !editRule',
+};
+keyboardService.register(shortcutMap.new, listActions.new, noEdit);
 keyboardService.register(shortcutMap.copy, listActions.selCopy, listsRealm);
 keyboardService.register(shortcutMap.copy, ruleActions.selCopy, rulesRealm);
 keyboardService.register(shortcutMap.cut, listActions.selCut, listsRealm);
 keyboardService.register(shortcutMap.cut, ruleActions.selCut, rulesRealm);
-keyboardService.register(shortcutMap.paste, selPaste, {
-  condition: '!inputFocus && !editRule',
-});
+keyboardService.register(shortcutMap.paste, selPaste, noEdit);
 keyboardService.register(
   shortcutMap.duplicate,
   ruleActions.selDuplicate,
@@ -458,11 +494,12 @@ keyboardService.register(
 );
 keyboardService.register(shortcutMap.remove, listActions.selRemove, listsRealm);
 keyboardService.register(shortcutMap.remove, ruleActions.selRemove, rulesRealm);
-keyboardService.register(shortcutMap.add, ruleActions.new, rulesRealm);
+keyboardService.register(shortcutMap.add, ruleActions.new, noEdit);
+keyboardService.register(shortcutMap.selectAll, selectAll, noEdit);
 keyboardService.register('up', ruleKeys.up, rulesRealm);
 keyboardService.register('down', ruleKeys.down, rulesRealm);
 keyboardService.register('space', ruleKeys.space, rulesRealm);
-keyboardService.register(shortcutMap.edit, ruleActions.selEdit, rulesRealm);
+keyboardService.register(shortcutMap.edit, selEdit, noEdit);
 keyboardService.register('esc', ruleActions.selClear, rulesRealm);
 keyboardService.register('esc', ruleActions.cancel, { condition: 'editRule' });
 keyboardService.register('esc', listActions.cancel, {

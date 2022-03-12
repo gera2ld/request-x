@@ -86,7 +86,7 @@ export function ensureGroupSelection(index: number) {
   return selection;
 }
 
-export function getSelectedLists() {
+export const selectedLists = computed(() => {
   const lists = listSelection.selection.flatMap((selection, i) =>
     selection.count
       ? store.lists[listTypes[i]]?.filter(
@@ -95,4 +95,4 @@ export function getSelectedLists() {
       : []
   );
   return lists;
-}
+});
