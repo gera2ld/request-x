@@ -166,6 +166,14 @@ export function dumpList(item: ListData) {
   } as Partial<ListData>;
 }
 
+export function compareNumberArray(a: number[], b: number[]) {
+  for (let i = 0; i < a.length && i < b.length; i += 1) {
+    if (a[i] < b[i]) return -1;
+    if (a[i] > b[i]) return 1;
+  }
+  return Math.sign(a.length - b.length);
+}
+
 const port = browser.runtime.connect({
   name: 'dashboard',
 });

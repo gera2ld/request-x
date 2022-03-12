@@ -10,6 +10,9 @@ import {
   listEditable,
   ruleState,
   listSelection,
+  listTypes,
+  getSelectedLists,
+  ensureGroupSelection,
 } from './store';
 import {
   dump,
@@ -22,6 +25,7 @@ import {
   isRoute,
   downloadBlob,
   dumpList,
+  compareNumberArray,
 } from './util';
 import { shortcutMap } from './shortcut';
 
@@ -93,66 +97,86 @@ export const listActions = {
     setRoute(`lists/${id}`);
   },
   selClear() {
-    listSelection.activeIndex = -1;
-    listSelection.count = 0;
-    listSelection.selected.length = 0;
+    listSelection.groupIndex = -1;
+    listSelection.itemIndex = -1;
+    listSelection.selection = [];
   },
   selToggle(
-    type: ListData['type'],
-    index: number,
+    groupIndex: number,
+    itemIndex: number,
     event: { cmdCtrl: boolean; shift: boolean }
   ) {
-    if (listSelection.activeType !== type) {
-      listSelection.activeType = type;
-      listActions.selClear();
-    }
-    if (event.shift && listSelection.activeIndex >= 0) {
-      listSelection.selected = [];
-      const start = Math.min(listSelection.activeIndex, index);
-      const end = Math.max(listSelection.activeIndex, index);
-      for (let i = start; i <= end; i += 1) {
-        listSelection.selected[i] = true;
+    const lastGroupIndex = listSelection.groupIndex;
+    const lastItemIndex = listSelection.itemIndex;
+    listSelection.groupIndex = groupIndex;
+
+    if (event.shift && lastGroupIndex >= 0 && lastItemIndex >= 0) {
+      listSelection.selection = [];
+      let start = [lastGroupIndex, lastItemIndex];
+      let end = [groupIndex, itemIndex];
+      if (compareNumberArray(start, end) > 0) {
+        [start, end] = [end, start];
       }
-      listSelection.count = end - start + 1;
+      for (let i = start[0]; i <= end[0]; i += 1) {
+        const jStart = i === start[0] ? start[1] : 0;
+        const jEnd =
+          i === end[0] ? end[1] : store.lists[listTypes[i]]?.length ?? -1;
+        const selection = {
+          count: jEnd - jStart + 1,
+          selected: [],
+        };
+        for (let j = jStart; j <= jEnd; j += 1) {
+          selection.selected[j] = true;
+        }
+        listSelection.selection[i] = selection;
+      }
       return;
     }
+
     if (event.cmdCtrl) {
-      if ((listSelection.selected[index] = !listSelection.selected[index])) {
-        listSelection.count += 1;
+      const selection = ensureGroupSelection(groupIndex);
+      if ((selection.selected[itemIndex] = !selection.selected[itemIndex])) {
+        selection.count += 1;
       } else {
-        listSelection.count -= 1;
+        selection.count -= 1;
       }
     } else {
-      listSelection.selected = [];
-      listSelection.selected[index] = true;
-      listSelection.count = 1;
+      listSelection.selection = [];
+      const selection = ensureGroupSelection(groupIndex);
+      selection.selected[itemIndex] = true;
+      selection.count = 1;
     }
-    listSelection.activeIndex = index;
+    listSelection.itemIndex = itemIndex;
   },
   selRemove() {
-    if (!listSelection.count) return;
-    store.lists[listSelection.activeType]?.forEach((item, i) => {
-      if (listSelection.selected[i]) listActions.remove(item);
+    let count = 0;
+    listSelection.selection.forEach((selection, i) => {
+      if (!selection.count) return;
+      store.lists[listTypes[i]]?.forEach((item, j) => {
+        if (selection.selected[j]) {
+          listActions.remove(item);
+          count += 1;
+        }
+      });
     });
     listActions.selClear();
+    return count;
   },
   selCopy() {
-    if (!listSelection.count) return;
-    const lists = store.lists[listSelection.activeType]
-      ?.filter((_, index) => listSelection.selected[index])
-      .map(dumpList);
-    if (!lists?.length) return;
+    const lists = getSelectedLists().map(dumpList);
+    if (!lists?.length) return 0;
     const data: ListsDumpData = {
       provider: PROVIDER,
       category: 'lists',
       data: lists,
     };
     navigator.clipboard.writeText(JSON.stringify(data));
+    return lists.length;
   },
   selCut() {
-    if (!listSelection.count) return;
-    listActions.selCopy();
-    listActions.selRemove();
+    const count = listActions.selCopy();
+    if (count) listActions.selRemove();
+    return count;
   },
   async selPaste({ data }: ListsDumpData) {
     data.forEach((list) => {
@@ -167,20 +191,14 @@ export const listActions = {
     });
   },
   selExport() {
-    if (!listSelection.count) return;
-    const result = [];
-    store.lists[listSelection.activeType]?.forEach((item, i) => {
-      if (listSelection.selected[i]) {
-        result.push(dumpList(item));
-      }
-    });
-    if (!result.length) return;
+    const lists = getSelectedLists().map(dumpList);
+    if (!lists.length) return;
     const basename =
-      result.length === 1
-        ? result[0].name.replace(/\s+/g, '-').toLowerCase()
+      lists.length === 1
+        ? lists[0].name.replace(/\s+/g, '-').toLowerCase()
         : `request-x-export-${Date.now()}`;
     const blob = new Blob(
-      [JSON.stringify(result.length === 1 ? result[0] : result)],
+      [JSON.stringify(lists.length === 1 ? lists[0] : lists)],
       {
         type: 'application/json',
       }
@@ -188,11 +206,10 @@ export const listActions = {
     downloadBlob(blob, `${basename}.json`);
   },
   selToggleStatus() {
-    if (!listSelection.count) return;
-    const lists = store.lists[listSelection.activeType];
-    const selected = lists.filter((_, i) => listSelection.selected[i]);
-    const enabled = selected.some((list) => !list.enabled);
-    selected.forEach((list) => {
+    const lists = getSelectedLists();
+    if (!lists.length) return;
+    const enabled = lists.some((list) => !list.enabled);
+    lists.forEach((list) => {
       if (list.enabled !== enabled) {
         setStatus(list, enabled);
       }
@@ -394,10 +411,14 @@ watch(
         ? store.lists[currentList.value.type].indexOf(currentList.value)
         : -1;
       if (index >= 0) {
-        listActions.selToggle(currentList.value.type, index, {
-          cmdCtrl: false,
-          shift: false,
-        });
+        listActions.selToggle(
+          listTypes.indexOf(currentList.value.type),
+          index,
+          {
+            cmdCtrl: false,
+            shift: false,
+          }
+        );
       }
     } else {
       listActions.selClear();

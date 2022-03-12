@@ -1,5 +1,7 @@
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive } from 'vue';
 import { ListData, ConfigStorage, FeatureToggles, RuleData } from '#/types';
+
+export const listTypes = ['request', 'cookie'];
 
 export const store = reactive({
   lists: {},
@@ -48,15 +50,16 @@ export const ruleSelection = reactive<{
 });
 
 export const listSelection = reactive<{
-  activeType: ListData['type'];
-  activeIndex: number;
-  count: number;
-  selected: boolean[];
+  groupIndex: number;
+  itemIndex: number;
+  selection: Array<{
+    count: number;
+    selected: boolean[];
+  }>;
 }>({
-  activeType: 'request',
-  activeIndex: -1,
-  count: 0,
-  selected: [],
+  groupIndex: -1,
+  itemIndex: -1,
+  selection: [],
 });
 
 export const ruleState = reactive<{
@@ -70,3 +73,26 @@ export const ruleState = reactive<{
   filter: '',
   visible: [],
 });
+
+export function ensureGroupSelection(index: number) {
+  let selection = listSelection.selection[index];
+  if (!selection) {
+    selection = {
+      count: 0,
+      selected: [],
+    };
+    listSelection.selection[index] = selection;
+  }
+  return selection;
+}
+
+export function getSelectedLists() {
+  const lists = listSelection.selection.flatMap((selection, i) =>
+    selection.count
+      ? store.lists[listTypes[i]]?.filter(
+          (_, index) => selection.selected[index]
+        )
+      : []
+  );
+  return lists;
+}

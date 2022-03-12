@@ -6,12 +6,13 @@
   >
     <div class="flex-1 overflow-y-auto">
       <section class="nav-section">
-        <ListSection type="request" :lists="store.lists.request">
+        <ListSection type="request" :lists="store.lists.request" :index="0">
           <template #title>Request Interception</template>
         </ListSection>
         <ListSection
           type="cookie"
           :lists="store.lists.cookie"
+          :index="1"
           :unsupported="!store.features.cookies"
         >
           <template #title>Cookie Interception</template>
