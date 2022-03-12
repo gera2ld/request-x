@@ -7,9 +7,9 @@
       <div v-if="currentList && !listEditable" class="text-zinc-600 mx-2">
         You must fork this list before making changes to it
       </div>
-      <div class="input">
+      <div class="input-icon">
         <input type="search" v-model="ruleState.filter" />
-        <svg class="input-icon" viewBox="0 0 24 24">
+        <svg class="icon" viewBox="0 0 24 24">
           <path
             d="M10 4c8 0 8 12 0 12c-8 0 -8 -12 0 -12m0 1c-6 0 -6 10 0 10c6 0 6 -10 0 -10zm4 8l6 6l-1 1l-6 -6z"
           />

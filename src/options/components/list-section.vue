@@ -7,6 +7,7 @@
       <slot name="unsupported"></slot>
     </div>
     <div v-else-if="!lists?.length" class="list-section-empty">Empty</div>
+    <div v-else-if="!visible.count" class="list-section-empty">Not found</div>
     <ul v-else>
       <li
         v-for="(item, itemIndex) in lists"
@@ -22,6 +23,7 @@
             dragging.over === itemIndex && dragging.over > dragging.start,
         }"
         :title="getName(item)"
+        v-show="visible.data[itemIndex]"
         @click.prevent="onSelToggle(itemIndex, $event)"
         @dragstart="onDragStart($event, itemIndex)"
         @dragover="onDragOver($event, itemIndex)"
@@ -56,7 +58,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, reactive } from 'vue';
+import { defineComponent, PropType, computed, reactive } from 'vue';
 import { ListData } from '#/types';
 import { getName, isRoute, moveList, getModifiers } from '../util';
 import { listActions } from '../actions';
@@ -72,6 +74,9 @@ export default defineComponent({
     },
     index: {
       type: Number,
+    },
+    filter: {
+      type: String,
     },
     unsupported: {
       type: Boolean,
@@ -92,7 +97,23 @@ export default defineComponent({
     const isSelected = (index: number) =>
       listSelection.selection[props.index]?.selected[index];
 
-    const onDragStart = (_event: DragEvent, index: number) => {
+    const visible = computed(() => {
+      let count = 0;
+      const data = props.lists.map((list) => {
+        const visible =
+          !props.filter ||
+          list.name.toLowerCase().includes(props.filter.toLowerCase());
+        count += +visible;
+        return visible;
+      });
+      return { data, count };
+    });
+
+    const onDragStart = (event: DragEvent, index: number) => {
+      if (props.filter) {
+        event.preventDefault();
+        return;
+      }
       if (!listSelection.selection[props.index]?.selected[index]) {
         onSelToggle(index, {} as any);
       }
@@ -168,6 +189,7 @@ export default defineComponent({
       store,
       isActive,
       isSelected,
+      visible,
       onDragStart,
       onDragOver,
       onDragLeave,

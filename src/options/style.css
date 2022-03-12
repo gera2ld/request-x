@@ -66,12 +66,12 @@ textarea {
   @apply text-zinc-400 dark:text-zinc-500;
 }
 
-.input {
+.input-icon {
   @apply relative;
   > input {
     @apply pl-8;
   }
-  &-icon {
+  > .icon {
     @apply absolute w-8 top-0 left-0 h-full text-zinc-500;
   }
 }
@@ -137,10 +137,12 @@ textarea {
 
 .nav {
   @apply flex flex-col w-1/4 max-w-[16rem] px-2 border-r border-zinc-200 dark:border-zinc-600;
+  &-filter {
+    @apply mt-2;
+  }
 }
 
 .nav-section {
-  @apply mt-2;
   &-title {
     @apply uppercase text-zinc-600 dark:text-zinc-400;
   }
