@@ -5,7 +5,7 @@ export const inspectPorts = new Map<number, browser.Runtime.Port>();
 export const dashboardPorts = new Set<browser.Runtime.Port>();
 
 const deferPort = () => defer<browser.Runtime.Port>();
-let dashboardDeferred: ReturnType<typeof deferPort>;
+let dashboardDeferred: ReturnType<typeof deferPort> | undefined;
 
 browser.runtime.onConnect.addListener((port) => {
   if (port.name === 'dashboard') {
@@ -29,7 +29,7 @@ browser.runtime.onConnect.addListener((port) => {
 });
 
 export function getInspectPort(tabId: number) {
-  return inspectPorts[tabId];
+  return inspectPorts.get(tabId);
 }
 
 export async function ensureDashboardPorts() {
