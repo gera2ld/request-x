@@ -24,7 +24,7 @@
         }"
         :title="getName(item)"
         v-show="visible.data[itemIndex]"
-        @click.prevent="onSelToggle(itemIndex, $event)"
+        @click.prevent.stop="onSelToggle(itemIndex, $event)"
         @dragstart="onDragStart($event, itemIndex)"
         @dragover="onDragOver($event, itemIndex)"
         @dragleave="onDragLeave($event, itemIndex)"

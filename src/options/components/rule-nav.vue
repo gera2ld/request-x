@@ -7,7 +7,7 @@
     <div class="nav-filter">
       <input type="search" v-model="filter" placeholder="Filter by name" />
     </div>
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto" @click="onSelCancel">
       <ListSection
         type="request"
         :lists="store.lists.request"
@@ -34,7 +34,8 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { store } from '../store';
+import { listActions } from '../actions';
+import { listSelection, store } from '../store';
 import ListSection from './list-section.vue';
 
 export default defineComponent({
@@ -44,9 +45,17 @@ export default defineComponent({
   setup() {
     const filter = ref('');
 
+    const onSelCancel = () => {
+      listActions.selToggle(listSelection.groupIndex, listSelection.itemIndex, {
+        cmdCtrl: false,
+        shift: false,
+      });
+    };
+
     return {
       filter,
       store,
+      onSelCancel,
     };
   },
 });

@@ -44,7 +44,7 @@
         @cancel="onCancel"
       />
     </div>
-    <footer>
+    <footer class="p-1">
       <div class="mb-1 truncate text-zinc-500" v-if="currentList.subscribeUrl">
         Subscribed from:
         <span v-text="currentList.subscribeUrl"></span>
