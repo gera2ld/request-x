@@ -36,11 +36,7 @@
       </div>
       <div class="modal-group" v-if="!store.editList.isSubscribed">
         <div>Name:</div>
-        <input
-          type="text"
-          v-model="store.editList.name"
-          :placeholder="store.editList.defaultName"
-        />
+        <input type="text" v-model="store.editList.name" />
       </div>
       <div class="modal-group" v-else>
         <div>
@@ -106,7 +102,9 @@ export default defineComponent({
       const { editList } = store;
       return {
         subscribeUrl:
-          editList.isSubscribed && !isValidURL(editList.subscribeUrl),
+          editList?.isSubscribed &&
+          editList.subscribeUrl &&
+          !isValidURL(editList.subscribeUrl),
       };
     });
 
@@ -120,23 +118,23 @@ export default defineComponent({
     });
 
     const onListCancel = () => {
-      store.editList = null;
+      store.editList = undefined;
     };
 
     const onListSave = () => {
       if (!canSubmit.value) return;
       dump(
-        store.editList.isSubscribed
-          ? {
+        store.editList?.isSubscribed
+          ? ({
               ...subscribeData.value.data,
               ...pick(store.editList, ['id', 'subscribeUrl']),
-            }
+            } as Partial<ListData>)
           : pick(store.editList, ['id', 'name', 'type'])
       );
       onListCancel();
     };
 
-    const formatType = (type: string) =>
+    const formatType = (type?: string) =>
       type && type[0].toUpperCase() + type.slice(1);
 
     const resetSubscribedData = () => {

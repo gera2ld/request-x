@@ -99,7 +99,7 @@ import {
 import type { PropType } from 'vue';
 import type { CookieData, SameSiteStatus } from '#/types';
 import { store } from '../store';
-import { isValidPattern } from '../util';
+import { isValidPattern, focusInput } from '../util';
 import RuleItemView from './rule-item-view.vue';
 
 const sameSiteOptions = [
@@ -148,6 +148,7 @@ export default defineComponent({
   props: {
     rule: {
       type: Object as PropType<CookieData>,
+      required: true,
     },
     showDetail: Boolean,
     editable: Boolean,
@@ -163,7 +164,7 @@ export default defineComponent({
       secure?: '' | 'true' | 'false';
       ttl?: string;
     }>({});
-    const refForm = ref(null);
+    const refForm = ref<HTMLFormElement | undefined>(undefined);
 
     const reset = () => {
       if (!props.showDetail) return;
@@ -178,7 +179,7 @@ export default defineComponent({
       });
       nextTick(() => {
         if (props.editable) {
-          refForm.value?.querySelector('input,select')?.focus();
+          focusInput(refForm.value);
         }
       });
     };
@@ -195,7 +196,7 @@ export default defineComponent({
         rule.sameSite != null && 'SameSite',
         rule.httpOnly != null && 'httpOnly',
         rule.ttl != null && 'ttl',
-      ].filter(Boolean);
+      ].filter(Boolean) as string[];
     });
 
     const onCancel = () => {
@@ -209,9 +210,9 @@ export default defineComponent({
           url: input.url,
           name: input.name,
           sameSite: input.sameSite || undefined,
-          httpOnly: str2bool(input.httpOnly),
-          secure: str2bool(input.secure),
-          ttl: str2num(input.ttl),
+          httpOnly: str2bool(input.httpOnly ?? ''),
+          secure: str2bool(input.secure ?? ''),
+          ttl: str2num(input.ttl ?? ''),
         } as CookieData,
       });
     };

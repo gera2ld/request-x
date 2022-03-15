@@ -164,3 +164,12 @@ port.onMessage.addListener((message: PortMessage<any>) => {
     });
   }
 });
+
+export function focusInput(form: HTMLFormElement | undefined) {
+  (
+    form?.querySelector('input,select') as
+      | HTMLInputElement
+      | HTMLSelectElement
+      | null
+  )?.focus();
+}

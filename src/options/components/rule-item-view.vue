@@ -25,7 +25,9 @@ import { getModifiers } from '../util';
 export default defineComponent({
   props: {
     selected: Boolean,
-    badges: Array as PropType<string[]>,
+    badges: {
+      type: Array as PropType<string[]>,
+    },
   },
   emits: ['select'],
   setup(_, context) {

@@ -116,7 +116,12 @@ import {
 import type { PropType } from 'vue';
 import type { HttpHeaderItem, RequestData } from '#/types';
 import { store } from '../store';
-import { isValidMethod, isValidPattern, isValidTarget } from '../util';
+import {
+  isValidMethod,
+  isValidPattern,
+  isValidTarget,
+  focusInput,
+} from '../util';
 import RuleItemView from './rule-item-view.vue';
 
 const methodList = ['*', 'GET', 'POST', 'HEAD', 'PUT', 'PATCH', 'DELETE'];
@@ -147,6 +152,7 @@ export default defineComponent({
   props: {
     rule: {
       type: Object as PropType<RequestData>,
+      required: true,
     },
     showDetail: Boolean,
     selected: Boolean,
@@ -161,7 +167,7 @@ export default defineComponent({
       reqHeaders?: string;
       resHeaders?: string;
     }>({});
-    const refForm = ref(null);
+    const refForm = ref<HTMLFormElement | undefined>(undefined);
 
     const reset = () => {
       if (!props.showDetail) return;
@@ -175,14 +181,14 @@ export default defineComponent({
       });
       nextTick(() => {
         if (props.editable) {
-          refForm.value?.querySelector('input,select')?.focus();
+          focusInput(refForm.value);
         }
       });
     };
 
     const errors = computed(() => {
       return {
-        method: !isValidMethod(input.method),
+        method: !isValidMethod(input.method ?? ''),
         url: !input.url || !isValidPattern(input.url),
         target:
           !input.target ||
@@ -197,10 +203,10 @@ export default defineComponent({
         rule.target?.length > 1 && 'redirect',
         rule.requestHeaders?.length && 'req_headers',
         rule.responseHeaders?.length && 'res_headers',
-      ].filter(Boolean);
+      ].filter(Boolean) as string[];
     });
 
-    const onMethodInput = (e: InputEvent) => {
+    const onMethodInput = (e: Event) => {
       input.method = (e.target as HTMLInputElement).value.toUpperCase();
     };
 
@@ -215,8 +221,8 @@ export default defineComponent({
           method: input.method,
           url: input.url,
           target: input.target,
-          requestHeaders: parseHeaders(input.reqHeaders),
-          responseHeaders: parseHeaders(input.resHeaders),
+          requestHeaders: parseHeaders(input.reqHeaders ?? ''),
+          responseHeaders: parseHeaders(input.resHeaders ?? ''),
         } as RequestData,
       });
     };

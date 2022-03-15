@@ -6,11 +6,11 @@
       <div class="section-body">
         <div>
           <span class="entry-label">Request URL:</span>
-          <span v-text="store.active.url"></span>
+          <span v-text="store.active?.url"></span>
         </div>
         <div>
           <span class="entry-label">Request Method:</span>
-          <span v-text="store.active.method"></span>
+          <span v-text="store.active?.method"></span>
         </div>
       </div>
     </section>
@@ -51,6 +51,7 @@
 </template>
 
 <script lang="ts">
+import type { HttpHeaderItem } from '#/types';
 import { computed, defineComponent } from 'vue';
 import { store } from './util';
 
@@ -79,13 +80,21 @@ export default defineComponent({
               typeText: 'Modify response headers',
               headers: result.payload?.responseHeaders,
             },
-          ].filter(Boolean) as string[])
+          ].filter(Boolean) as Array<{
+            type: string;
+            typeText: string;
+            redirectUrl?: string;
+            headers?: {
+              added: HttpHeaderItem[];
+              removed: HttpHeaderItem[];
+            };
+          }>)
         : [];
       return actions;
     });
 
     const onClose = () => {
-      store.active = null;
+      store.active = undefined;
     };
 
     return {

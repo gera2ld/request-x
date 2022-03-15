@@ -70,12 +70,12 @@ export default defineComponent({
     };
 
     const onSelect = (row: InterceptionData) => {
-      store.active = store.active === row ? null : row;
+      store.active = store.active === row ? undefined : row;
     };
 
     const onClear = () => {
       clearRequests();
-      store.active = null;
+      store.active = undefined;
     };
 
     return {

@@ -5,7 +5,7 @@
       :key="i"
       :closeAfterClick="true"
       :modelValue="active === i"
-      @update:modelValue="(value) => onToggle(i, value)"
+      @update:modelValue="(value: boolean) => onToggle(i, value)"
     >
       <template v-slot:toggle>
         <div
@@ -188,6 +188,7 @@ const menus = computed(() => [
             handler: selEdit,
             disabled:
               ruleSelection.active < 0 ||
+              !currentList.value ||
               ruleSelection.active >= currentList.value.rules.length,
           },
       {

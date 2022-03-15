@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts">
-import { computed } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { pick } from 'lodash-es';
 import { browser, sendCommand } from '#/common/browser';
 import { SECTION_TITLE_MAP } from '#/common/constants';
@@ -57,7 +57,7 @@ const openDashboard = () => {
   browser.runtime.openOptionsPage();
 };
 
-export default {
+export default defineComponent({
   setup() {
     const hasEnabledLists = computed(() => {
       return Object.values(store.enabledLists).some((lists) => lists.length);
@@ -78,5 +78,5 @@ export default {
       onToggle,
     };
   },
-};
+});
 </script>
