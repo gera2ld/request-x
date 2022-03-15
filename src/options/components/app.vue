@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-screen px-4">
+  <div class="request-x-options">
     <header class="header">
       <a href="#" class="text-xl">Request X</a>
       <div class="ml-4 mr-8 subtle" v-text="`v${version}`"></div>

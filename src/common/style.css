@@ -7,8 +7,15 @@ html {
 }
 
 body {
-  @apply text-zinc-800 max-w-screen-xl mx-auto dark:bg-zinc-900 dark:text-zinc-300 text-base;
-  min-width: 768px;
+  @apply text-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 text-base;
+}
+
+.request-x-options {
+  @apply max-w-screen-xl mx-auto min-w-[768px] flex flex-col h-screen px-4;
+}
+
+.request-x-popup {
+  @apply w-[24rem];
 }
 
 .active-area {
@@ -232,4 +239,8 @@ textarea {
 
 .text-error {
   @apply text-red-500;
+}
+
+.popup-enabled-lists {
+  @apply px-2 overflow-y-auto max-h-[24rem];
 }
