@@ -53,7 +53,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import browser from '#/common/browser';
+import { browser } from '#/common/browser';
 import { isMacintosh } from '#/common/keyboard';
 import { currentList, listEditable, store, ruleState } from '../store';
 import { isRoute } from '../util';

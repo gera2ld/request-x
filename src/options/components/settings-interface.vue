@@ -22,16 +22,13 @@
 
 <script>
 import { defineComponent } from 'vue';
-import browser from '#/common/browser';
+import { sendCommand } from '#/common/browser';
 import { store } from '../util';
 
 export default defineComponent({
   setup() {
     const onChange = (key, value) => {
-      browser.runtime.sendMessage({
-        cmd: 'SetConfig',
-        data: { key, value },
-      });
+      sendCommand('SetConfig', { key, value });
     };
 
     return {

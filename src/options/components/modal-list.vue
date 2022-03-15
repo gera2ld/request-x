@@ -74,8 +74,8 @@
 import { computed, defineComponent, ref, watch, watchEffect } from 'vue';
 import { debounce, pick } from 'lodash-es';
 import VlModal from 'vueleton/lib/modal';
-import browser from '#/common/browser';
-import { ListData } from '#/types';
+import { sendCommand } from '#/common/browser';
+import type { ListData } from '#/types';
 import { store } from '../store';
 import { isValidURL, dump } from '../util';
 
@@ -153,10 +153,7 @@ export default defineComponent({
       value.loading = true;
       const url = store.editList.subscribeUrl;
       try {
-        const data = await browser.runtime.sendMessage({
-          cmd: 'FetchListData',
-          data: url,
-        });
+        const data = await sendCommand('FetchListData', url);
         if (session !== value.session) return;
         value.data = data;
         if (!['request', 'cookie'].includes(data.type)) {

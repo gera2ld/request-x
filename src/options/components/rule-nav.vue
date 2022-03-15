@@ -14,7 +14,7 @@
         :index="0"
         :filter="filter"
       >
-        <template #title>Request Interception</template>
+        <template #title>{{ SECTION_TITLE_MAP.request }}</template>
       </ListSection>
       <ListSection
         type="cookie"
@@ -23,7 +23,7 @@
         :filter="filter"
         :unsupported="!store.features.cookies"
       >
-        <template #title>Cookie Interception</template>
+        <template #title>{{ SECTION_TITLE_MAP.cookie }}</template>
         <template #unsupported>
           <div class="subtle">Not supported in this browser.</div>
         </template>
@@ -34,6 +34,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { SECTION_TITLE_MAP } from '#/common/constants';
 import { listActions } from '../actions';
 import { listSelection, store } from '../store';
 import ListSection from './list-section.vue';
@@ -53,6 +54,7 @@ export default defineComponent({
     };
 
     return {
+      SECTION_TITLE_MAP,
       filter,
       store,
       onSelCancel,

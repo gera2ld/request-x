@@ -35,8 +35,9 @@
         <a
           target="_blank"
           href="https://developer.chrome.com/extensions/match_patterns"
-          >match pattern</a
         >
+          match pattern
+        </a>
         or a RegExp (e.g. <code>/^https:/</code>).
       </div>
     </div>
@@ -104,7 +105,6 @@
 
 <script lang="ts">
 import {
-  PropType,
   computed,
   defineComponent,
   reactive,
@@ -113,7 +113,8 @@ import {
   nextTick,
   onMounted,
 } from 'vue';
-import { HttpHeaderItem, RequestData } from '#/types';
+import type { PropType } from 'vue';
+import type { HttpHeaderItem, RequestData } from '#/types';
 import { store } from '../store';
 import { isValidMethod, isValidPattern, isValidTarget } from '../util';
 import RuleItemView from './rule-item-view.vue';

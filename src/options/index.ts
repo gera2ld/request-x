@@ -1,17 +1,26 @@
 import { createApp } from 'vue';
 import { bindCommands } from '#/common/browser';
+import { loadData, loadLists } from '#/common/api';
 import type { ListData } from '#/types';
 import { store } from './store';
-import { setRoute, isRoute, updateRoute, loadData, loadLists } from './util';
+import { setRoute, isRoute, updateRoute } from './util';
 import App from './components/app.vue';
-import './style.css';
+import '#/common/style.css';
 
-loadLists();
-loadData();
-updateRoute();
-if (!isRoute('lists')) {
-  setRoute();
-}
+(async () => {
+  const [{ config, features, listErrors }, lists] = await Promise.all([
+    loadData(),
+    loadLists(),
+  ]);
+  store.lists = lists;
+  store.config = config;
+  store.features = features;
+  store.listErrors = listErrors;
+  updateRoute();
+  if (!isRoute('lists')) {
+    setRoute();
+  }
+})();
 
 bindCommands({
   UpdatedList(data: ListData) {

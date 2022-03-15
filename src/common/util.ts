@@ -1,3 +1,5 @@
+import type { ListData } from '../types';
+
 export function reorderList<T = any>(
   array: T[],
   selection: number[],
@@ -36,4 +38,8 @@ export function defer<T>() {
     reject = rej;
   });
   return { resolve, reject, promise };
+}
+
+export function getName(list: Partial<ListData>) {
+  return list.name || 'No name';
 }

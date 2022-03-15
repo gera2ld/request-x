@@ -44,23 +44,27 @@
           class="list-section-badge"
           v-if="item.subscribeUrl"
           title="Subscribed"
-          >s</span
         >
+          s
+        </span>
         <span
           class="list-section-badge text-error"
           v-if="store.listErrors[item.id]"
           :title="store.listErrors[item.id]"
-          >!</span
         >
+          !
+        </span>
       </li>
     </ul>
   </section>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, reactive } from 'vue';
-import { ListData } from '#/types';
-import { getName, isRoute, moveList, getModifiers } from '../util';
+import { defineComponent, computed, reactive } from 'vue';
+import type { PropType } from 'vue';
+import type { ListData } from '#/types';
+import { getName } from '#/common/util';
+import { isRoute, moveList, getModifiers } from '../util';
 import { listActions } from '../actions';
 import { store, listTypes, listSelection } from '../store';
 
@@ -68,12 +72,15 @@ export default defineComponent({
   props: {
     lists: {
       type: Object as PropType<ListData[]>,
+      required: true,
     },
     type: {
       type: String as PropType<ListData['type']>,
+      required: true,
     },
     index: {
       type: Number,
+      required: true,
     },
     filter: {
       type: String,
@@ -148,7 +155,7 @@ export default defineComponent({
       const offset =
         selected.filter((i) => i < dragging.over).length -
         +(dragging.over > dragging.start);
-      const newSelected = [];
+      const newSelected: boolean[] = [];
       selected.forEach((_, i) => {
         newSelected[dragging.over - offset + i] = true;
       });

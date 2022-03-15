@@ -18,7 +18,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref } from 'vue';
+import { defineComponent, ref } from 'vue';
+import type { PropType } from 'vue';
 import { getModifiers } from '../util';
 
 export default defineComponent({
@@ -28,11 +29,11 @@ export default defineComponent({
   },
   emits: ['select'],
   setup(_, context) {
-    const refButtons = ref(null);
+    const refButtons = ref<Node | undefined>(undefined);
 
     const onSelect = (e: MouseEvent) => {
       if (e.altKey) return;
-      if (refButtons.value?.contains(e.target)) return;
+      if (refButtons.value?.contains(e.target as Node)) return;
       e.preventDefault();
       e.stopPropagation();
       context.emit('select', getModifiers(e));

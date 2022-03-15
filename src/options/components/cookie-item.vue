@@ -88,7 +88,6 @@
 
 <script lang="ts">
 import {
-  PropType,
   computed,
   defineComponent,
   nextTick,
@@ -97,7 +96,8 @@ import {
   watch,
   onMounted,
 } from 'vue';
-import { CookieData, SameSiteStatus } from '#/types';
+import type { PropType } from 'vue';
+import type { CookieData, SameSiteStatus } from '#/types';
 import { store } from '../store';
 import { isValidPattern } from '../util';
 import RuleItemView from './rule-item-view.vue';
