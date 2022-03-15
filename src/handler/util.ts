@@ -1,4 +1,4 @@
-import browser from '#/common/browser';
+import { browser } from '#/common/browser';
 import { createGetterSetter } from '#/common/util';
 import type { ConfigStorage } from '#/types';
 

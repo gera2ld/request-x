@@ -1,24 +1,19 @@
 import { createApp } from 'vue';
-import browser from '#/common/browser';
+import { bindCommands } from '#/common/browser';
 import type { ListData } from '#/types';
 import { store } from './store';
-import { setRoute, isRoute, updateRoute, getData } from './util';
+import { setRoute, isRoute, updateRoute, loadData, loadLists } from './util';
 import App from './components/app.vue';
 import './style.css';
 
-browser.runtime.sendMessage({ cmd: 'GetLists' }).then((data) => {
-  store.lists = data;
-  updateRoute();
-  if (!isRoute('lists')) {
-    setRoute();
-  }
-});
+loadLists();
+loadData();
+updateRoute();
+if (!isRoute('lists')) {
+  setRoute();
+}
 
-getData();
-
-const commands: {
-  [command: string]: (data: any, src: browser.Runtime.MessageSender) => void;
-} = {
+bindCommands({
   UpdatedList(data: ListData) {
     const group = store.lists[data.type];
     if (!group) return;
@@ -43,13 +38,6 @@ const commands: {
   SetErrors(errors: { [id: number]: string }) {
     store.listErrors = errors;
   },
-};
-browser.runtime.onMessage.addListener(
-  (req: { cmd: string; data: any }, src) => {
-    const func = commands[req.cmd];
-    if (!func) return;
-    return func(req.data, src);
-  }
-);
+});
 
 createApp(App).mount(document.body);

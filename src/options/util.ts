@@ -1,6 +1,6 @@
 import { pick } from 'lodash-es';
 import type { ListData, PortMessage, SubscriptionData } from '#/types';
-import browser from '#/common/browser';
+import { browser, sendCommand } from '#/common/browser';
 import { isMacintosh } from '#/common/keyboard';
 import { reorderList } from '#/common/util';
 import { store } from './store';
@@ -28,17 +28,11 @@ export function isRoute(...args: (string | number)[]) {
 }
 
 export function dump(list: Partial<ListData>) {
-  return browser.runtime.sendMessage({
-    cmd: 'UpdateList',
-    data: list,
-  });
+  return sendCommand('UpdateList', list);
 }
 
 export function remove(type: string, id: number) {
-  return browser.runtime.sendMessage({
-    cmd: 'RemoveList',
-    data: { id, type },
-  });
+  return sendCommand('RemoveList', { id, type });
 }
 
 export function setStatus(item: ListData, enabled: boolean) {
@@ -103,10 +97,13 @@ export function getName(list: Partial<ListData>) {
   return list.name || 'No name';
 }
 
-export async function getData() {
-  const { config, features, listErrors } = await browser.runtime.sendMessage({
-    cmd: 'GetData',
-  });
+export async function loadLists() {
+  const data = await sendCommand('GetLists');
+  store.lists = data;
+}
+
+export async function loadData() {
+  const { config, features, listErrors } = await sendCommand('GetData');
   store.config = config;
   store.features = features;
   store.listErrors = listErrors;
@@ -118,14 +115,11 @@ export async function moveList(
   target: number,
   downward: boolean
 ) {
-  await browser.runtime.sendMessage({
-    cmd: 'MoveList',
-    data: {
-      type,
-      selection,
-      target,
-      downward,
-    },
+  await sendCommand('MoveList', {
+    type,
+    selection,
+    target,
+    downward,
   });
   const reordered = reorderList(store.lists[type], selection, target, downward);
   if (reordered) {

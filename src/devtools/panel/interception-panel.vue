@@ -57,28 +57,30 @@ import { store } from './util';
 export default defineComponent({
   setup() {
     const actions = computed(() => {
-      const { result } = store.active;
-      const actions = [
-        result.cancel && {
-          type: 'block',
-          typeText: 'Block',
-        },
-        result.redirectUrl && {
-          type: 'redirect',
-          typeText: 'Redirect',
-          redirectUrl: result.redirectUrl,
-        },
-        result.requestHeaders && {
-          type: 'headers',
-          typeText: 'Modify request headers',
-          headers: result.payload?.requestHeaders,
-        },
-        result.responseHeaders && {
-          type: 'headers',
-          typeText: 'Modify response headers',
-          headers: result.payload?.responseHeaders,
-        },
-      ].filter(Boolean);
+      const result = store.active?.result;
+      const actions = result
+        ? ([
+            result.cancel && {
+              type: 'block',
+              typeText: 'Block',
+            },
+            result.redirectUrl && {
+              type: 'redirect',
+              typeText: 'Redirect',
+              redirectUrl: result.redirectUrl,
+            },
+            result.requestHeaders && {
+              type: 'headers',
+              typeText: 'Modify request headers',
+              headers: result.payload?.requestHeaders,
+            },
+            result.responseHeaders && {
+              type: 'headers',
+              typeText: 'Modify response headers',
+              headers: result.payload?.responseHeaders,
+            },
+          ].filter(Boolean) as string[])
+        : [];
       return actions;
     });
 

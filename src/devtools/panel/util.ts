@@ -1,11 +1,11 @@
 import { reactive } from 'vue';
-import browser from '#/common/browser';
+import { browser } from '#/common/browser';
 import type { PortMessage, InterceptionData } from '#/types';
 
 export const store = reactive<{
   fields: Array<{ title: string; width: number }>;
   requests: InterceptionData[];
-  active: InterceptionData | null;
+  active: InterceptionData | undefined;
 }>({
   fields: [
     {
@@ -18,7 +18,7 @@ export const store = reactive<{
     },
   ],
   requests: [],
-  active: null,
+  active: undefined,
 });
 
 const requestMap = new Map<string, InterceptionData>();

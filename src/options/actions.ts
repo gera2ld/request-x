@@ -1,6 +1,6 @@
 import { watch } from 'vue';
 import { debounce, pick } from 'lodash-es';
-import browser from '#/common/browser';
+import { sendCommand } from '#/common/browser';
 import { keyboardService } from '#/common/keyboard';
 import type { ListData, ListsDumpData, RuleData, RulesDumpData } from '#/types';
 import {
@@ -63,7 +63,7 @@ export const listActions = {
     });
   },
   fetchAll() {
-    browser.runtime.sendMessage({ cmd: 'FetchLists' });
+    sendCommand('FetchLists');
   },
   toggle(item?: ListData) {
     item ||= currentList.value;
@@ -79,10 +79,7 @@ export const listActions = {
   fetch(item?: ListData) {
     item ||= currentList.value;
     if (item) {
-      browser.runtime.sendMessage({
-        cmd: 'FetchList',
-        data: { type: item.type, id: item.id },
-      });
+      sendCommand('FetchList', { type: item.type, id: item.id });
     }
   },
   remove(item?: ListData) {

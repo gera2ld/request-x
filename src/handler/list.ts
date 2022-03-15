@@ -1,4 +1,4 @@
-import browser from '#/common/browser';
+import { sendCommand } from '#/common/browser';
 import { reorderList } from '#/common/util';
 import type {
   CookieData,
@@ -113,7 +113,7 @@ export abstract class BaseList<T, D, M> implements ListMeta {
   }
 
   fireChange() {
-    browser.runtime.sendMessage({ cmd: 'UpdatedList', data: this.get() });
+    sendCommand('UpdatedList', this.get());
   }
 
   match(details: D, method: string): void | M {
@@ -274,7 +274,7 @@ export async function fetchLists() {
     res[item.id] = item.error;
     return res;
   }, {} as { [id: number]: string });
-  browser.runtime.sendMessage({ cmd: 'SetErrors', data: listErrors });
+  sendCommand('SetErrors', listErrors);
 }
 
 export function getLastErrors() {

@@ -51,19 +51,21 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { InterceptionData } from '#/types';
+import type { InterceptionData } from '#/types';
 import { store, clearRequests } from './util';
 
 export default defineComponent({
   setup() {
     const getLabels = (row: InterceptionData) => {
       const { result } = row;
-      const labels = [
-        result.cancel && 'blocked',
-        result.redirectUrl && 'redirected',
-        result.requestHeaders && 'req_headers',
-        result.responseHeaders && 'res_headers',
-      ].filter(Boolean);
+      const labels = result
+        ? ([
+            result.cancel && 'blocked',
+            result.redirectUrl && 'redirected',
+            result.requestHeaders && 'req_headers',
+            result.responseHeaders && 'res_headers',
+          ].filter(Boolean) as string[])
+        : [];
       return labels;
     };
 

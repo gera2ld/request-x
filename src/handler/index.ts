@@ -1,4 +1,4 @@
-import browser from '#/common/browser';
+import { browser, bindCommands } from '#/common/browser';
 import type {
   ConfigStorage,
   ListData,
@@ -110,12 +110,7 @@ browser.webRequest.onCompleted.addListener(handleRequestEnd, {
   urls: ['<all_urls>'],
 });
 
-const commands: {
-  [command: string]: (
-    data: any,
-    src: browser.Runtime.MessageSender
-  ) => Promise<any> | any;
-} = {
+bindCommands({
   GetLists: () => {
     return {
       request: lists.request.get(),
@@ -177,17 +172,6 @@ const commands: {
       [key]: value,
     });
   },
-};
-browser.runtime.onMessage.addListener(async (req, src) => {
-  const func = commands[req.cmd];
-  if (!func) return;
-  try {
-    const result = await func(req.data, src);
-    return result;
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
 });
 
 browser.alarms.create({

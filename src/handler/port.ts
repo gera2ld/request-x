@@ -1,4 +1,4 @@
-import browser from '#/common/browser';
+import { browser } from '#/common/browser';
 import { defer } from '#/common/util';
 
 export const inspectPorts = new Map<number, browser.Runtime.Port>();
