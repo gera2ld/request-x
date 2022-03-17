@@ -43,18 +43,26 @@ export const listActions = {
     const blob = await loadFile();
     const text = await blob2Text(blob);
     let data = JSON.parse(text);
-    if (!Array.isArray(data)) data = [data];
-    data.forEach((list: Partial<ListData>) => {
-      list.type ??= 'request';
-      dump(
-        pick(list, [
-          'name',
-          'type',
-          'rules',
-          'subscribeUrl',
-        ]) as Partial<ListData>
-      );
-    });
+    let importData: ListsDumpData;
+    if (data.provider === PROVIDER) {
+      if (data.category !== 'lists') {
+        throw new Error(`Invalid category: ${data.category}`);
+      }
+      importData = data;
+    } else {
+      if (!Array.isArray(data)) {
+        data = [data];
+      }
+      data.forEach((list: Partial<ListData>) => {
+        list.type ??= 'request';
+      });
+      importData = {
+        provider: PROVIDER,
+        category: 'lists',
+        data,
+      };
+    }
+    listActions.selPaste(importData);
   },
   subscribe() {
     editList({
@@ -196,6 +204,7 @@ export const listActions = {
         pick(list, [
           'name',
           'type',
+          'enabled',
           'rules',
           'subscribeUrl',
         ]) as Partial<ListData>
