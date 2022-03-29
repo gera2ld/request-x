@@ -1,6 +1,6 @@
-import { browser } from '#/common/browser';
-import { createGetterSetter } from '#/common/util';
-import type { ConfigStorage } from '#/types';
+import { browser } from '@/common/browser';
+import { createGetterSetter } from '@/common/util';
+import type { ConfigStorage } from '@/types';
 
 export const getData = browser.storage.local.get;
 export const dumpData = browser.storage.local.set;

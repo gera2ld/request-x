@@ -70,8 +70,8 @@
 import { computed, defineComponent, ref, watch, watchEffect } from 'vue';
 import { debounce, pick } from 'lodash-es';
 import VlModal from 'vueleton/lib/modal';
-import { sendCommand } from '#/common/browser';
-import type { ListData } from '#/types';
+import { sendCommand } from '@/common/browser';
+import type { ListData } from '@/types';
 import { store } from '../store';
 import { isValidURL, dump } from '../util';
 

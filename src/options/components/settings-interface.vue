@@ -22,7 +22,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { sendCommand } from '#/common/browser';
+import { sendCommand } from '@/common/browser';
 import { store } from '../util';
 
 export default defineComponent({

@@ -1,7 +1,5 @@
 node_modules
 *.log
-*.lock
-pnpm-lock.yaml
 /.idea
 /dist
 /.nyc_output

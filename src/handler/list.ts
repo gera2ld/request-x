@@ -1,5 +1,5 @@
-import { sendCommand } from '#/common/browser';
-import { reorderList } from '#/common/util';
+import { sendCommand } from '@/common/browser';
+import { reorderList } from '@/common/util';
 import type {
   CookieData,
   CookieDetails,
@@ -10,7 +10,7 @@ import type {
   RequestDetails,
   RequestMatchResult,
   IRule,
-} from '#/types';
+} from '@/types';
 import { groupBy } from 'lodash-es';
 import { RequestRule, CookieRule } from './rule';
 import {

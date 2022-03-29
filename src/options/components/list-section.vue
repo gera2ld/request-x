@@ -62,8 +62,8 @@
 <script lang="ts">
 import { defineComponent, computed, reactive } from 'vue';
 import type { PropType } from 'vue';
-import type { ListData } from '#/types';
-import { getName } from '#/common/util';
+import type { ListData } from '@/types';
+import { getName } from '@/common/util';
 import { isRoute, moveList, getModifiers } from '../util';
 import { listActions } from '../actions';
 import { store, listTypes, listSelection } from '../store';

@@ -1,8 +1,8 @@
 import { createApp } from 'vue';
-import { loadData, loadLists } from '#/common/api';
+import { loadData, loadLists } from '@/common/api';
 import App from './app.vue';
 import { getEnabledLists, store } from './store';
-import '#/common/style.css';
+import '@/common/style.css';
 
 (async () => {
   const [{ features }, lists] = await Promise.all([loadData(), loadLists()]);

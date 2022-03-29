@@ -4,7 +4,7 @@ import type {
   ConfigStorage,
   FeatureToggles,
   RuleData,
-} from '#/types';
+} from '@/types';
 
 export const listTypes = ['request', 'cookie'];
 

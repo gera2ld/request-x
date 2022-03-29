@@ -46,10 +46,10 @@
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
 import { pick } from 'lodash-es';
-import { browser, sendCommand } from '#/common/browser';
-import { SECTION_TITLE_MAP } from '#/common/constants';
-import { getName } from '#/common/util';
-import type { ListData } from '#/types';
+import { browser, sendCommand } from '@/common/browser';
+import { SECTION_TITLE_MAP } from '@/common/constants';
+import { getName } from '@/common/util';
+import type { ListData } from '@/types';
 import { store } from './store';
 
 const manifest = browser.runtime.getManifest();

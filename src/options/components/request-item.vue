@@ -114,7 +114,7 @@ import {
   onMounted,
 } from 'vue';
 import type { PropType } from 'vue';
-import type { HttpHeaderItem, RequestData } from '#/types';
+import type { HttpHeaderItem, RequestData } from '@/types';
 import { store } from '../store';
 import {
   isValidMethod,

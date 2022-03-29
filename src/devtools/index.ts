@@ -1,4 +1,4 @@
-import { browser } from '#/common/browser';
+import { browser } from '@/common/browser';
 
 async function main() {
   await browser.devtools.panels.create(

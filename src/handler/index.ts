@@ -1,4 +1,4 @@
-import { browser, bindCommands } from '#/common/browser';
+import { browser, bindCommands } from '@/common/browser';
 import type {
   ConfigStorage,
   ListData,
@@ -8,7 +8,7 @@ import type {
   RequestMatchResult,
   RequestDetails,
   FeatureToggles,
-} from '#/types';
+} from '@/types';
 import { debounce, omit, pick } from 'lodash-es';
 import {
   RequestList,

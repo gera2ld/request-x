@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
-import { browser } from '#/common/browser';
-import type { PortMessage, InterceptionData } from '#/types';
+import { browser } from '@/common/browser';
+import type { PortMessage, InterceptionData } from '@/types';
 
 export const store = reactive<{
   fields: Array<{ title: string; width: number }>;

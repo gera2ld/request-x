@@ -51,7 +51,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import type { InterceptionData } from '#/types';
+import type { InterceptionData } from '@/types';
 import { store, clearRequests } from './util';
 
 export default defineComponent({

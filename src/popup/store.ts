@@ -1,5 +1,5 @@
 import { computed, reactive } from 'vue';
-import type { ListData, FeatureToggles } from '#/types';
+import type { ListData, FeatureToggles } from '@/types';
 
 export const store = reactive({
   lists: {},

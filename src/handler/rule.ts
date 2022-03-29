@@ -8,7 +8,7 @@ import type {
   RequestMatchResult,
   RuleMatcher,
   IRule,
-} from '#/types';
+} from '@/types';
 import { pick } from 'lodash-es';
 import { getUrl } from './util';
 

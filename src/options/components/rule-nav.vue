@@ -34,7 +34,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { SECTION_TITLE_MAP } from '#/common/constants';
+import { SECTION_TITLE_MAP } from '@/common/constants';
 import { listActions } from '../actions';
 import { listSelection, store } from '../store';
 import ListSection from './list-section.vue';

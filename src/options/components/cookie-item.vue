@@ -97,7 +97,7 @@ import {
   onMounted,
 } from 'vue';
 import type { PropType } from 'vue';
-import type { CookieData, SameSiteStatus } from '#/types';
+import type { CookieData, SameSiteStatus } from '@/types';
 import { store } from '../store';
 import { isValidPattern, focusInput } from '../util';
 import RuleItemView from './rule-item-view.vue';

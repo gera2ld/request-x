@@ -1,8 +1,8 @@
 import { pick } from 'lodash-es';
-import type { ListData, PortMessage, SubscriptionData } from '#/types';
-import { browser, sendCommand } from '#/common/browser';
-import { isMacintosh } from '#/common/keyboard';
-import { reorderList, getName } from '#/common/util';
+import type { ListData, PortMessage, SubscriptionData } from '@/types';
+import { browser, sendCommand } from '@/common/browser';
+import { isMacintosh } from '@/common/keyboard';
+import { reorderList, getName } from '@/common/util';
 import { store } from './store';
 
 window.addEventListener('hashchange', updateRoute);

@@ -1,4 +1,4 @@
-import { isMacintosh, reprShortcut } from '#/common/keyboard';
+import { isMacintosh, reprShortcut } from '@/common/keyboard';
 
 export const shortcutMap = {
   new: 'c',

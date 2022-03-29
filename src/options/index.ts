@@ -1,11 +1,11 @@
 import { createApp } from 'vue';
-import { bindCommands } from '#/common/browser';
-import { loadData, loadLists } from '#/common/api';
-import type { ListData } from '#/types';
+import { bindCommands } from '@/common/browser';
+import { loadData, loadLists } from '@/common/api';
+import type { ListData } from '@/types';
 import { store } from './store';
 import { setRoute, isRoute, updateRoute } from './util';
 import App from './components/app.vue';
-import '#/common/style.css';
+import '@/common/style.css';
 
 (async () => {
   const [{ config, features, listErrors }, lists] = await Promise.all([

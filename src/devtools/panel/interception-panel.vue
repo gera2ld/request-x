@@ -51,7 +51,7 @@
 </template>
 
 <script lang="ts">
-import type { HttpHeaderItem } from '#/types';
+import type { HttpHeaderItem } from '@/types';
 import { computed, defineComponent } from 'vue';
 import { store } from './util';
 

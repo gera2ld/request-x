@@ -1,5 +1,5 @@
-import { browser } from '#/common/browser';
-import { defer } from '#/common/util';
+import { browser } from '@/common/browser';
+import { defer } from '@/common/util';
 
 export const inspectPorts = new Map<number, browser.Runtime.Port>();
 export const dashboardPorts = new Set<browser.Runtime.Port>();

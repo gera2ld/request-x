@@ -1,9 +1,9 @@
 import { watch } from 'vue';
 import { debounce, pick } from 'lodash-es';
-import { sendCommand } from '#/common/browser';
-import { keyboardService } from '#/common/keyboard';
-import { getName } from '#/common/util';
-import type { ListData, ListsDumpData, RuleData, RulesDumpData } from '#/types';
+import { sendCommand } from '@/common/browser';
+import { keyboardService } from '@/common/keyboard';
+import { getName } from '@/common/util';
+import type { ListData, ListsDumpData, RuleData, RulesDumpData } from '@/types';
 import {
   store,
   ruleSelection,
