@@ -7,7 +7,7 @@
           Show number of handled requests on badge:
           <select
             :value="store.config.badge"
-            @change="onChange('badge', $event.target.value)"
+            @change="onChange('badge', $event)"
           >
             <option value="">none</option>
             <option value="page">on current page</option>
@@ -20,14 +20,15 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue';
 import { sendCommand } from '@/common/browser';
-import { store } from '../util';
+import { store } from '../store';
 
 export default defineComponent({
   setup() {
-    const onChange = (key, value) => {
+    const onChange = (key: string, evt: Event) => {
+      const value = (evt.target as HTMLSelectElement).value;
       sendCommand('SetConfig', { key, value });
     };
 
