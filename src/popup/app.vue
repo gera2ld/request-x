@@ -8,9 +8,12 @@
       </div>
       <a class="text-sm" @click.prevent="openDashboard">Dashboard</a>
     </div>
-    <div class="popup-enabled-lists" v-if="hasEnabledLists">
+    <div class="mb-2 px-2">
+      <input type="search" v-model="filter" placeholder="Filter by name" />
+    </div>
+    <div class="popup-enabled-lists" v-if="hasLists">
       <div
-        v-for="(lists, group) in store.enabledLists"
+        v-for="(lists, group) in listGroups"
         :key="group"
         class="list-section"
       >
@@ -44,13 +47,13 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import { pick } from 'lodash-es';
 import { browser, sendCommand } from '@/common/browser';
 import { SECTION_TITLE_MAP } from '@/common/constants';
 import { getName } from '@/common/util';
 import type { ListData } from '@/types';
-import { store } from './store';
+import { store, filterLists, trackListToggle } from './store';
 
 const manifest = browser.runtime.getManifest();
 const openDashboard = () => {
@@ -59,22 +62,36 @@ const openDashboard = () => {
 
 export default defineComponent({
   setup() {
-    const hasEnabledLists = computed(() => {
-      return Object.values(store.enabledLists).some((lists) => lists.length);
+    const filter = ref('');
+
+    const listGroups = computed(() => {
+      const lowerValue = filter.value.toLowerCase();
+      const predicate = lowerValue
+        ? (list: ListData) => list.name.toLowerCase().includes(lowerValue)
+        : (list: ListData) =>
+            list.enabled || store.recentlyDisabledListIds.includes(list.id);
+      return filterLists(predicate);
+    });
+
+    const hasLists = computed(() => {
+      return Object.values(listGroups.value).some((lists) => lists.length);
     });
 
     const onToggle = (item: ListData) => {
       item.enabled = !item.enabled;
       sendCommand('UpdateList', pick(item, ['id', 'type', 'enabled']));
+      trackListToggle(item.id, item.enabled);
     };
 
     return {
       SECTION_TITLE_MAP,
+      filter,
       getName,
       store,
       openDashboard,
       version: manifest.version,
-      hasEnabledLists,
+      listGroups,
+      hasLists,
       onToggle,
     };
   },
