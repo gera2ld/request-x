@@ -170,7 +170,6 @@ const menus = computed(() => [
         label: 'Paste',
         shortcut: shortcutTextMap.paste,
         handler: selPaste,
-        disabled: store.activeArea !== 'lists' && !listEditable.value,
       },
       {
         type: 'sep',
