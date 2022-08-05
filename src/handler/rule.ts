@@ -70,7 +70,13 @@ export const requestMatchers: RuleMatcher<
       let { target } = rule.data;
       if (target === '=') return;
       if (!target || target === '-') return { cancel: true };
-      target = fill(target, matches);
+      if (target[0] === '<') {
+        const i = target.indexOf('\n');
+        target =
+          `data:${target.slice(1, i)};base64,` + btoa(target.slice(i + 1));
+      } else {
+        target = fill(target, matches);
+      }
       return { redirectUrl: target };
     });
   },

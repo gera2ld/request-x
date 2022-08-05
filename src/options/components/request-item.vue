@@ -1,11 +1,11 @@
 <template>
   <form
     v-if="showDetail"
-    class="grid grid-cols-[5rem_auto_min-content] gap-2"
+    class="grid grid-cols-[8rem_auto_9rem] gap-2"
     @submit.prevent="onSubmit"
     ref="refForm"
   >
-    <div class="row-span-5" :class="{ error: errors.method }">
+    <div class="row-span-4" :class="{ error: errors.method }">
       <input
         type="text"
         :value="input.method"
@@ -41,25 +41,13 @@
         or a RegExp (e.g. <code>/^https:/</code>).
       </div>
     </div>
-    <div class="row-span-2 whitespace-nowrap">
+    <div class="whitespace-nowrap">
       <button class="mr-1" type="submit" v-if="editable">Save</button>
       <button
         type="reset"
         @click="onCancel"
         v-text="editable ? 'Cancel' : 'Close'"
       ></button>
-    </div>
-    <div :class="{ error: errors.target }">
-      <input
-        type="text"
-        v-model="input.target"
-        placeholder="Target"
-        :readonly="!editable"
-      />
-      <div class="form-hint">
-        Set to <code>-</code> for blocking the request, <code>=</code> for
-        keeping the original, or a new URL to redirect.
-      </div>
     </div>
     <div>
       <textarea
@@ -95,6 +83,41 @@
         <code>authorization: token always-add-my-token</code>,
         <code>!x-to-remove</code>.
       </div>
+    </div>
+    <div></div>
+    <div>
+      <select v-model="input.type" :disabled="!editable">
+        <option value="">Noop</option>
+        <option value="block">Block</option>
+        <option value="redirect">Redirect</option>
+        <option value="replace">Replace</option>
+      </select>
+      <div class="form-hint">Action type</div>
+    </div>
+    <div :class="{ error: errors.target }">
+      <textarea
+        :value="noTarget ? '' : input.target"
+        @input="!noTarget && (input.target = ($event.target as HTMLInputElement).value)"
+        :placeholder="noTarget ? 'No target' : 'Set target here'"
+        :readonly="!editable"
+        :disabled="noTarget"
+      />
+      <div class="form-hint">
+        <ul>
+          <li>
+            <code>Noop</code> / <code>Block</code> - No target is allowed.
+          </li>
+          <li><code>Redirect</code> - A valid URL must be set.</li>
+          <li>
+            <code>Replace</code> - Any text content is allowed and will replace
+            the response content by redirecting it to a dataURL.
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div v-if="input.type === 'replace'">
+      <input type="text" v-model="input.contentType" />
+      <div class="form-hint">Content type</div>
     </div>
   </form>
   <RuleItemView v-else :selected="selected" :badges="badges" @select="onSelect">
@@ -145,6 +168,25 @@ function parseHeaders(headers: string) {
     });
 }
 
+function parseTarget(target: string) {
+  let type = '';
+  let contentType = 'text/plain';
+  if (target === '-') {
+    type = 'block';
+    target = '';
+  } else if (target[0] === '<') {
+    type = 'replace';
+    const i = target.indexOf('\n');
+    contentType = target.slice(1, i);
+    target = target.slice(i + 1);
+  } else if (target && target !== '=') {
+    type = 'redirect';
+  } else {
+    target = '';
+  }
+  return { type, contentType, target };
+}
+
 export default defineComponent({
   components: {
     RuleItemView,
@@ -164,18 +206,26 @@ export default defineComponent({
       method?: string;
       url?: string;
       target?: string;
+      type: '' | 'block' | 'redirect' | 'replace';
+      contentType: string;
       reqHeaders?: string;
       resHeaders?: string;
-    }>({});
+    }>({
+      type: '',
+      contentType: '',
+    });
     const refForm = ref<HTMLFormElement | undefined>(undefined);
 
     const reset = () => {
       if (!props.showDetail) return;
       const { rule } = props;
+      const { type, contentType, target } = parseTarget(rule.target);
       Object.assign(input, {
         method: rule.method,
         url: rule.url,
-        target: rule.target || '=',
+        type,
+        contentType,
+        target,
         reqHeaders: stringifyHeaders(rule.requestHeaders),
         resHeaders: stringifyHeaders(rule.responseHeaders),
       });
@@ -186,21 +236,23 @@ export default defineComponent({
       });
     };
 
+    const noTarget = computed(() => ['', 'block'].includes(input.type));
     const errors = computed(() => {
       return {
         method: !isValidMethod(input.method ?? ''),
         url: !input.url || !isValidPattern(input.url),
         target:
-          !input.target ||
-          (!['-', '='].includes(input.target) && !isValidTarget(input.target)),
+          !noTarget.value &&
+          input.type === 'redirect' &&
+          (!input.target || !isValidTarget(input.target)),
       };
     });
 
     const badges = computed(() => {
       const { rule } = props;
+      const { type } = parseTarget(rule.target);
       return [
-        rule.target === '-' && 'block',
-        rule.target?.length > 1 && 'redirect',
+        type,
         rule.requestHeaders?.length && 'req_headers',
         rule.responseHeaders?.length && 'res_headers',
       ].filter(Boolean) as string[];
@@ -216,11 +268,16 @@ export default defineComponent({
 
     const onSubmit = () => {
       if (Object.values(errors.value).some(Boolean)) return;
+      let target: string;
+      if (input.type === 'block') target = '-';
+      else if (input.type === 'replace')
+        target = `<${input.contentType}\n${input.target}`;
+      else target = (input.target || '=').trim();
       context.emit('submit', {
         rule: {
           method: input.method,
           url: input.url,
-          target: input.target,
+          target,
           requestHeaders: parseHeaders(input.reqHeaders ?? ''),
           responseHeaders: parseHeaders(input.resHeaders ?? ''),
         } as RequestData,
@@ -237,6 +294,7 @@ export default defineComponent({
     return {
       store,
       input,
+      noTarget,
       errors,
       badges,
       refForm,
