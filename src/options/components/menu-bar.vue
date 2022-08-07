@@ -7,37 +7,37 @@
       :modelValue="active === i"
       @update:modelValue="(value: boolean) => onToggle(i, value)"
     >
-      <template v-slot:toggle>
-        <div
-          class="menu-toggle"
-          :class="{ active: active === i }"
-          v-text="menu.label"
-          @mouseover="onHover(i)"
-        ></div>
-      </template>
-      <div class="menu-dropdown">
-        <template v-for="(item, j) in menu.items" :key="j">
-          <div v-if="item.type === 'sep'" class="menu-sep"></div>
-          <div
-            v-else-if="item.type === 'group'"
-            class="menu-group"
-            v-text="item.label"
-          ></div>
-          <div
-            v-else
-            class="menu-item"
-            :class="{ disabled: item.disabled }"
-            @click="() => !item.disabled && item.handler?.()"
-          >
-            <div class="flex-1 mr-4" v-text="item.label"></div>
+      <div
+        class="menu-toggle"
+        :class="{ active: active === i }"
+        v-text="menu.label"
+        @mouseover="onHover(i)"
+      />
+      <template #content>
+        <div class="menu-dropdown">
+          <template v-for="(item, j) in menu.items" :key="j">
+            <div v-if="item.type === 'sep'" class="menu-sep"></div>
             <div
-              class="menu-shortcut"
-              v-if="item.shortcut"
-              v-text="item.shortcut"
+              v-else-if="item.type === 'group'"
+              class="menu-group"
+              v-text="item.label"
             ></div>
-          </div>
-        </template>
-      </div>
+            <div
+              v-else
+              class="menu-item"
+              :class="{ disabled: item.disabled }"
+              @click="() => !item.disabled && item.handler?.()"
+            >
+              <div class="flex-1 mr-4" v-text="item.label"></div>
+              <div
+                class="menu-shortcut"
+                v-if="item.shortcut"
+                v-text="item.shortcut"
+              ></div>
+            </div>
+          </template>
+        </div>
+      </template>
     </vl-dropdown>
   </div>
 </template>
