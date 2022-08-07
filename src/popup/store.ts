@@ -36,7 +36,7 @@ function loadRecentlyDisabledListIds(): number[] {
 function dumpRecentlyDisabledListIds() {
   localStorage.setItem(
     RECENTLY_DISABLED_KEY,
-    JSON.stringify(store.recentlyDisabledListIds)
+    JSON.stringify(store.recentlyDisabledListIds.slice(-RECENTLY_DISABLED_MAX_RECORD))
   );
 }
 
@@ -47,12 +47,6 @@ export function trackListToggle(id: number, enabled: boolean) {
     if (index >= 0) recentlyDisabledListIds.splice(index, 1);
   } else if (index < 0) {
     recentlyDisabledListIds.push(id);
-    if (recentlyDisabledListIds.length > RECENTLY_DISABLED_MAX_RECORD) {
-      recentlyDisabledListIds.splice(
-        0,
-        recentlyDisabledListIds.length - RECENTLY_DISABLED_MAX_RECORD
-      );
-    }
   }
   dumpRecentlyDisabledListIds();
 }
