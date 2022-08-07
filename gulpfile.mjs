@@ -1,10 +1,10 @@
-const gulp = require('gulp');
-const fs = require('fs').promises;
-const del = require('del');
-const yaml = require('js-yaml');
-const Jimp = require('jimp');
-const string = require('./scripts/string');
-const pkg = require('./package.json');
+import gulp from 'gulp';
+import { mkdir } from 'fs/promises';
+import { deleteAsync } from 'del';
+import yaml from 'js-yaml';
+import Jimp from 'jimp';
+import string from './scripts/string.js';
+import pkg from './package.json' assert { type: 'json' };
 
 const DIST = 'dist';
 const paths = {
@@ -15,8 +15,9 @@ const paths = {
     'src/_locales/**',
   ],
 };
-function clean() {
-  return del(DIST);
+
+export function clean() {
+  return deleteAsync(DIST);
 }
 
 function copyFiles() {
@@ -26,7 +27,7 @@ function copyFiles() {
 
 async function createIcons() {
   const dist = `${DIST}/public/images`;
-  await fs.mkdir(dist, { recursive: true });
+  await mkdir(dist, { recursive: true });
   const icon = await Jimp.read('src/resources/wall.png');
   return Promise.all([
     16, 19, 38, 48, 128,
@@ -46,16 +47,17 @@ function manifest() {
 }
 
 async function jsDev() {
-  require('@gera2ld/plaid-webpack/bin/develop')();
+  const { default: develop } = await import('@gera2ld/plaid-webpack/bin/develop.js');
+  return develop();
 }
 
 async function jsProd() {
-  return require('@gera2ld/plaid-webpack/bin/build')({
+  const { default: build } = await import('@gera2ld/plaid-webpack/bin/build.js');
+  return build({
     api: true,
     keep: true,
   });
 }
 
-exports.clean = clean;
-exports.dev = gulp.parallel(manifest, createIcons, copyFiles, jsDev);
-exports.build = gulp.series(clean, gulp.parallel(manifest, createIcons, copyFiles, jsProd));
+export const dev = gulp.parallel(manifest, createIcons, copyFiles, jsDev);
+export const build = gulp.series(clean, gulp.parallel(manifest, createIcons, copyFiles, jsProd));
