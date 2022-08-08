@@ -52,7 +52,7 @@ export function isValidPattern(url: string) {
 }
 
 export function isValidURL(url: string) {
-  return /^[\w-]+:\/\/.*?\//.test(url);
+  return /^[\w-]+:\/\/.*?\/\S*$/.test(url);
 }
 
 export function isValidTarget(url: string) {
