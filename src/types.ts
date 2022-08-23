@@ -46,9 +46,6 @@ export interface HttpHeaderItem {
 export interface RequestData {
   method: string;
   url: string;
-  /**
-   * `-` for blocking, `=` for keeping, otherwise redirection
-   */
   target: string;
   requestHeaders?: HttpHeaderItem[];
   responseHeaders?: HttpHeaderItem[];

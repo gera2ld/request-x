@@ -287,8 +287,9 @@ export async function fetchListData(url: string) {
   count += 1;
   hookInstall.set(false);
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { credentials: 'include' });
     const data = await res.json();
+    if (!res.ok) throw { status: res.status, data };
     return {
       type: data.type ?? 'request',
       name: data.name || '',

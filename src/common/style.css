@@ -56,7 +56,7 @@ input[type=text],
 input[type=search],
 input[type=number],
 textarea {
-  @apply block w-full outline-none rounded border border-zinc-400 overflow-hidden px-2 py-1 dark:border-zinc-600 dark:bg-zinc-800;
+  @apply block w-full outline-none rounded border border-zinc-400 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-800;
   &:focus {
     @apply border-zinc-500 dark:border-zinc-400;
   }

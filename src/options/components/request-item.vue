@@ -168,13 +168,13 @@ function parseHeaders(headers: string) {
     });
 }
 
-function parseTarget(target: string) {
+function parseTarget(target?: string) {
   let type = '';
   let contentType = 'text/plain';
   if (target === '-') {
     type = 'block';
     target = '';
-  } else if (target[0] === '<') {
+  } else if (target?.[0] === '<') {
     type = 'replace';
     const i = target.indexOf('\n');
     contentType = target.slice(1, i);
@@ -193,7 +193,7 @@ export default defineComponent({
   },
   props: {
     rule: {
-      type: Object as PropType<RequestData>,
+      type: Object as PropType<Partial<RequestData>>,
       required: true,
     },
     showDetail: Boolean,
