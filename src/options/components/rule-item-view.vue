@@ -1,7 +1,7 @@
 <template>
   <div
     class="flex items-center select-none"
-    :class="{ 'rule-item-selected': selected }"
+    :class="{ selected }"
     @click="onSelect"
   >
     <slot></slot>
@@ -17,34 +17,25 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from 'vue';
-import type { PropType } from 'vue';
+<script lang="ts" setup>
+import { ref } from 'vue';
 import { getModifiers } from '../util';
 
-export default defineComponent({
-  props: {
-    selected: Boolean,
-    badges: {
-      type: Array as PropType<string[]>,
-    },
-  },
-  emits: ['select'],
-  setup(_, context) {
-    const refButtons = ref<Node | undefined>(undefined);
+defineProps<{
+  selected?: boolean;
+  badges?: string[];
+}>();
+const emit = defineEmits<{
+  (event: 'select', data: { cmdCtrl: boolean; shift: boolean }): void;
+}>();
 
-    const onSelect = (e: MouseEvent) => {
-      if (e.altKey) return;
-      if (refButtons.value?.contains(e.target as Node)) return;
-      e.preventDefault();
-      e.stopPropagation();
-      context.emit('select', getModifiers(e));
-    };
+const refButtons = ref<Node | undefined>(undefined);
 
-    return {
-      refButtons,
-      onSelect,
-    };
-  },
-});
+const onSelect = (e: MouseEvent) => {
+  if (e.altKey) return;
+  if (refButtons.value?.contains(e.target as Node)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  emit('select', getModifiers(e));
+};
 </script>

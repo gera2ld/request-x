@@ -1,8 +1,6 @@
-import { pick } from 'lodash-es';
-import type { ListData, PortMessage, SubscriptionData } from '@/types';
-import { browser, sendCommand } from '@/common/browser';
 import { isMacintosh } from '@/common/keyboard';
-import { reorderList, getName } from '@/common/util';
+import { getName } from '@/common/list';
+import type { ListData } from '@/types';
 import { store } from './store';
 
 window.addEventListener('hashchange', updateRoute);
@@ -27,23 +25,6 @@ export function isRoute(...args: (string | number)[]) {
   return true;
 }
 
-export function dump(list: Partial<ListData>) {
-  return sendCommand('UpdateList', list);
-}
-
-export function remove(type: string, id: number) {
-  return sendCommand('RemoveList', { id, type });
-}
-
-export function setStatus(item: ListData, enabled: boolean) {
-  item.enabled = enabled;
-  dump(pick(item, ['id', 'type', 'enabled']));
-}
-
-export function isValidMethod(method: string) {
-  return method === '*' || /^[A-Z]*$/.test(method);
-}
-
 export function isValidPattern(url: string) {
   return (
     (url.startsWith('/') && url.endsWith('/')) ||
@@ -53,10 +34,6 @@ export function isValidPattern(url: string) {
 
 export function isValidURL(url: string) {
   return /^[\w-]+:\/\/.*?\/\S*$/.test(url);
-}
-
-export function isValidTarget(url: string) {
-  return url.includes('$') || isValidURL(url);
 }
 
 export function loadFile() {
@@ -74,7 +51,7 @@ export function loadFile() {
           reject();
         }
       },
-      false
+      false,
     );
     input.click();
   });
@@ -93,25 +70,7 @@ export function blob2Text(blob: Blob) {
   });
 }
 
-export async function moveList(
-  type: ListData['type'],
-  selection: number[],
-  target: number,
-  downward: boolean
-) {
-  await sendCommand('MoveList', {
-    type,
-    selection,
-    target,
-    downward,
-  });
-  const reordered = reorderList(store.lists[type], selection, target, downward);
-  if (reordered) {
-    store.lists[type] = reordered;
-  }
-}
-
-export function editList(list: typeof store['editList']) {
+export function editList(list: (typeof store)['editList']) {
   store.editList = {
     isSubscribed: !!list?.subscribeUrl,
     ...list,
@@ -151,19 +110,6 @@ export function compareNumberArray(a: number[], b: number[]) {
   }
   return Math.sign(a.length - b.length);
 }
-
-const port = browser.runtime.connect({
-  name: 'dashboard',
-});
-port.onMessage.addListener((message: PortMessage<any>) => {
-  if (message.type === 'subscription') {
-    const data = message.data as SubscriptionData;
-    editList({
-      subscribeUrl: data.url,
-      isSubscribed: true,
-    });
-  }
-});
 
 export function focusInput(form: HTMLFormElement | undefined) {
   (

@@ -27,7 +27,6 @@ Supported browsers:
 - Redirect requests
 - Modify headers
 - Modify cookie properties like `SameSite`
-- View interception logs in DevTools
 
 ## Use cases
 
@@ -53,5 +52,3 @@ Here is an example: [Subscribe](https://gist.github.com/gera2ld/5730305dc9081ec9
 <img width="313" src="https://user-images.githubusercontent.com/3139113/153006528-ba5162e8-e991-4b3e-869e-b7af81b8c15a.png">
 
 <img width="1080" src="https://user-images.githubusercontent.com/3139113/155350420-37db70c6-94d0-4d78-a48d-1e78f7247cb2.png">
-
-<img width="1080" src="https://user-images.githubusercontent.com/3139113/147549923-44a2194d-1fd3-4384-94fb-6e2eb0e0add0.png">

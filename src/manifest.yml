@@ -1,35 +1,31 @@
+manifest_version: 3
 name: Request X
 version: __VERSION__
-minimum_chrome_version: '50'
-manifest_version: 2
+# Requires Chrome 99+ to support sendMessage with callback / promise
+minimum_chrome_version: '99.0'
 description: Intercept requests and cookies by flexible rules.
 author:
-  name: Gerald
-  url: 'https://gerald.top'
+  email: liuxc07@gmail.com
 icons:
   '16': public/images/icon_16.png
   '48': public/images/icon_48.png
   '128': public/images/icon_128.png
 default_locale: en
-browser_action:
-  browser_style: true
+action:
   default_icon:
     '19': public/images/icon_19.png
     '38': public/images/icon_38.png
   default_title: Request X
   default_popup: popup/index.html
 background:
-  scripts:
-    - browser.js
-    - handler.js
-options_ui:
-  page: options/index.html
-  open_in_tab: true
-devtools_page: devtools/index.html
+  service_worker: handler/index.js
+  type: module
+options_page: options/index.html
 permissions:
-  - <all_urls>
-  - webRequest
-  - webRequestBlocking
+  - declarativeNetRequest
+  - declarativeNetRequestWithHostAccess
   - storage
   - alarms
   - cookies
+host_permissions:
+  - '<all_urls>'

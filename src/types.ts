@@ -4,10 +4,7 @@ export interface ConfigStorage {
   badge: '' | 'page' | 'tab' | 'total';
 }
 
-export interface FeatureToggles {
-  responseHeaders?: boolean;
-  cookies?: boolean;
-}
+export interface FeatureToggles {}
 
 export interface LogItem {
   count: {
@@ -17,41 +14,46 @@ export interface LogItem {
   requestIds: Set<string>;
 }
 
-export interface ListMeta {
+export interface ListData {
   id: number;
   name: string;
   subscribeUrl: string;
   lastUpdated: number;
   enabled: boolean;
+  type: 'request' | 'cookie';
+  rules: (RequestData | CookieData)[];
 }
 
-export interface RequestListData extends ListMeta {
+export interface RequestListData extends ListData {
   type: 'request';
   rules: RequestData[];
 }
 
-export interface CookieListData extends ListMeta {
+export interface CookieListData extends ListData {
   type: 'cookie';
   rules: CookieData[];
 }
-
-export type ListData = RequestListData | CookieListData;
-export type RuleData = RequestData | CookieData;
 
 export interface HttpHeaderItem {
   name: string;
   value?: string;
 }
 
-export interface RequestData {
-  method: string;
+export interface RuleDataBase {
+  enabled: boolean;
+}
+
+export interface RequestData extends RuleDataBase {
+  methods: chrome.declarativeNetRequest.RequestMethod[];
+  type: 'block' | 'redirect' | 'replace' | 'headers';
   url: string;
   target: string;
+  contentType?: string;
   requestHeaders?: HttpHeaderItem[];
   responseHeaders?: HttpHeaderItem[];
 }
 
-export interface CookieData {
+export interface CookieData extends RuleDataBase {
   url: string;
   name: string;
   sameSite?: SameSiteStatus;
@@ -62,6 +64,8 @@ export interface CookieData {
    */
   ttl?: number;
 }
+
+export type RuleData = RequestData | CookieData;
 
 export interface RequestDetails {
   tabId: number;
@@ -137,23 +141,10 @@ export interface ListsDumpData {
 export interface RulesDumpData {
   provider: string;
   category: 'rules';
-  data: {
-    type: ListData['type'];
-    rules: RuleData[];
-  };
+  data: Pick<ListData, 'type' | 'rules'>;
 }
 
-export interface IRule<T, D, M> {
-  dump(): T;
-
-  matchCallback(
-    details: D,
-    callback: (matches: RegExpMatchArray) => void | M
-  ): void | M;
-
-  matchers: RuleMatcher<any, D, M>;
-}
-
-export interface RuleMatcher<R, D, M> {
-  [name: string]: (rule: R, details: D) => void | M;
+export interface ListGroups {
+  request: RequestListData[];
+  cookie: CookieListData[];
 }

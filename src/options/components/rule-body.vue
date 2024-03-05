@@ -17,13 +17,15 @@
       </div>
     </div>
     <div v-else class="flex-1 pt-1 overflow-y-auto" @click="onSelClear">
-      <component
+      <Component
         v-for="(rule, index) in currentList.rules"
         :is="RuleItem"
         :key="index"
-        :rule="rule"
+        :index="index"
+        :rule="rule as any"
         :showDetail="ruleState.editing === index"
         :editable="listEditable"
+        :listDisabled="!currentList.enabled"
         v-show="ruleState.visible[index]"
         :selected="ruleSelection.selected[index]"
         @submit="onSubmit(index, $event)"
@@ -31,26 +33,26 @@
         @select="onSelToggle(index, $event)"
         @dblclick="onEdit(index)"
         class="rule-item"
-        :class="{ 'rule-item-active': index === ruleSelection.active }"
+        :class="{ active: index === ruleSelection.active }"
       />
-      <component
+      <Component
         :is="RuleItem"
         v-if="ruleState.newRule"
-        :rule="ruleState.newRule"
+        :rule="ruleState.newRule as any"
         :showDetail="true"
         :editable="true"
-        class="rule-item rule-item-active"
+        class="rule-item active"
         @submit="onSubmit(-1, $event)"
         @cancel="onCancel"
       />
     </div>
     <footer class="p-1">
-      <div class="mb-1 truncate text-zinc-500" v-if="currentList.subscribeUrl">
+      <div class="mb-1 truncate subtle" v-if="currentList.subscribeUrl">
         Subscribed from:
         <span v-text="currentList.subscribeUrl"></span>
       </div>
       <div
-        class="mb-1 text-zinc-500"
+        class="mb-1 subtle"
         v-if="currentList.subscribeUrl && currentList.lastUpdated"
       >
         Last updated at:
@@ -68,17 +70,15 @@
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, onMounted } from 'vue';
+<script lang="ts" setup>
+import { computed, onMounted } from 'vue';
 import {
   currentList,
-  currentType,
   ruleSelection,
   ruleState,
   listEditable,
   store,
 } from '../store';
-import { shortcutTextMap } from '../shortcut';
 import RequestItem from './request-item.vue';
 import CookieItem from './cookie-item.vue';
 import { ruleActions } from '../actions';
@@ -88,29 +88,17 @@ const ruleItemMap = {
   cookie: CookieItem,
 };
 
-export default defineComponent({
-  setup() {
-    const RuleItem = computed(() => ruleItemMap[currentType.value]);
+const RuleItem = computed(
+  () => currentList.value && ruleItemMap[currentList.value.type],
+);
+const onCancel = ruleActions.cancel;
+const onEdit = ruleActions.edit;
+const onSubmit = ruleActions.submit;
+const onSelClear = ruleActions.selClear;
+const onSelToggle = ruleActions.selToggle;
+const onRuleAdd = ruleActions.new;
 
-    onMounted(() => {
-      ruleActions.update();
-    });
-
-    return {
-      RuleItem,
-      currentList,
-      listEditable,
-      shortcutTextMap,
-      ruleSelection,
-      ruleState,
-      store,
-      onCancel: ruleActions.cancel,
-      onEdit: ruleActions.edit,
-      onSubmit: ruleActions.submit,
-      onSelClear: ruleActions.selClear,
-      onSelToggle: ruleActions.selToggle,
-      onRuleAdd: ruleActions.new,
-    };
-  },
+onMounted(() => {
+  ruleActions.update();
 });
 </script>

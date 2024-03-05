@@ -1,34 +1,31 @@
-import { watch } from 'vue';
-import { debounce, pick } from 'lodash-es';
-import { sendCommand } from '@/common/browser';
 import { keyboardService } from '@/common/keyboard';
-import { getName } from '@/common/util';
+import { getName, normalizeRequestRule } from '@/common/list';
+import { reorderList, sendMessage } from '@/common/util';
 import type { ListData, ListsDumpData, RuleData, RulesDumpData } from '@/types';
+import { debounce, pick } from 'lodash-es';
+import { toRaw, watch } from 'vue';
+import { shortcutMap } from './shortcut';
 import {
-  store,
-  ruleSelection,
   currentList,
+  ensureGroupSelection,
   listEditable,
-  ruleState,
   listSelection,
   listTypes,
+  ruleSelection,
+  ruleState,
   selectedLists,
-  ensureGroupSelection,
+  store,
 } from './store';
 import {
-  dump,
-  loadFile,
   blob2Text,
-  editList,
-  setRoute,
-  setStatus,
-  remove,
-  isRoute,
+  compareNumberArray,
   downloadBlob,
   dumpList,
-  compareNumberArray,
+  editList,
+  isRoute,
+  loadFile,
+  setRoute,
 } from './util';
-import { shortcutMap } from './shortcut';
 
 const PROVIDER = 'Request X';
 
@@ -71,11 +68,14 @@ export const listActions = {
     });
   },
   fetchAll() {
-    sendCommand('FetchLists');
+    sendMessage('FetchLists');
   },
   toggle(item?: ListData) {
     item ||= currentList.value;
-    if (item) setStatus(item, !item.enabled);
+    if (item) {
+      item.enabled = !item.enabled;
+      listActions.save([pick(item, ['id', 'enabled'])]);
+    }
   },
   edit(item?: ListData) {
     item ||= currentList.value;
@@ -86,13 +86,36 @@ export const listActions = {
   },
   fetch(item?: ListData) {
     item ||= currentList.value;
-    if (item) {
-      sendCommand('FetchList', { type: item.type, id: item.id });
-    }
+    if (item) sendMessage('FetchList', pick(item, ['id']));
   },
   remove(item?: ListData) {
     item ||= currentList.value;
-    if (item) remove(item.type, item.id);
+    if (item) sendMessage('RemoveList', pick(item, ['id']));
+  },
+  async move(
+    type: 'request' | 'cookie',
+    selection: number[],
+    target: number,
+    downward: boolean,
+  ) {
+    await sendMessage('MoveLists', {
+      type,
+      selection,
+      target,
+      downward,
+    });
+    const reordered = reorderList(
+      store.lists[type] as ListData[],
+      selection,
+      target,
+      downward,
+    );
+    if (reordered) {
+      store.lists[type] = reordered as any;
+    }
+  },
+  async save(payload: Partial<ListData>[]) {
+    return sendMessage<ListData[]>('SaveLists', payload);
   },
   async fork(item?: ListData) {
     item ||= currentList.value;
@@ -102,7 +125,7 @@ export const listActions = {
       name: `${item.name || 'No name'} (forked)`,
       rules: item.rules,
     };
-    const id = await dump(data as Partial<ListData>);
+    const [{ id }] = await listActions.save([data]);
     setRoute(`lists/${id}`);
   },
   selClear() {
@@ -114,7 +137,7 @@ export const listActions = {
     listSelection.selection = [];
     listTypes.forEach((type, i) => {
       const selection = ensureGroupSelection(i);
-      const lists = store.lists[type];
+      const lists = store.lists[type] || [];
       lists.forEach((_, j) => {
         selection.selected[j] = true;
       });
@@ -124,7 +147,7 @@ export const listActions = {
   selToggle(
     groupIndex: number,
     itemIndex: number,
-    event: { cmdCtrl: boolean; shift: boolean }
+    event: { cmdCtrl: boolean; shift: boolean },
   ) {
     const lastGroupIndex = listSelection.groupIndex;
     const lastItemIndex = listSelection.itemIndex;
@@ -199,17 +222,20 @@ export const listActions = {
     return count;
   },
   async selPaste({ data }: ListsDumpData) {
-    data.forEach((list) => {
-      dump(
-        pick(list, [
+    await listActions.save(
+      data.map((list) => {
+        const data = pick(list, [
           'name',
           'type',
           'enabled',
           'rules',
           'subscribeUrl',
-        ]) as Partial<ListData>
-      );
-    });
+        ]);
+        if (data.type === 'request' && data.rules)
+          data.rules = data.rules.flatMap(fixRequestRule);
+        return data;
+      }),
+    );
   },
   selExport() {
     const lists = selectedLists.value.map(dumpList);
@@ -222,7 +248,7 @@ export const listActions = {
       [JSON.stringify(lists.length === 1 ? lists[0] : lists)],
       {
         type: 'application/json',
-      }
+      },
     );
     downloadBlob(blob, `${basename}.json`);
   },
@@ -230,11 +256,11 @@ export const listActions = {
     const lists = selectedLists.value;
     if (!lists.length) return;
     const enabled = lists.some((list) => !list.enabled);
-    lists.forEach((list) => {
-      if (list.enabled !== enabled) {
-        setStatus(list, enabled);
-      }
+    const updatedLists = lists.filter((list) => list.enabled !== enabled);
+    updatedLists.forEach((list) => {
+      list.enabled = enabled;
     });
+    listActions.save(updatedLists.map((list) => pick(list, ['id', 'enabled'])));
   },
 };
 
@@ -277,11 +303,16 @@ export const ruleActions = {
     });
     ruleSelection.count = current.rules.length;
   },
+  save() {
+    const current = currentList.value;
+    if (!current) return;
+    listActions.save([current]);
+  },
   selRemove() {
     const current = currentList.value;
     if (!current || !listEditable.value) return;
     current.rules = (current.rules as RuleData[]).filter(
-      (_, index) => !ruleSelection.selected[index]
+      (_, index) => !ruleSelection.selected[index],
     ) as ListData['rules'];
     ruleActions.selClear();
     ruleActions.save();
@@ -310,7 +341,7 @@ export const ruleActions = {
     const current = currentList.value;
     if (!current || !ruleSelection.count) return;
     const rules = (current.rules as RuleData[])?.filter(
-      (_, index) => ruleSelection.selected[index]
+      (_, index) => ruleSelection.selected[index],
     );
     if (!rules?.length) return;
     const data: RulesDumpData = {
@@ -335,10 +366,12 @@ export const ruleActions = {
       throw new Error('Invalid clipboard data');
     if (data.type !== current.type) throw new Error('Incompatible rule type');
     const rules = current.rules as RuleData[];
+    let newRules = data.rules as RuleData[];
+    if (data.type === 'request') newRules = newRules.flatMap(fixRequestRule);
     rules.splice(
       ruleSelection.active < 0 ? rules.length : ruleSelection.active,
       0,
-      ...(data.rules as RuleData[])
+      ...newRules,
     );
     ruleActions.save();
   },
@@ -348,7 +381,9 @@ export const ruleActions = {
   new() {
     const current = currentList.value;
     if (!current || !listEditable.value) return;
-    ruleState.newRule = {};
+    ruleState.newRule = {
+      enabled: true,
+    };
     ruleState.editing = current.rules.length;
     ruleActions.selClear();
   },
@@ -362,12 +397,10 @@ export const ruleActions = {
     ruleActions.edit();
     ruleSelection.active = active;
   },
-  save() {
-    dump(pick(currentList.value, ['id', 'type', 'rules']) as Partial<ListData>);
-  },
   submit(index: number, { rule }: { rule: RuleData }) {
     const rules = currentList.value?.rules as RuleData[];
     if (!rules) return;
+    rule = toRaw(rule);
     if (index < 0) {
       rules.push(rule);
     } else {
@@ -390,6 +423,22 @@ export const ruleActions = {
       return filtered;
     });
   },
+  toggle(item: RuleData) {
+    item.enabled = !item.enabled;
+    ruleActions.save();
+  },
+  selToggleStatus() {
+    const current = currentList.value;
+    if (!current || !ruleSelection.count) return;
+    const selectedRules = (current.rules as RuleData[]).filter(
+      (_, index) => ruleSelection.selected[index],
+    );
+    const enabled = selectedRules.every((rule) => rule.enabled) ? false : true;
+    selectedRules.forEach((rule) => {
+      rule.enabled = enabled;
+    });
+    ruleActions.save();
+  },
 };
 
 export const ruleKeys = {
@@ -401,7 +450,7 @@ export const ruleKeys = {
     if (!current) return;
     ruleSelection.active = Math.min(
       current.rules.length - 1,
-      ruleSelection.active + 1
+      ruleSelection.active + 1,
     );
   },
   space() {
@@ -444,7 +493,27 @@ export function selectAll() {
   }
 }
 
+function fixRequestRule(rule: any) {
+  if (!rule.type) {
+    console.warn(
+      'The support for the old data structure is deprecated and will be removed soon.',
+    );
+  }
+  return normalizeRequestRule(rule);
+}
+
 const updateListLater = debounce(ruleActions.update, 200);
+
+watch(currentList, (list) => {
+  listSelection.groupIndex = list
+    ? ['request', 'cookie'].indexOf(list.type)
+    : -1;
+  listSelection.itemIndex = list
+    ? (store.lists[list.type] as ListData[]).findIndex(
+        (item) => item.id === list.id,
+      )
+    : -1;
+});
 watch(() => ruleState.filter, updateListLater);
 watch(currentList, (cur, prev) => {
   ruleActions.update();
@@ -454,16 +523,20 @@ watch(
   () => ruleState.editing,
   (editing) => {
     keyboardService.setContext('editRule', editing >= 0);
-  }
+  },
 );
 watch(
   () => store.route,
   () => {
     if (isRoute('lists')) {
       const current = currentList.value;
-      const index = current ? store.lists[current.type].indexOf(current) : -1;
+      if (!current) return;
+      const index =
+        (store.lists[current.type] as ListData[] | undefined)?.indexOf(
+          current,
+        ) ?? -1;
       if (index >= 0) {
-        listActions.selToggle(listTypes.indexOf(current!.type), index, {
+        listActions.selToggle(listTypes.indexOf(current.type), index, {
           cmdCtrl: false,
           shift: false,
         });
@@ -471,19 +544,19 @@ watch(
     } else {
       listActions.selClear();
     }
-  }
+  },
 );
 watch(
   () => store.activeArea,
   (activeArea) => {
     keyboardService.setContext('listsRealm', activeArea === 'lists');
-  }
+  },
 );
 watch(
   () => store.editList,
   (editList) => {
     keyboardService.setContext('listModal', !!editList);
-  }
+  },
 );
 
 const listsRealm = {
@@ -504,7 +577,7 @@ keyboardService.register(shortcutMap.paste, selPaste, noEdit);
 keyboardService.register(
   shortcutMap.duplicate,
   ruleActions.selDuplicate,
-  rulesRealm
+  rulesRealm,
 );
 keyboardService.register(shortcutMap.remove, listActions.selRemove, listsRealm);
 keyboardService.register(shortcutMap.remove, ruleActions.selRemove, rulesRealm);

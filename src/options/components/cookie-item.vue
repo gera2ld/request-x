@@ -82,25 +82,37 @@
     </div>
   </form>
   <RuleItemView v-else :selected="selected" :badges="badges" @select="onSelect">
+    <Toggle
+      class="mr-4"
+      :class="{ disabled: listDisabled }"
+      :active="!!rule.enabled"
+      @toggle="handleToggle"
+    />
     <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
   </RuleItemView>
 </template>
 
-<script lang="ts">
-import {
-  computed,
-  defineComponent,
-  nextTick,
-  reactive,
-  ref,
-  watch,
-  onMounted,
-} from 'vue';
-import type { PropType } from 'vue';
+<script lang="ts" setup>
+import { computed, nextTick, reactive, ref, watch, onMounted } from 'vue';
 import type { CookieData, SameSiteStatus } from '@/types';
-import { store } from '../store';
+import Toggle from '@/common/components/toggle.vue';
 import { isValidPattern, focusInput } from '../util';
 import RuleItemView from './rule-item-view.vue';
+import { ruleActions } from '../actions';
+
+const props = defineProps<{
+  rule: CookieData;
+  showDetail?: boolean;
+  selected?: boolean;
+  editable?: boolean;
+  listDisabled?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (event: 'cancel'): void;
+  (event: 'submit', data: { rule: CookieData }): void;
+  (event: 'select', data: { cmdCtrl: boolean; shift: boolean }): void;
+}>();
 
 const sameSiteOptions = [
   {
@@ -126,6 +138,74 @@ const sameSiteOptions = [
   },
 ];
 
+const input = reactive<{
+  url?: string;
+  name?: string;
+  sameSite?: '' | SameSiteStatus;
+  httpOnly?: '' | 'true' | 'false';
+  secure?: '' | 'true' | 'false';
+  ttl?: string;
+}>({});
+const refForm = ref<HTMLFormElement | undefined>(undefined);
+
+const reset = () => {
+  if (!props.showDetail) return;
+  const { rule } = props;
+  Object.assign(input, {
+    url: rule.url,
+    name: rule.name,
+    sameSite: rule.sameSite || '',
+    httpOnly: bool2str(rule.httpOnly),
+    secure: bool2str(rule.secure),
+    ttl: rule.ttl,
+  });
+  nextTick(() => {
+    if (props.editable) {
+      focusInput(refForm.value);
+    }
+  });
+};
+
+const errors = computed(() => {
+  return {
+    url: !input.url || !isValidPattern(input.url),
+  };
+});
+
+const badges = computed(() => {
+  const { rule } = props;
+  return [
+    rule.sameSite != null && 'SameSite',
+    rule.httpOnly != null && 'httpOnly',
+    rule.ttl != null && 'ttl',
+  ].filter(Boolean) as string[];
+});
+
+const onCancel = () => {
+  emit('cancel');
+};
+
+const onSubmit = () => {
+  if (Object.values(errors.value).some(Boolean)) return;
+  emit('submit', {
+    rule: {
+      url: input.url,
+      name: input.name,
+      sameSite: input.sameSite || undefined,
+      httpOnly: str2bool(input.httpOnly ?? ''),
+      secure: str2bool(input.secure ?? ''),
+      ttl: str2num(input.ttl ?? ''),
+    } as CookieData,
+  });
+};
+
+const onSelect = (e: any) => {
+  emit('select', e);
+};
+
+watch(() => props.showDetail, reset);
+onMounted(reset);
+
 function bool2str(value?: boolean) {
   if (value == null) return '';
   return `${!!value}`;
@@ -141,100 +221,7 @@ function str2num(value: string) {
   return isNaN(num) ? undefined : num;
 }
 
-export default defineComponent({
-  components: {
-    RuleItemView,
-  },
-  props: {
-    rule: {
-      type: Object as PropType<CookieData>,
-      required: true,
-    },
-    showDetail: Boolean,
-    editable: Boolean,
-    selected: Boolean,
-  },
-  emits: ['cancel', 'submit', 'select'],
-  setup(props, context) {
-    const input = reactive<{
-      url?: string;
-      name?: string;
-      sameSite?: '' | SameSiteStatus;
-      httpOnly?: '' | 'true' | 'false';
-      secure?: '' | 'true' | 'false';
-      ttl?: string;
-    }>({});
-    const refForm = ref<HTMLFormElement | undefined>(undefined);
-
-    const reset = () => {
-      if (!props.showDetail) return;
-      const { rule } = props;
-      Object.assign(input, {
-        url: rule.url,
-        name: rule.name,
-        sameSite: rule.sameSite || '',
-        httpOnly: bool2str(rule.httpOnly),
-        secure: bool2str(rule.secure),
-        ttl: rule.ttl,
-      });
-      nextTick(() => {
-        if (props.editable) {
-          focusInput(refForm.value);
-        }
-      });
-    };
-
-    const errors = computed(() => {
-      return {
-        url: !input.url || !isValidPattern(input.url),
-      };
-    });
-
-    const badges = computed(() => {
-      const { rule } = props;
-      return [
-        rule.sameSite != null && 'SameSite',
-        rule.httpOnly != null && 'httpOnly',
-        rule.ttl != null && 'ttl',
-      ].filter(Boolean) as string[];
-    });
-
-    const onCancel = () => {
-      context.emit('cancel');
-    };
-
-    const onSubmit = () => {
-      if (Object.values(errors.value).some(Boolean)) return;
-      context.emit('submit', {
-        rule: {
-          url: input.url,
-          name: input.name,
-          sameSite: input.sameSite || undefined,
-          httpOnly: str2bool(input.httpOnly ?? ''),
-          secure: str2bool(input.secure ?? ''),
-          ttl: str2num(input.ttl ?? ''),
-        } as CookieData,
-      });
-    };
-
-    const onSelect = (e: any) => {
-      context.emit('select', e);
-    };
-
-    watch(() => props.showDetail, reset);
-    onMounted(reset);
-
-    return {
-      store,
-      input,
-      errors,
-      badges,
-      refForm,
-      sameSiteOptions,
-      onCancel,
-      onSubmit,
-      onSelect,
-    };
-  },
-});
+function handleToggle() {
+  ruleActions.toggle(props.rule);
+}
 </script>

@@ -1,23 +1,17 @@
-import { computed, reactive } from 'vue';
 import type {
-  ListData,
   ConfigStorage,
   FeatureToggles,
+  ListData,
+  ListGroups,
   RuleData,
 } from '@/types';
+import { computed, reactive } from 'vue';
 
-export const listTypes = ['request', 'cookie'];
+export const listTypes = ['request', 'cookie'] as const;
 
-export const store = reactive({
-  lists: {},
-  editList: undefined,
-  route: [],
-  config: undefined,
-  features: {},
-  activeArea: 'rules',
-  listErrors: {},
-} as {
-  lists: { [key: string]: ListData[] };
+export const store = reactive<{
+  lists: ListGroups;
+  ruleErrors: Record<number, Record<number, string>>;
   editList:
     | ({
         isSubscribed?: boolean;
@@ -27,24 +21,18 @@ export const store = reactive({
   config: ConfigStorage | undefined;
   features: FeatureToggles;
   activeArea: 'lists' | 'rules';
-  listErrors: { [id: number]: string };
+}>({
+  lists: {
+    request: [],
+    cookie: [],
+  },
+  ruleErrors: {},
+  editList: undefined,
+  route: [],
+  config: undefined,
+  features: {},
+  activeArea: 'rules',
 });
-
-export const currentType = computed<ListData['type']>(
-  () => store.route[1] as ListData['type']
-);
-
-export const currentList = computed<ListData | undefined>(() => {
-  const [page, , sid] = store.route;
-  if (page !== 'lists') return;
-  const id = +sid;
-  const list = store.lists[currentType.value]?.find((item) => item.id === id);
-  return list as ListData | undefined;
-});
-
-export const listEditable = computed(
-  () => currentList.value && !currentList.value.subscribeUrl
-);
 
 export const ruleSelection = reactive<{
   active: number;
@@ -81,6 +69,20 @@ export const ruleState = reactive<{
   visible: [],
 });
 
+export const currentList = computed<ListData | undefined>(() => {
+  const [page, sid] = store.route;
+  if (page !== 'lists') return;
+  const id = +sid;
+  const list = [...store.lists.request, ...store.lists.cookie].find(
+    (item) => item.id === id,
+  );
+  return list as ListData | undefined;
+});
+
+export const listEditable = computed(
+  () => currentList.value && !currentList.value.subscribeUrl,
+);
+
 export function ensureGroupSelection(index: number) {
   let selection = listSelection.selection[index];
   if (!selection) {
@@ -96,10 +98,10 @@ export function ensureGroupSelection(index: number) {
 export const selectedLists = computed(() => {
   const lists = listSelection.selection.flatMap((selection, i) =>
     selection.count
-      ? store.lists[listTypes[i]]?.filter(
-          (_, index) => selection.selected[index]
+      ? store.lists[listTypes[i]].filter(
+          (_, index) => selection.selected[index],
         )
-      : []
+      : [],
   );
   return lists;
 });

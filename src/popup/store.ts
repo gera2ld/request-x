@@ -1,26 +1,23 @@
+import type { FeatureToggles, ListGroups } from '@/types';
 import { reactive } from 'vue';
-import type { ListData, FeatureToggles } from '@/types';
 
 const RECENTLY_DISABLED_KEY = 'recentlyDisabled';
-const RECENTLY_DISABLED_MAX_RECORD = 3;
+const RECENTLY_DISABLED_MAX_RECORD = 5;
 
-export const store = reactive({
-  lists: {},
-  recentlyDisabledListIds: loadRecentlyDisabledListIds(),
-  features: {},
-} as {
-  lists: { [key: string]: ListData[] };
+export const store = reactive<{
+  lists: ListGroups;
+  ruleErrors: Record<number, Record<number, string>>;
   recentlyDisabledListIds: number[];
   features: FeatureToggles;
+}>({
+  lists: {
+    request: [],
+    cookie: [],
+  },
+  ruleErrors: {},
+  recentlyDisabledListIds: loadRecentlyDisabledListIds(),
+  features: {},
 });
-
-export function filterLists(predicate: (list: ListData) => boolean) {
-  return Object.keys(store.lists).reduce((res, key) => {
-    const lists = store.lists[key].filter(predicate);
-    if (lists.length) res[key] = lists;
-    return res;
-  }, {} as Record<string, ListData[]>);
-}
 
 function loadRecentlyDisabledListIds(): number[] {
   let ids;
@@ -36,7 +33,9 @@ function loadRecentlyDisabledListIds(): number[] {
 function dumpRecentlyDisabledListIds() {
   localStorage.setItem(
     RECENTLY_DISABLED_KEY,
-    JSON.stringify(store.recentlyDisabledListIds.slice(-RECENTLY_DISABLED_MAX_RECORD))
+    JSON.stringify(
+      store.recentlyDisabledListIds.slice(-RECENTLY_DISABLED_MAX_RECORD),
+    ),
   );
 }
 

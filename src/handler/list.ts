@@ -1,303 +1,326 @@
-import { sendCommand } from '@/common/browser';
-import { reorderList } from '@/common/util';
-import type {
-  CookieData,
-  CookieDetails,
-  CookieMatchResult,
-  ListMeta,
-  ListData,
-  RequestData,
-  RequestDetails,
-  RequestMatchResult,
-  IRule,
-} from '@/types';
-import { groupBy } from 'lodash-es';
-import { RequestRule, CookieRule } from './rule';
 import {
-  getExactData,
-  dumpExactData,
-  getData,
-  removeData,
-  hookInstall,
-} from './util';
+  fetchListData,
+  normalizeCookieRule,
+  normalizeRequestRule,
+} from '@/common/list';
+import { b64encodeText, sendMessage, loadRegExp } from '@/common/util';
+import type {
+  ListData,
+  ListGroups,
+  RequestData,
+  RequestListData,
+  RuleData,
+} from '@/types';
+import { flatMap, groupBy, isEqual, map, values } from 'lodash-es';
+import { dumpExactData, getExactData } from './util';
 
-let lastId = 0;
-let listErrors: { [id: number]: string } = {};
+const LIST_PREFIX = 'list:';
+const KEY_LISTS = 'lists';
+const MAX_RULES_PER_LIST = 100;
+const resourceTypes = [
+  chrome.declarativeNetRequest.ResourceType.CSP_REPORT,
+  chrome.declarativeNetRequest.ResourceType.FONT,
+  chrome.declarativeNetRequest.ResourceType.IMAGE,
+  chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
+  chrome.declarativeNetRequest.ResourceType.MEDIA,
+  chrome.declarativeNetRequest.ResourceType.OBJECT,
+  chrome.declarativeNetRequest.ResourceType.OTHER,
+  chrome.declarativeNetRequest.ResourceType.PING,
+  chrome.declarativeNetRequest.ResourceType.SCRIPT,
+  chrome.declarativeNetRequest.ResourceType.STYLESHEET,
+  chrome.declarativeNetRequest.ResourceType.SUB_FRAME,
+  chrome.declarativeNetRequest.ResourceType.WEBSOCKET,
+  chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
+];
+const requestRuleTypeMap: Record<
+  RequestData['type'],
+  chrome.declarativeNetRequest.RuleActionType
+> = {
+  block: chrome.declarativeNetRequest.RuleActionType.BLOCK,
+  redirect: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
+  replace: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
+  headers: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
+};
+let lastId = -1;
+const ruleErrors: Record<number, Record<number, string>> = {};
+
+export const dataLoaded = loadData();
 
 export function getKey(id: number) {
-  return `list:${id}`;
+  return `${LIST_PREFIX}${id}`;
 }
 
-function setIfNotNull<T>(target: T, source: Partial<T>, key: keyof T) {
-  const value = source[key];
-  if (value != null) target[key] = value!;
+export async function loadList(id: number) {
+  return getExactData<ListData>(`${LIST_PREFIX}${id}`);
 }
 
-export abstract class BaseList<T, D, M> implements ListMeta {
-  name = 'No name';
-  subscribeUrl = '';
-  lastUpdated = 0;
-  enabled = true;
-
-  abstract rules: IRule<T, D, M>[];
-  abstract type: ListData['type'];
-
-  protected fetching: Promise<void> | undefined;
-
-  abstract createRule(rule: T): IRule<T, D, M>;
-
-  constructor(public id: number) {}
-
-  key() {
-    return getKey(this.id);
-  }
-
-  async load(data: Partial<ListData>) {
-    const key = this.key();
-    data ??= await getExactData(key);
-    if (data) {
-      const keys: (keyof ListMeta)[] = [
-        'name',
-        'subscribeUrl',
-        'lastUpdated',
-        'enabled',
-      ];
-      keys.forEach((ikey) => {
-        setIfNotNull<ListMeta>(this, data, ikey);
-      });
-      this.name ||= 'No name';
-      if (data.rules) {
-        this.rules = data.rules.map((rule) =>
-          this.createRule(rule as unknown as T)
-        );
-      }
-    }
-  }
-
-  async dump() {
-    await dumpExactData(this.key(), this.get());
-    this.fireChange();
-  }
-
-  get() {
-    return {
-      id: this.id,
-      type: this.type,
-      name: this.name,
-      enabled: this.enabled,
-      subscribeUrl: this.subscribeUrl,
-      lastUpdated: this.lastUpdated,
-      rules: this.rules.map((rule) => rule.dump()),
-    };
-  }
-
-  async update(data: Partial<ListData>) {
-    await this.load(data);
-    await this.dump();
-  }
-
-  async doFetch() {
-    try {
-      const data = await fetchListData(this.subscribeUrl);
-      if (data.type !== this.type) throw new Error('Type mismatch');
-      this.update(data);
-    } finally {
-      this.fetching = undefined;
-    }
-  }
-
-  async fetch() {
-    if (!this.subscribeUrl) return;
-    if (!this.fetching) this.fetching = this.doFetch();
-    return this.fetching;
-  }
-
-  fireChange() {
-    sendCommand('UpdatedList', this.get());
-  }
-
-  match(details: D, method: string): void | M {
-    if (!this.enabled) return;
-    for (const rule of this.rules) {
-      const target = rule.matchers[method]?.(rule, details);
-      if (target) return target;
-    }
-  }
+export async function dumpLists(lists: ListGroups) {
+  await dumpExactData(
+    KEY_LISTS,
+    values(lists).flatMap((group: ListData[]) => map(group, 'id')),
+  );
 }
 
-export class RequestList extends BaseList<
-  RequestData,
-  RequestDetails,
-  RequestMatchResult
-> {
-  type: ListData['type'] = 'request';
-
-  rules: RequestRule[] = [];
-
-  createRule(
-    rule: RequestData
-  ): IRule<RequestData, RequestDetails, RequestMatchResult> {
-    return new RequestRule(rule);
-  }
-}
-
-export class CookieList extends BaseList<
-  CookieData,
-  CookieDetails,
-  CookieMatchResult
-> {
-  type: ListData['type'] = 'cookie';
-
-  rules: CookieRule[] = [];
-
-  createRule(rule: CookieData) {
-    return new CookieRule(rule);
-  }
-}
-
-export abstract class BaseListManager<T extends BaseList<any, any, any>> {
-  data: T[] = [];
-
-  abstract createList(id: number): T;
-
-  async create(data: Partial<ListData>) {
-    lastId += 1;
-    const newId = lastId;
-    const list = this.createList(newId);
-    await list.update(data);
-    await list.fetch();
-    this.data.push(list);
-    dumpLists();
-    return list;
-  }
-
-  find(id: number) {
-    return this.data.find((list) => list.id === id);
-  }
-
-  async remove(id: number) {
-    const list = this.find(id)!;
-    const i = this.data.indexOf(list);
-    this.data.splice(i, 1);
-    await removeData(list.key());
-    dumpLists();
-  }
-
-  move(selection: number[], target: number, downward: boolean) {
-    const reordered = reorderList(this.data, selection, target, downward);
-    if (reordered) {
-      this.data = reordered;
-      dumpLists();
-    }
-  }
-
-  get() {
-    return this.data.map((list) => list.get());
-  }
-
-  async fetch() {
-    const errors = await Promise.all(
-      this.data.map((list) =>
-        list.fetch().catch((error) => ({
-          id: list.id,
-          error: `${error}`,
-        }))
-      )
+export async function loadData() {
+  let ids = await getExactData<number[]>(KEY_LISTS);
+  const lists: ListGroups = { request: [], cookie: [] };
+  if (Array.isArray(ids)) {
+    const allData = await chrome.storage.local.get(
+      map(ids, (id) => `${LIST_PREFIX}${id}`),
     );
-    return errors.filter(Boolean) as Array<{ id: number; error: string }>;
+    const allLists = map(ids, (id) => allData[`${LIST_PREFIX}${id}`]).filter(
+      Boolean,
+    ) as ListData[];
+    const groups = groupBy(allLists, 'type');
+    Object.assign(lists, groups);
+  } else {
+    const allData = await chrome.storage.local.get();
+    const allLists = Object.keys(allData)
+      .filter((key) => key.startsWith(LIST_PREFIX))
+      .map((key) => allData[key]) as ListData[];
+    const groups = groupBy(allLists, 'type');
+    Object.assign(lists, groups);
   }
+  if (import.meta.env.DEV) console.log('loadData:raw', lists);
+  ids = values(lists).flatMap((group: ListData[]) => map(group, 'id'));
+  lastId = Math.max(0, ...ids);
+  lists.request.forEach((list) => {
+    list.enabled ??= true;
+    list.rules = flatMap(list.rules, normalizeRequestRule);
+  });
+  lists.cookie.forEach((list) => {
+    list.enabled ??= true;
+    list.rules = flatMap(list.rules, normalizeCookieRule);
+  });
+  if (import.meta.env.DEV) console.log('loadData', lists);
+  return lists;
+}
 
-  match(...args: Parameters<T['match']>): void | ReturnType<T['match']> {
-    for (const list of this.data) {
-      const [details, type] = args;
-      const target = list.match(details, type);
-      if (target) return target;
+export async function saveList(data: Partial<ListData>) {
+  const list: ListData = {
+    id: 0,
+    name: 'No name',
+    subscribeUrl: '',
+    lastUpdated: 0,
+    enabled: true,
+    type: 'request',
+    rules: [],
+    ...data,
+  };
+  if (!list.rules) throw new Error('Invalid list data');
+  list.name ||= 'No name';
+  if (!list.id) {
+    if (lastId < 0) throw new Error('Data is not loaded yet');
+    list.id = ++lastId;
+  }
+  if (import.meta.env.DEV) console.log('saveList', list);
+  await dumpExactData(getKey(list.id), list);
+  return list;
+}
+
+export async function saveLists(payload: Partial<ListData>[]) {
+  const lists = await dataLoaded;
+  const updatedLists = await Promise.all(
+    payload.map(async (data) => {
+      if (data.id) {
+        data = {
+          ...values(lists)
+            .flat()
+            .find((list) => list.id === data.id),
+          ...data,
+        };
+      }
+      const list = await saveList(data);
+      const group = lists[list.type] as ListData[];
+      const i = group.findIndex((item) => item.id === list.id);
+      if (i < 0) {
+        group.push(list);
+      } else {
+        group[i] = list;
+      }
+      return list;
+    }),
+  );
+  if (updatedLists.length) {
+    dumpLists(lists);
+    reloadRules(lists.request);
+  }
+  return updatedLists;
+}
+
+function buildListRules(list: RequestListData, base = MAX_RULES_PER_LIST) {
+  const rules: chrome.declarativeNetRequest.Rule[] = list.rules.flatMap(
+    (item, i) => {
+      const type = requestRuleTypeMap[item.type];
+      if (!item.enabled) return [];
+      const rule: chrome.declarativeNetRequest.Rule = {
+        id: list.id * base + i + 1,
+        action: {
+          type,
+        },
+        condition: {
+          resourceTypes,
+        },
+      };
+      // Do not support match patterns here as they may exceed the 2KB memory limit after conversion to RegExp
+      const re = loadRegExp(item.url);
+      if (re) {
+        rule.condition.regexFilter = re;
+      } else {
+        rule.condition.urlFilter = item.url;
+      }
+      if (item.methods.length) rule.condition.requestMethods = item.methods;
+      if (item.type === 'redirect') {
+        rule.action.redirect = {
+          [re ? 'regexSubstitution' : 'url']: item.target,
+        };
+      } else if (item.type === 'replace') {
+        rule.action.redirect = {
+          url: `data:${item.contentType || ''};base64,${b64encodeText(
+            item.target,
+          )}`,
+        };
+      } else if (item.type === 'headers') {
+        const validKeys = (
+          ['requestHeaders', 'responseHeaders'] as const
+        ).filter((key) => {
+          const headerItems = item[key];
+          if (headerItems?.length) {
+            rule.action[key] = headerItems.map((headerItem) => {
+              let { name, value } = headerItem;
+              if (name[0] === '!') {
+                name = name.slice(1);
+                value = undefined;
+              }
+              return {
+                header: name,
+                operation:
+                  value == null
+                    ? chrome.declarativeNetRequest.HeaderOperation.REMOVE
+                    : chrome.declarativeNetRequest.HeaderOperation.SET,
+                value,
+              };
+            });
+            return true;
+          }
+        });
+        if (!validKeys.length) return [];
+      }
+      return rule;
+    },
+  );
+  return rules;
+}
+
+export async function reloadRulesForList(
+  list: RequestListData,
+  allRules: chrome.declarativeNetRequest.Rule[],
+) {
+  const currentRules = allRules.filter(
+    (rule) => Math.floor(rule.id / MAX_RULES_PER_LIST) === list.id,
+  );
+  const rules = buildListRules(list);
+  const updates: Record<
+    string,
+    {
+      old?: chrome.declarativeNetRequest.Rule;
+      new?: chrome.declarativeNetRequest.Rule;
+    }
+  > = {};
+  currentRules.forEach((rule) => {
+    updates[rule.id] = { old: rule };
+  });
+  rules.forEach((rule) => {
+    const update = updates[rule.id];
+    if (update && isEqual(update.old, rule)) delete updates[rule.id];
+    else updates[rule.id] = { ...update, new: rule };
+  });
+  const toRemove = Object.keys(updates)
+    .filter((key) => !updates[key].new)
+    .map((id) => +id);
+  if (toRemove.length) {
+    if (import.meta.env.DEV)
+      console.log(
+        'removeRules',
+        toRemove.map((id) => updates[id].old),
+      );
+    await chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: toRemove,
+    });
+  }
+  delete ruleErrors[list.id];
+  const errors: Record<number, string> = {};
+  for (const update of Object.values(updates)) {
+    if (!update.new) continue;
+    try {
+      if (import.meta.env.DEV) console.log('updateRule', update);
+      await chrome.declarativeNetRequest.updateSessionRules({
+        addRules: [update.new],
+        removeRuleIds: update.old ? [update.old.id] : [],
+      });
+    } catch (err) {
+      console.error(err);
+      errors[update.new.id % MAX_RULES_PER_LIST] = `${err}`;
+      ruleErrors[list.id] = errors;
     }
   }
+}
 
-  async load(items: ListData[]) {
-    this.data = items.map((item) => {
-      lastId = Math.max(lastId, item.id);
-      const list = this.createList(item.id);
-      list.load(item);
-      return list;
+export async function reloadRules(lists: RequestListData[]) {
+  lists = lists.filter((list) => list.enabled);
+  const listIds = new Set(lists.map((list) => list.id));
+  Object.keys(ruleErrors).forEach((key) => {
+    const id = +key;
+    if (!listIds.has(id)) delete ruleErrors[id];
+  });
+  const allRules = await chrome.declarativeNetRequest.getSessionRules();
+  const toRemove = allRules.filter(
+    (rule) => !listIds.has(Math.floor(rule.id / MAX_RULES_PER_LIST)),
+  );
+  if (toRemove.length) {
+    if (import.meta.env.DEV) console.log('removeRules', toRemove);
+    await chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: toRemove.map((rule) => rule.id),
     });
   }
+  await Promise.all(lists.map((list) => reloadRulesForList(list, allRules)));
+  if (import.meta.env.DEV) console.log('reloadRules done', ruleErrors);
 }
 
-export class RequestListManager extends BaseListManager<RequestList> {
-  createList(id: number) {
-    return new RequestList(id);
-  }
+export function getErrors() {
+  return ruleErrors;
 }
 
-export class CookieListManager extends BaseListManager<CookieList> {
-  createList(id: number) {
-    return new CookieList(id);
-  }
-}
+const cache: Record<number, Promise<void>> = {};
 
-export const lists = {
-  request: new RequestListManager(),
-  cookie: new CookieListManager(),
-};
-
-export async function dumpLists() {
-  const ids = Object.values(lists).flatMap((list) =>
-    list.data.map((item) => item.id)
+async function doFetchList(list: ListData) {
+  const url = list.subscribeUrl;
+  if (!url) return;
+  const data = await fetchListData(url);
+  if (data.type !== list.type) throw new Error('Type mismatch');
+  if (!data.rules) throw new Error('Invalid data');
+  list.lastUpdated = Date.now();
+  list.rules = data.rules.flatMap(
+    (list.type === 'cookie' ? normalizeCookieRule : normalizeRequestRule) as (
+      data: any,
+    ) => RuleData[],
   );
-  await dumpExactData('lists', ids);
+  await saveList(list);
 }
 
-export async function loadLists() {
-  const ids = await getExactData<number[]>('lists');
-  if (ids) {
-    const data = await getData(ids.map(getKey));
-    const items: ListData[] = ids.map((id) => data[getKey(id)]).filter(Boolean);
-    const resources = groupBy(
-      items,
-      (item) => item.type || 'request'
-    ) as unknown as {
-      [key in ListData['type']]: ListData[];
-    };
-    Object.entries(resources).forEach(([key, data]) => {
-      lists[key as unknown as ListData['type']]?.load(data);
+export function fetchList(list: ListData | undefined) {
+  if (!list?.subscribeUrl) return;
+  let promise = cache[list.id];
+  if (!promise) {
+    promise = doFetchList(list);
+    cache[list.id] = promise;
+    promise.finally(() => {
+      delete cache[list.id];
     });
   }
+  return promise;
 }
 
-export async function fetchLists() {
-  const groupErrors = await Promise.all(
-    Object.values(lists).map((list) => list.fetch())
-  );
-  listErrors = groupErrors.flat().reduce((res, item) => {
-    res[item.id] = item.error;
-    return res;
-  }, {} as { [id: number]: string });
-  sendCommand('SetErrors', listErrors);
-}
-
-export function getLastErrors() {
-  return listErrors;
-}
-
-let count = 0;
-
-export async function fetchListData(url: string) {
-  count += 1;
-  hookInstall.set(false);
-  try {
-    const res = await fetch(url, { credentials: 'include' });
-    const data = await res.json();
-    if (!res.ok) throw { status: res.status, data };
-    return {
-      type: data.type ?? 'request',
-      name: data.name || '',
-      rules: data.rules,
-      lastUpdated: Date.now(),
-    } as Partial<ListData>;
-  } finally {
-    count -= 1;
-    if (!count) hookInstall.set(true);
-  }
+export function broadcastUpdates() {
+  sendMessage('UpdateLists');
 }

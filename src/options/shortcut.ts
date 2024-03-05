@@ -17,5 +17,5 @@ export const shortcutTextMap = Object.entries(shortcutMap).reduce(
     map[key] = reprShortcut(value);
     return map;
   },
-  {} as { [key: string]: string }
+  {} as { [key: string]: string },
 );

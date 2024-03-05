@@ -1,24 +1,18 @@
-import { browser } from '@/common/browser';
-import { createGetterSetter } from '@/common/util';
 import type { ConfigStorage } from '@/types';
 
-export const getData = browser.storage.local.get;
-export const dumpData = browser.storage.local.set;
-export const removeData = browser.storage.local.remove;
-
 export async function getExactData<T>(key: string): Promise<T> {
-  const res = await getData(key);
+  const res = await chrome.storage.local.get(key);
   return res[key];
 }
 
 export async function dumpExactData(key: string, value: any) {
-  await dumpData({
+  await chrome.storage.local.set({
     [key]: value,
   });
 }
 
 export async function getActiveTab() {
-  const [tab] = await browser.tabs.query({
+  const [tab] = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true, // also gets incognito windows
   });
@@ -28,12 +22,18 @@ export async function getActiveTab() {
 export class ObjectStorage<T extends { [key: string]: any }> {
   ready: Promise<void> | undefined;
 
-  static async load<T>(key: string, defaults: T) {
+  static async load<T extends { [key: string]: any }>(
+    key: string,
+    defaults: T,
+  ) {
     const data = await getExactData<T>(key);
     return new ObjectStorage<T>(key, data || defaults);
   }
 
-  constructor(private key: string, private data: T) {}
+  constructor(
+    private key: string,
+    private data: T,
+  ) {}
 
   dump() {
     return dumpExactData(this.key, this.data);
@@ -76,5 +76,3 @@ export function getUrl(cookie: {
 export const configPromise = ObjectStorage.load<ConfigStorage>('config', {
   badge: '',
 });
-
-export const hookInstall = createGetterSetter<boolean>(true);

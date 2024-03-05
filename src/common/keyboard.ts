@@ -42,7 +42,7 @@ function bindKeys() {
       hasSelection = document.getSelection()?.type === 'Range';
       updateInputFocus();
     },
-    false
+    false,
   );
   keyboardService.register(
     'enter',
@@ -51,7 +51,7 @@ function bindKeys() {
     },
     {
       condition: '!inputFocus',
-    }
+    },
   );
   keyboardService.enable();
 }

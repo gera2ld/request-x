@@ -1,219 +1,175 @@
-import { browser, bindCommands } from '@/common/browser';
-import type {
-  ConfigStorage,
-  ListData,
-  InterceptionData,
-  SubscriptionData,
-  PortMessage,
-  RequestMatchResult,
-  RequestDetails,
-  FeatureToggles,
-} from '@/types';
-import { debounce, omit, pick } from 'lodash-es';
 import {
-  RequestList,
-  lists,
-  loadLists,
-  CookieList,
-  fetchLists,
-  fetchListData,
-  getLastErrors,
+  handleMessages,
+  reorderList,
+  sendMessage,
+  textTester,
+  urlTester,
+} from '@/common/util';
+import { CookieData, CookieMatchResult, ListData } from '@/types';
+import { debounce, pick } from 'lodash-es';
+import {
+  broadcastUpdates,
+  dataLoaded,
+  dumpLists,
+  fetchList,
+  getErrors,
+  reloadRules,
+  saveLists,
 } from './list';
-import { ensureDashboardPorts, getInspectPort } from './port';
-import { getUrl, configPromise, hookInstall } from './util';
+import { getUrl } from './util';
 
-const features: FeatureToggles = {
-  responseHeaders: false,
-  cookies: false,
+let cookieRules: CookieData[] = [];
+const actions: Array<{
+  name: string;
+  payload: any;
+}> = [];
+
+chrome.cookies.onChanged.addListener(handleCookieChange);
+chrome.tabs.onCreated.addListener((tab) => {
+  if (!tab.id) return;
+  const url = getSubsribeUrl(tab.url || tab.pendingUrl);
+  if (url) {
+    initiateSubscription(url);
+    chrome.tabs.remove(tab.id);
+  }
+});
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  const url = getSubsribeUrl(changeInfo.url);
+  if (url) {
+    initiateSubscription(url);
+    chrome.tabs.goBack(tabId);
+  }
+});
+
+const cookieActions = {
+  async update() {
+    const lists = await dataLoaded;
+    cookieRules = lists.cookie
+      .filter((list) => list.enabled)
+      .flatMap((list) => list.rules.filter((rule) => rule.enabled));
+    return lists;
+  },
 };
 
-loadLists();
-
-function pushLog(details: RequestDetails, result?: RequestMatchResult) {
-  const { tabId, method, url, requestId } = details;
-  getInspectPort(tabId)?.postMessage({
-    type: 'interception',
-    data: {
-      requestId,
-      method,
-      url,
-      result,
-    },
-  } as PortMessage<InterceptionData>);
-}
-
-const matchedRequestIds = new Set<string>();
-
-function getRequestHandler(type: string) {
-  return (details: RequestDetails) => {
-    const result = lists.request.match(details, type);
-    if (result) {
-      matchedRequestIds.add(details.requestId);
-      console.info(
-        `[request] matched: ${details.method} ${details.url}`,
-        type,
-        result
-      );
-      pushLog(details, result);
-      return omit(result, 'payload');
-    }
-  };
-}
-
-browser.webRequest.onBeforeRequest.addListener(
-  ((handler) => (details) => {
-    const { url } = details;
-    if (hookInstall.get() && url.includes('#:request-x:')) {
-      subscribeUrl(url);
-      return { redirectUrl: 'javascript:void 0' };
-    }
-    return handler(details);
-  })(getRequestHandler('onBeforeRequest')),
-  {
-    urls: ['<all_urls>'],
+handleMessages({
+  async GetLists() {
+    return dataLoaded;
   },
-  ['blocking']
-);
-
-browser.webRequest.onBeforeSendHeaders.addListener(
-  getRequestHandler('onBeforeSendHeaders'),
-  {
-    urls: ['<all_urls>'],
+  async GetErrors() {
+    return getErrors();
   },
-  ['blocking', 'requestHeaders']
-);
-
-try {
-  browser.webRequest.onHeadersReceived.addListener(
-    getRequestHandler('onHeadersReceived'),
-    { urls: ['<all_urls>'] },
-    // 'extraHeaders' is required to deceive the CORS protocol
-    // but may have a negative impact on performance
-    // TODO only include 'extraHeaders' when necessary
-    ['blocking', 'responseHeaders', 'extraHeaders']
-  );
-  features.responseHeaders = true;
-} catch {
-  // Some browsers may not support `responseHeaders` and `extraHeaders`
-  console.info('Disabled modification of response headers.');
-}
-
-function handleRequestEnd(details: RequestDetails) {
-  pushLog(details);
-}
-
-browser.webRequest.onErrorOccurred.addListener(handleRequestEnd, {
-  urls: ['<all_urls>'],
-});
-
-browser.webRequest.onCompleted.addListener(handleRequestEnd, {
-  urls: ['<all_urls>'],
-});
-
-bindCommands({
-  GetLists: () => {
-    return {
-      request: lists.request.get(),
-      cookie: lists.cookie.get(),
-    };
+  async SaveLists(payload: Partial<ListData>[]) {
+    const updatedLists = await saveLists(payload);
+    broadcastUpdates();
+    return updatedLists;
   },
-  RemoveList: async ({ type, id }: { type: ListData['type']; id: number }) => {
-    await lists[type]?.remove(id);
-    browser.runtime.sendMessage({
-      cmd: 'RemovedList',
-      data: { type, id },
-    });
+  async UpdateCookieRules() {
+    cookieActions.update();
   },
-  MoveList: async ({
-    type,
-    selection,
-    target,
-    downward,
-  }: {
-    type: ListData['type'];
+  async MoveLists(payload: {
+    type: 'request' | 'cookie';
     selection: number[];
     target: number;
     downward: boolean;
-  }) => {
-    const list = lists[type];
-    list.move(selection, target, downward);
-  },
-  UpdateList: async (data: Partial<ListData> & { type: ListData['type'] }) => {
-    const group = lists[data.type];
-    if (!group) return -1;
-    let list: RequestList | CookieList;
-    if (data.id) {
-      list = group.find(data.id)!;
-      await list.update(data);
-    } else {
-      list = await group.create(data);
-    }
-    return list.id;
-  },
-  FetchLists: () => fetchLists(),
-  FetchList: ({ type, id }: { type: ListData['type']; id: number }) =>
-    lists[type]?.find(id)?.fetch(),
-  FetchListData: (url: string) => fetchListData(url),
-  async GetData() {
-    return {
-      config: (await configPromise).getAll(),
-      features,
-      listErrors: getLastErrors(),
-    };
-  },
-  async SetConfig<K extends keyof ConfigStorage>({
-    key,
-    value,
-  }: {
-    key: K;
-    value: ConfigStorage[K];
   }) {
-    (await configPromise).set({
-      [key]: value,
+    const lists = await dataLoaded;
+    const { type, selection, target, downward } = payload;
+    const reordered = reorderList(
+      lists[type] as ListData[],
+      selection,
+      target,
+      downward,
+    );
+    if (reordered) {
+      lists[type] = reordered as any;
+      dumpLists(lists);
+    }
+  },
+  async FetchLists() {
+    const lists = await dataLoaded;
+    await Promise.all(
+      ([...lists.request, ...lists.cookie] as ListData[])
+        .filter((list) => list.subscribeUrl)
+        .map(async (list) => {
+          await fetchList(list);
+          broadcastUpdates();
+        }),
+    );
+  },
+  async FetchList(payload: { id: number }) {
+    const lists = await dataLoaded;
+    const list = ([...lists.request, ...lists.cookie] as ListData[]).find(
+      (item) => item.id === payload.id,
+    );
+    await fetchList(list);
+    broadcastUpdates();
+  },
+  async RemoveList(payload: { id: number }) {
+    const lists = await dataLoaded;
+    Object.values(lists).forEach((group: ListData[]) => {
+      const i = group.findIndex(({ id }) => id === payload.id);
+      if (i >= 0) group.splice(i, 1);
     });
+    reloadRules(lists.request);
+    broadcastUpdates();
+  },
+  GetAction() {
+    return actions.shift();
+  },
+  CreateAction(payload: { name: string; payload: any }) {
+    createAction(payload);
   },
 });
 
-browser.alarms.create({
-  delayInMinutes: 1,
-  periodInMinutes: 120,
-});
-browser.alarms.onAlarm.addListener(() => {
-  console.info(new Date().toISOString(), 'Fetching lists...');
-  fetchLists();
+main().catch((err) => {
+  console.error(err);
 });
 
 let processing = false;
-const updates = new Map<string, browser.Cookies.SetDetailsType>();
+const updates = new Map<string, chrome.cookies.SetDetails>();
 const updateCookiesLater = debounce(updateCookies, 100);
-setUpCookies();
 
-function setUpCookies() {
-  if (features.cookies) return;
-  try {
-    browser.cookies.onChanged.addListener(handleCookieChange);
-    features.cookies = true;
-  } catch {
-    // ignore
-  }
+async function main() {
+  const lists = await dataLoaded;
+  await reloadRules(lists.request);
 }
 
-function handleCookieChange(
-  changeInfo: browser.Cookies.OnChangedChangeInfoType
-) {
-  if (['expired', 'evicted'].includes(changeInfo.cause)) return;
+function handleCookieChange(changeInfo: chrome.cookies.CookieChangeInfo) {
+  // if (['expired', 'evicted'].includes(changeInfo.cause)) return;
+  if (changeInfo.cause !== 'explicit') return;
   if (processing) return;
-  const result = lists.cookie.match(changeInfo, 'onCookieChange');
-  if (result) {
+  let update: CookieMatchResult | undefined;
+  for (const rule of cookieRules) {
+    const url = getUrl(changeInfo.cookie);
+    const matches = url.match(urlTester(rule.url));
+    if (!matches) continue;
+    if (rule.name && !changeInfo.cookie.name.match(textTester(rule.name)))
+      continue;
+    const { ttl } = rule;
+    if (changeInfo.removed && !(ttl && ttl > 0)) {
+      // If cookie is removed and no positive ttl, ignore since change will not persist
+      continue;
+    }
+    update = pick(rule, ['sameSite', 'httpOnly', 'secure']);
+    if (ttl != null) {
+      // If ttl is 0, set to undefined to mark the cookie as a session cookie
+      update.expirationDate = ttl
+        ? Math.floor(Date.now() / 1000 + ttl)
+        : undefined;
+    }
+    if (update.sameSite === 'no_restriction') update.secure = true;
+    break;
+  }
+  if (update) {
     const { cookie } = changeInfo;
-    const hasUpdate = Object.entries(result).some(([key, value]) => {
-      return cookie[key as keyof browser.Cookies.Cookie] !== value;
+    const hasUpdate = Object.entries(update).some(([key, value]) => {
+      return cookie[key as keyof chrome.cookies.Cookie] !== value;
     });
     if (!hasUpdate) {
       console.info(`[cookie] no update: ${cookie.name} ${getUrl(cookie)}`);
       return;
     }
-    const details: browser.Cookies.SetDetailsType = {
+    const details: chrome.cookies.SetDetails = {
       url: getUrl(pick(cookie, ['domain', 'path', 'secure'])),
       domain: cookie.hostOnly ? undefined : cookie.domain,
       expirationDate: cookie.session ? undefined : cookie.expirationDate,
@@ -226,12 +182,12 @@ function handleCookieChange(
         'storeId',
         'value',
       ]),
-      ...result,
+      ...update,
     };
     console.info(`[cookie] matched: ${details.name} ${details.url}`, details);
     updates.set(
       [details.storeId, details.url, details.name].join('\n'),
-      details
+      details,
     );
     updateCookiesLater();
   }
@@ -245,7 +201,7 @@ async function updateCookies() {
   for (const item of items) {
     console.info(`[cookie] set: ${item.name} ${item.url}`, item);
     try {
-      await browser.cookies.set(item);
+      await chrome.cookies.set(item);
     } catch (err) {
       console.error(err);
     }
@@ -253,16 +209,22 @@ async function updateCookies() {
   processing = false;
 }
 
-async function subscribeUrl(url: string) {
-  const [jsonUrl] = url.split('#');
-  await browser.runtime.openOptionsPage();
-  const dashboardPorts = await ensureDashboardPorts();
-  dashboardPorts.forEach((port) => {
-    port.postMessage({
-      type: 'subscription',
-      data: {
-        url: jsonUrl,
-      },
-    } as PortMessage<SubscriptionData>);
+function initiateSubscription(url: string) {
+  createAction({
+    name: 'SubscribeUrl',
+    payload: url,
   });
+}
+
+async function createAction(action: { name: string; payload: any }) {
+  actions.push(action);
+  await chrome.runtime.openOptionsPage();
+  sendMessage('CheckAction');
+}
+
+function getSubsribeUrl(url: string | undefined) {
+  if (!url) return;
+  if (url.endsWith('#:request-x:')) {
+    return url.split('#')[0];
+  }
 }

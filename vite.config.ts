@@ -18,8 +18,6 @@ export default defineConfig({
         handler: resolve(__dirname, 'src/handler/index.html'),
         options: resolve(__dirname, 'src/options/index.html'),
         popup: resolve(__dirname, 'src/popup/index.html'),
-        devtools: resolve(__dirname, 'src/devtools/index.html'),
-        'devtools/panel': resolve(__dirname, 'src/devtools/panel/index.html'),
       },
       output: {
         entryFileNames: '[name]/index.js',

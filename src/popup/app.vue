@@ -1,7 +1,7 @@
 <template>
   <div class="request-x-popup">
     <div class="flex p-4 items-center text-lg">
-      <img class="w-8 mr-4" src="/public/images/icon_48.png" />
+      <img class="w-8 mr-4" :src="'/public/images/icon_48.png'" />
       <div class="flex-1">
         Request X
         <span class="version" v-text="version"></span>
@@ -19,81 +19,68 @@
       >
         <div
           class="list-section-title"
-          v-text="`${SECTION_TITLE_MAP[group]} (${lists.length})`"
+          v-text="
+            `${SECTION_TITLE_MAP[group]} (${lists.filter((item) => item.enabled).length})`
+          "
         ></div>
         <ul>
-          <li
+          <ListItem
             v-for="(item, itemIndex) in lists"
             :key="itemIndex"
-            class="list-item"
-            :class="{ enabled: item.enabled }"
-            :title="getName(item)"
-            @click.prevent.stop="onToggle(item)"
+            :item="item"
+            :errors="store.ruleErrors[item.id]"
+            @click.stop="onToggle(item)"
+            @error-click.stop="onOpenList(item)"
           >
-            <span class="list-section-status"></span>
-            <span class="mx-1 flex-1 truncate" v-text="getName(item)"></span>
-            <span
-              class="list-section-badge"
-              v-if="item.subscribeUrl"
-              title="Subscribed"
-            >
-              s
-            </span>
-          </li>
+            <template #suffix v-if="!store.ruleErrors[item.id]">
+              <div class="ml-1 text-zinc-600" @click.stop="onOpenList(item)">
+                <IconOpen />
+              </div>
+            </template>
+          </ListItem>
         </ul>
       </div>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, ref } from 'vue';
-import { pick } from 'lodash-es';
-import { browser, sendCommand } from '@/common/browser';
+<script lang="ts" setup>
+import IconOpen from '~icons/mdi/open-in-new';
 import { SECTION_TITLE_MAP } from '@/common/constants';
-import { getName } from '@/common/util';
+import { sendMessage } from '@/common/util';
 import type { ListData } from '@/types';
-import { store, filterLists, trackListToggle } from './store';
+import { mapValues, pick } from 'lodash-es';
+import { computed, ref } from 'vue';
+import { store, trackListToggle } from './store';
+import ListItem from '@/common/components/list-item.vue';
 
-const manifest = browser.runtime.getManifest();
+const { version } = chrome.runtime.getManifest();
 const openDashboard = () => {
-  browser.runtime.openOptionsPage();
+  chrome.runtime.openOptionsPage();
 };
 
-export default defineComponent({
-  setup() {
-    const filter = ref('');
+const filter = ref('');
 
-    const listGroups = computed(() => {
-      const lowerValue = filter.value.toLowerCase();
-      const predicate = lowerValue
-        ? (list: ListData) => list.name.toLowerCase().includes(lowerValue)
-        : (list: ListData) =>
-            list.enabled || store.recentlyDisabledListIds.includes(list.id);
-      return filterLists(predicate);
-    });
-
-    const hasLists = computed(() => {
-      return Object.values(listGroups.value).some((lists) => lists.length);
-    });
-
-    const onToggle = (item: ListData) => {
-      item.enabled = !item.enabled;
-      sendCommand('UpdateList', pick(item, ['id', 'type', 'enabled']));
-      trackListToggle(item.id, item.enabled);
-    };
-
-    return {
-      SECTION_TITLE_MAP,
-      filter,
-      getName,
-      store,
-      openDashboard,
-      version: manifest.version,
-      listGroups,
-      hasLists,
-      onToggle,
-    };
-  },
+const listGroups = computed(() => {
+  const lowerValue = filter.value.toLowerCase();
+  const predicate = lowerValue
+    ? (list: ListData) => list.name.toLowerCase().includes(lowerValue)
+    : (list: ListData) =>
+        list.enabled || store.recentlyDisabledListIds.includes(list.id);
+  return mapValues(store.lists, (group) => group.filter(predicate));
 });
+
+const hasLists = computed(() => {
+  return Object.values(listGroups.value).some((lists) => lists.length);
+});
+
+const onToggle = (item: ListData) => {
+  item.enabled = !item.enabled;
+  sendMessage('SaveLists', [pick(item, ['id', 'enabled'])]);
+  trackListToggle(item.id, item.enabled);
+};
+
+const onOpenList = (item: ListData) => {
+  sendMessage('CreateAction', { name: 'OpenList', payload: item.id });
+};
 </script>

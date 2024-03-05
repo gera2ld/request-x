@@ -15,7 +15,7 @@
       />
       <template #content>
         <div class="menu-dropdown">
-          <template v-for="(item, j) in menu.items" :key="j">
+          <template v-for="(item, _j) in menu.items" :key="_j">
             <div v-if="item.type === 'sep'" class="menu-sep"></div>
             <div
               v-else-if="item.type === 'group'"
@@ -51,6 +51,7 @@ import {
   listEditable,
   ruleSelection,
   selectedLists,
+  store,
 } from '../store';
 import {
   listActions,
@@ -59,7 +60,6 @@ import {
   selectAll,
   selEdit,
 } from '../actions';
-import { store } from '../store';
 
 const menus = computed(() => [
   {

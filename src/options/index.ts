@@ -1,52 +1,49 @@
+import '@/common/style';
+import { handleMessages, sendMessage } from '@/common/util';
+import { ListGroups } from '@/types';
 import { createApp } from 'vue';
-import { bindCommands } from '@/common/browser';
-import { loadData, loadLists } from '@/common/api';
-import type { ListData } from '@/types';
-import { store } from './store';
-import { setRoute, isRoute, updateRoute } from './util';
 import App from './components/app.vue';
-import '@/common/style.css';
-
-(async () => {
-  const [{ config, features, listErrors }, lists] = await Promise.all([
-    loadData(),
-    loadLists(),
-  ]);
-  store.lists = lists;
-  store.config = config;
-  store.features = features;
-  store.listErrors = listErrors;
-  updateRoute();
-  if (!isRoute('lists')) {
-    setRoute();
-  }
-})();
-
-bindCommands({
-  UpdatedList(data: ListData) {
-    const group = store.lists[data.type];
-    if (!group) return;
-    const i = group.findIndex((item) => item.id === data.id);
-    if (i < 0) {
-      group.push(data);
-    } else {
-      group[i] = data;
-    }
-  },
-  RemovedList({ type, id }: { type: ListData['type']; id: number }) {
-    const group = store.lists[type];
-    const i = group?.findIndex((item) => item.id === id);
-    if (i >= 0) {
-      group.splice(i, 1);
-      if (isRoute('lists', type, id)) {
-        const next = group[Math.min(group.length - 1, i)]?.id;
-        setRoute(next ? `lists/${type}/${next}` : undefined);
-      }
-    }
-  },
-  SetErrors(errors: { [id: number]: string }) {
-    store.listErrors = errors;
-  },
-});
+import { store } from './store';
+import { editList, isRoute, setRoute, updateRoute } from './util';
 
 createApp(App).mount(document.body);
+
+loadData();
+updateRoute();
+if (!isRoute('lists')) {
+  setRoute();
+}
+
+handleMessages({
+  UpdateLists: loadData,
+  CheckAction: checkAction,
+});
+
+async function loadData() {
+  store.lists = await sendMessage<ListGroups>('GetLists');
+  store.ruleErrors =
+    await sendMessage<Record<number, Record<number, string>>>('GetErrors');
+  checkAction();
+}
+
+const actionHandlers: Record<string, (payload: any) => void> = {
+  SubscribeUrl(url: string) {
+    editList({
+      subscribeUrl: url,
+      isSubscribed: true,
+    });
+  },
+  OpenList(id: number) {
+    window.location.hash = `#lists/${id}`;
+  },
+};
+
+async function checkAction() {
+  const action = await sendMessage<{ name: string; payload: any } | null>(
+    'GetAction',
+  );
+  if (action) {
+    const handler = actionHandlers[action.name];
+    handler?.(action.payload);
+  }
+}
