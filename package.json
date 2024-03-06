@@ -8,7 +8,10 @@
   "type": "module",
   "scripts": {
     "prepare": "husky install",
-    "lint": "vue-tsc && eslint --ext .ts,.vue .",
+    "lint:ts": "vue-tsc",
+    "lint:js": "eslint --ext .ts,.vue .",
+    "lint": "run-s lint:ts lint:js",
+    "format": "prettier -w src test",
     "dev": "gulp copyAssets && NODE_ENV=development vite build --watch",
     "build": "gulp clean && vite build && gulp copyAssets",
     "test": "jest test"
@@ -38,6 +41,7 @@
     "husky": "^9.0.11",
     "jimp": "^0.22.12",
     "js-yaml": "^4.1.0",
+    "lint-staged": "^15.2.2",
     "postcss-nesting": "^12.0.4",
     "unplugin-icons": "^0.18.5",
     "vite": "^5.1.4"
@@ -51,5 +55,14 @@
     "vue": "^3.4.21",
     "vueleton": "^2.0.2",
     "webextension-polyfill": "^0.10.0"
+  },
+  "lint-staged": {
+    "*.{ts,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.html": [
+      "prettier --write"
+    ]
   }
 }
