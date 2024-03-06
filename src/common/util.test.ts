@@ -1,4 +1,5 @@
-import { reorderList } from '@/common/util';
+import { describe, expect, test } from 'vitest';
+import { reorderList } from './util';
 
 describe('reorderList', () => {
   test('noop if param invalid', () => {
