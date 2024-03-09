@@ -2,7 +2,7 @@
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/cblonkdlnemhdeefhmaoiijjaedcphbf.svg)](https://chrome.google.com/webstore/detail/request-x/cblonkdlnemhdeefhmaoiijjaedcphbf)
 
-![Request X](https://user-images.githubusercontent.com/3139113/47605468-5e024c00-da39-11e8-9762-2ba6c4a4f7cc.png)
+![Request X](./src/resources/x.png)
 
 This is a web extension to block or redirect undesired requests.
 

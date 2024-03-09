@@ -17,7 +17,7 @@ function copyFiles() {
 async function createIcons() {
   const dist = `dist/public/images`;
   await mkdir(dist, { recursive: true });
-  const icon = await Jimp.read('src/resources/wall.png');
+  const icon = await Jimp.read('src/resources/x.png');
   return Promise.all([
     16, 19, 38, 48, 128,
   ].map(size => icon.clone().resize(size, size).write(`${dist}/icon_${size}.png`)));
