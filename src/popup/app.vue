@@ -23,7 +23,7 @@
             `${SECTION_TITLE_MAP[group]} (${lists.filter((item) => item.enabled).length})`
           "
         ></div>
-        <ul>
+        <div>
           <ListItem
             v-for="(item, itemIndex) in lists"
             :key="itemIndex"
@@ -38,7 +38,7 @@
               </div>
             </template>
           </ListItem>
-        </ul>
+        </div>
       </div>
     </div>
   </div>

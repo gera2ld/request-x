@@ -8,7 +8,7 @@
     </div>
     <div v-else-if="!lists?.length" class="list-section-empty">Empty</div>
     <div v-else-if="!visible.count" class="list-section-empty">Not found</div>
-    <ul v-else>
+    <div v-else>
       <ListItem
         v-for="(item, itemIndex) in lists"
         :key="itemIndex"
@@ -33,7 +33,7 @@
         @dblclick="onEdit(item)"
         @toggle.stop="onToggle(item)"
       />
-    </ul>
+    </div>
   </section>
 </template>
 

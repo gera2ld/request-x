@@ -34,9 +34,9 @@ export interface CookieListData extends ListData {
   rules: CookieData[];
 }
 
-export interface HttpHeaderItem {
+export interface KeyValueItem {
   name: string;
-  value?: string;
+  value: string;
 }
 
 export interface RuleDataBase {
@@ -45,12 +45,26 @@ export interface RuleDataBase {
 
 export interface RequestData extends RuleDataBase {
   methods: chrome.declarativeNetRequest.RequestMethod[];
-  type: 'block' | 'redirect' | 'replace' | 'headers';
+  type: 'block' | 'redirect' | 'transform' | 'replace' | 'headers';
   url: string;
   target: string;
+
+  // replace
   contentType?: string;
-  requestHeaders?: HttpHeaderItem[];
-  responseHeaders?: HttpHeaderItem[];
+
+  // headers
+  requestHeaders?: KeyValueItem[];
+  responseHeaders?: KeyValueItem[];
+
+  // transform
+  transform?: {
+    host?: string;
+    port?: string;
+    username?: string;
+    password?: string;
+    path?: string;
+    query?: KeyValueItem[];
+  };
 }
 
 export interface CookieData extends RuleDataBase {

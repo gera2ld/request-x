@@ -16,7 +16,7 @@
         A
         <a
           target="_blank"
-          href="https://developer.chrome.com/extensions/match_patterns"
+          href="https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Match_patterns"
           >match pattern</a
         >
         or a RegExp (e.g. <code>/^https:/</code>).

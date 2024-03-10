@@ -38,19 +38,19 @@
       />
       <div class="form-hint">
         <p>One of the following:</p>
-        <ul class="list-disc pl-4">
+        <ul>
           <li>
             a
             <a
               target="_blank"
-              href="https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest#property-RuleCondition-urlFilter"
+              href="https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/RuleCondition#urlfilter"
             >
               URL filter
             </a>
           </li>
           <li>
             a regular expression, e.g. <code>/^https://www\./</code>, note that
-            <code>/</code> does not have to be escaped.
+            <code>/</code> does not have to be escaped
           </li>
         </ul>
       </div>
@@ -59,34 +59,35 @@
       <select v-model="input.type" :disabled="!editable">
         <option value="block">Block</option>
         <option value="redirect">Redirect</option>
+        <option value="transform">Transform</option>
         <option value="replace">Replace</option>
         <option value="headers">Headers</option>
       </select>
       <div class="form-hint">Action type</div>
     </div>
-    <template v-if="input.type !== 'headers'">
-      <div
-        :class="{ error: errors.target }"
-        v-if="input.type === 'redirect' || input.type === 'replace'"
-      >
-        <textarea
-          :value="noTarget ? '' : input.target"
-          @input="
-            !noTarget &&
-              (input.target = ($event.target as HTMLInputElement).value)
-          "
-          :placeholder="noTarget ? 'No target' : 'Set target here'"
-          :readonly="!editable"
-          :disabled="noTarget"
-        />
-        <div class="form-hint">
+    <div
+      :class="{ error: errors.target }"
+      v-if="input.type === 'redirect' || input.type === 'replace'"
+    >
+      <textarea
+        :value="noTarget ? '' : input.target"
+        @input="
+          !noTarget &&
+            (input.target = ($event.target as HTMLInputElement).value)
+        "
+        :placeholder="noTarget ? 'No target' : 'Set target here'"
+        :readonly="!editable"
+        :disabled="noTarget"
+      />
+      <div class="form-hint">
+        <template v-if="input.type === 'redirect'">
           <p>If the original URL is matched by</p>
-          <ul class="list-disc pl-4" v-if="input.type === 'redirect'">
+          <ul>
             <li>
               a
               <a
                 target="_blank"
-                href="https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest#property-RuleCondition-urlFilter"
+                href="https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/RuleCondition#urlfilter"
               >
                 URL filter</a
               >, it will be redirected to the target.
@@ -96,18 +97,73 @@
               target.
             </li>
           </ul>
-          <p v-else-if="input.type === 'replace'">
-            Any text content is allowed and will replace the response content by
-            redirecting it to a dataURL.
-          </p>
+        </template>
+        <p v-else-if="input.type === 'replace'">
+          Any text content is allowed and will replace the response content by
+          redirecting it to a dataURL.
+        </p>
+      </div>
+    </div>
+    <div v-if="input.type === 'replace'">
+      <input type="text" v-model="input.contentType" />
+      <div class="form-hint">Content type</div>
+    </div>
+    <template v-if="input.type === 'transform'">
+      <div>
+        <textarea
+          type="text"
+          v-model="input.transformQuery"
+          placeholder="Modify query string"
+          rows="3"
+          :readonly="!editable"
+        ></textarea>
+        <div class="form-hint">
+          <p>Either change the entire query string:</p>
+          <ul>
+            <li>Set to <code>!</code> to remove it</li>
+            <li>
+              Prefix with <code>?</code> to replace it, e.g.
+              <code>?new_query_string</code>
+            </li>
+          </ul>
+          <p>Or modify the query string by keys, each in a line:</p>
+          <ul>
+            <li>
+              Prefix with <code>!</code> to remove a key, e.g.
+              <code>!key_to_remove</code>
+            </li>
+            <li>
+              To add or replace a key, e.g. <code>some_key: some_value</code>
+            </li>
+          </ul>
         </div>
       </div>
-      <div v-if="input.type === 'replace'">
-        <input type="text" v-model="input.contentType" />
-        <div class="form-hint">Content type</div>
+      <div class="pt-1">Query String</div>
+      <div>
+        <textarea
+          type="text"
+          v-model="input.transformUrl"
+          placeholder="Transform URL"
+          rows="3"
+          :readonly="!editable"
+        ></textarea>
+        <div class="form-hint">
+          <p>
+            <a
+              target="_blank"
+              href="https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/URLTransform"
+              >Transform URL parts</a
+            >
+            optionally, with each in a line:
+          </p>
+          <ul>
+            <li><code>host: www.example.com</code></li>
+            <li><code>path: /new/path</code></li>
+          </ul>
+        </div>
       </div>
     </template>
-    <template v-else>
+    <template v-if="input.type === 'headers'">
       <div>
         <textarea
           type="text"
@@ -130,11 +186,18 @@
       <div class="pt-1">Response headers</div>
       <div>
         <div class="form-hint">
-          Modify headers, each in a line, prefix with
-          <code>!</code> to remove, e.g.<br />
-          <code>x-powered-by: request-x</code>,
-          <code>authorization: token always-add-my-token</code>,
-          <code>!x-to-remove</code>.
+          <p>Modify headers, each in a line:</p>
+          <ul>
+            <li>
+              Prefix with <code>!</code> to remove it, e.g.
+              <code>!x-to-remove</code>
+            </li>
+            <li>
+              Add or replace a header, e.g.
+              <code>x-powered-by: request-x</code>,
+              <code>authorization: token always-add-my-token</code>
+            </li>
+          </ul>
         </div>
       </div>
     </template>
@@ -164,7 +227,7 @@
 
 <script lang="ts" setup>
 import Toggle from '@/common/components/toggle.vue';
-import type { HttpHeaderItem, RequestData } from '@/types';
+import type { KeyValueItem, RequestData } from '@/types';
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import IconCheck from '~icons/mdi/check';
 import IconError from '~icons/mdi/error';
@@ -173,6 +236,7 @@ import { currentList, store } from '../store';
 import { focusInput } from '../util';
 import RuleItemView from './rule-item-view.vue';
 import { loadRegExp } from '@/common/util';
+import { URL_TRANSFORM_KEYS } from '@/common/constants';
 
 const props = defineProps<{
   rule: RequestData;
@@ -199,6 +263,8 @@ const input = reactive<{
   contentType: string;
   reqHeaders?: string;
   resHeaders?: string;
+  transformUrl?: string;
+  transformQuery?: string;
 }>({
   methods: new Set(),
   type: 'block',
@@ -219,15 +285,25 @@ const ruleError = computed(
 
 const badges = computed(() => {
   const { rule } = props;
-  return [
-    loadRegExp(rule.url) ? 'regex' : 'url_filter',
-    ...(rule.type === 'headers'
-      ? [
-          rule.requestHeaders?.length ? 'req_headers' : '',
-          rule.responseHeaders?.length ? 'res_headers' : '',
-        ].filter(Boolean)
-      : [rule.type]),
-  ];
+  const result = [loadRegExp(rule.url) ? 'regex' : 'url_filter'];
+  switch (rule.type) {
+    case 'headers': {
+      if (rule.requestHeaders?.length) result.push('req_headers');
+      if (rule.responseHeaders?.length) result.push('res_headers');
+      break;
+    }
+    case 'transform': {
+      const { transform } = rule;
+      if (
+        transform &&
+        (URL_TRANSFORM_KEYS.some((key) => transform[key] != null) ||
+          transform.query?.length)
+      )
+        result.push('url_transform');
+      break;
+    }
+  }
+  return result;
 });
 
 const reset = () => {
@@ -239,8 +315,15 @@ const reset = () => {
     type: rule.type || 'block',
     contentType: rule.contentType,
     target: rule.target,
-    reqHeaders: stringifyHeaders(rule.requestHeaders),
-    resHeaders: stringifyHeaders(rule.responseHeaders),
+    reqHeaders: stringifyKeyValues(rule.requestHeaders),
+    resHeaders: stringifyKeyValues(rule.responseHeaders),
+    transformQuery: stringifyKeyValues(rule.transform?.query),
+    transformUrl: stringifyKeyValues(
+      URL_TRANSFORM_KEYS.flatMap((key) => {
+        const value = rule.transform?.[key as keyof RequestData['transform']];
+        return value == null ? [] : { name: key, value };
+      }),
+    ),
   });
   nextTick(() => {
     if (props.editable) {
@@ -263,8 +346,22 @@ const onSubmit = () => {
     url: input.url || '',
     target: input.target || '',
     contentType: input.contentType,
-    requestHeaders: parseHeaders(input.reqHeaders ?? ''),
-    responseHeaders: parseHeaders(input.resHeaders ?? ''),
+    ...(input.type === 'headers' && {
+      requestHeaders: parseKeyValues(input.reqHeaders ?? ''),
+      responseHeaders: parseKeyValues(input.resHeaders ?? ''),
+    }),
+    ...(input.type === 'transform' && {
+      transform: {
+        query: parseKeyValues(input.transformQuery ?? ''),
+        ...Object.fromEntries(
+          parseKeyValues(input.transformUrl ?? '')
+            .filter(({ name }) =>
+              (URL_TRANSFORM_KEYS as readonly string[]).includes(name),
+            )
+            .map(({ name, value }) => [name, value]),
+        ),
+      },
+    }),
   };
   emit('submit', {
     rule,
@@ -278,14 +375,12 @@ const onSelect = (e: any) => {
 watch(() => props.showDetail, reset);
 onMounted(reset);
 
-function stringifyHeaders(headers?: HttpHeaderItem[]) {
-  return (
-    headers?.map(({ name, value }) => `${name}: ${value}`).join('\n') || ''
-  );
+function stringifyKeyValues(items?: KeyValueItem[]) {
+  return items?.map(({ name, value }) => `${name}: ${value}`).join('\n') || '';
 }
 
-function parseHeaders(headers: string) {
-  return headers
+function parseKeyValues(content: string): KeyValueItem[] {
+  return content
     .split('\n')
     .filter(Boolean)
     .map((line: string) => {

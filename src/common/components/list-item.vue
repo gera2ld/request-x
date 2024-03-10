@@ -1,5 +1,5 @@
 <template>
-  <li class="list-item" :title="name">
+  <div class="list-item" :title="name">
     <Toggle :active="item.enabled" @toggle="emit('toggle', $event)" />
     <span
       class="mx-1 flex-1 truncate"
@@ -23,7 +23,7 @@
         <IconError />
       </div>
     </slot>
-  </li>
+  </div>
 </template>
 
 <script lang="ts" setup>

@@ -64,6 +64,10 @@ textarea {
   }
 }
 
+ul {
+  @apply list-disc pl-6;
+}
+
 .subtle {
   @apply text-zinc-400 dark:text-zinc-500;
 }

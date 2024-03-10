@@ -33,7 +33,9 @@
         @select="onSelToggle(index, $event)"
         @dblclick="onEdit(index)"
         class="rule-item"
-        :class="{ active: index === ruleSelection.active }"
+        :class="{
+          active: index === ruleSelection.active || index === ruleState.editing,
+        }"
       />
       <Component
         :is="RuleItem"

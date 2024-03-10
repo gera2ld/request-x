@@ -1,3 +1,4 @@
+import { URL_TRANSFORM_KEYS } from '@/common/constants';
 import {
   fetchListData,
   normalizeCookieRule,
@@ -38,6 +39,7 @@ const requestRuleTypeMap: Record<
 > = {
   block: chrome.declarativeNetRequest.RuleActionType.BLOCK,
   redirect: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
+  transform: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
   replace: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
   headers: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
 };
@@ -170,41 +172,58 @@ function buildListRules(list: RequestListData, base = MAX_RULES_PER_LIST) {
         rule.condition.urlFilter = item.url;
       }
       if (item.methods.length) rule.condition.requestMethods = item.methods;
-      if (item.type === 'redirect') {
-        rule.action.redirect = {
-          [re ? 'regexSubstitution' : 'url']: item.target,
-        };
-      } else if (item.type === 'replace') {
-        rule.action.redirect = {
-          url: `data:${item.contentType || ''};base64,${b64encodeText(
-            item.target,
-          )}`,
-        };
-      } else if (item.type === 'headers') {
-        const validKeys = (
-          ['requestHeaders', 'responseHeaders'] as const
-        ).filter((key) => {
-          const headerItems = item[key];
-          if (headerItems?.length) {
-            rule.action[key] = headerItems.map((headerItem) => {
-              let { name, value } = headerItem;
+      switch (item.type) {
+        case 'redirect': {
+          rule.action.redirect = {
+            [re ? 'regexSubstitution' : 'url']: item.target,
+          };
+          break;
+        }
+        case 'transform': {
+          rule.action.redirect = {
+            transform: buildUrlTransform(item.transform),
+          };
+          break;
+        }
+        case 'replace': {
+          rule.action.redirect = {
+            url: `data:${item.contentType || ''};base64,${b64encodeText(
+              item.target,
+            )}`,
+          };
+          break;
+        }
+        case 'headers': {
+          const validKeys = (
+            ['requestHeaders', 'responseHeaders'] as const
+          ).filter((key) => {
+            const headerItems = item[key];
+            const updates: chrome.declarativeNetRequest.ModifyHeaderInfo[] = [];
+            headerItems?.forEach((headerItem) => {
+              const { name, value } = headerItem;
+              if (name[0] === '#') return;
               if (name[0] === '!') {
-                name = name.slice(1);
-                value = undefined;
+                updates.push({
+                  header: name.slice(1),
+                  operation:
+                    chrome.declarativeNetRequest.HeaderOperation.REMOVE,
+                });
+              } else {
+                updates.push({
+                  header: name,
+                  operation: chrome.declarativeNetRequest.HeaderOperation.SET,
+                  value,
+                });
               }
-              return {
-                header: name,
-                operation:
-                  value == null
-                    ? chrome.declarativeNetRequest.HeaderOperation.REMOVE
-                    : chrome.declarativeNetRequest.HeaderOperation.SET,
-                value,
-              };
             });
-            return true;
-          }
-        });
-        if (!validKeys.length) return [];
+            if (updates.length) {
+              rule.action[key] = updates;
+              return true;
+            }
+          });
+          if (!validKeys.length) return [];
+          break;
+        }
       }
       return rule;
     },
@@ -323,4 +342,47 @@ export function fetchList(list: ListData | undefined) {
 
 export function broadcastUpdates() {
   sendMessage('UpdateLists');
+}
+
+function buildUrlTransform(transform: RequestData['transform']) {
+  if (!transform) return;
+  const urlTransform: chrome.declarativeNetRequest.URLTransform = {};
+  const query = transform.query;
+  if (query) {
+    const firstName = query?.[0]?.name;
+    if (firstName?.[0] === '?') {
+      urlTransform.query = firstName;
+    } else if (firstName === '!') {
+      urlTransform.query = '';
+    } else {
+      const toSet: chrome.declarativeNetRequest.QueryKeyValue[] = [];
+      const toRemove: string[] = [];
+      query?.forEach((transformItem) => {
+        const { name, value } = transformItem;
+        if (name[0] === '#') return;
+        if (name[0] === '!') {
+          toRemove.push(name.slice(1));
+        } else {
+          toSet.push({ key: name, value: value || '' });
+        }
+      });
+      if (toSet.length) {
+        urlTransform.queryTransform = {
+          ...urlTransform,
+          addOrReplaceParams: toSet,
+        };
+      }
+      if (toRemove.length) {
+        urlTransform.queryTransform = {
+          ...urlTransform,
+          removeParams: toRemove,
+        };
+      }
+    }
+  }
+  URL_TRANSFORM_KEYS.forEach((key) => {
+    const value = transform[key];
+    if (value) urlTransform[key] = value;
+  });
+  return urlTransform;
 }

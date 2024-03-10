@@ -1,9 +1,4 @@
-import type {
-  CookieData,
-  HttpHeaderItem,
-  ListData,
-  RequestData,
-} from '@/types';
+import type { CookieData, KeyValueItem, ListData, RequestData } from '@/types';
 import { map } from 'lodash-es';
 
 export function getName(list: Partial<ListData>) {
@@ -38,8 +33,8 @@ export function normalizeRequestRule(rule: any): RequestData[] {
       }
       result.push(normalized);
     }
-    const requestHeaders = map<HttpHeaderItem>(rule.requestHeaders);
-    const responseHeaders = map<HttpHeaderItem>(rule.responseHeaders);
+    const requestHeaders = map<KeyValueItem>(rule.requestHeaders);
+    const responseHeaders = map<KeyValueItem>(rule.responseHeaders);
     if (requestHeaders.length || responseHeaders.length) {
       result.push({
         ...common,
@@ -58,6 +53,7 @@ export function normalizeRequestRule(rule: any): RequestData[] {
       methods: map(rule, 'methods').filter(Boolean),
       requestHeaders: map(rule, 'requestHeaders').filter(Boolean),
       responseHeaders: map(rule, 'responseHeaders').filter(Boolean),
+      transform: rule.transform,
     });
   }
   return result;
