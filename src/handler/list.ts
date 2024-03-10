@@ -3,7 +3,7 @@ import {
   normalizeCookieRule,
   normalizeRequestRule,
 } from '@/common/list';
-import { b64encodeText, sendMessage, loadRegExp } from '@/common/util';
+import { b64encodeText, loadRegExp, sendMessage } from '@/common/util';
 import type {
   ListData,
   ListGroups,

@@ -67,69 +67,13 @@ export interface CookieData extends RuleDataBase {
 
 export type RuleData = RequestData | CookieData;
 
-export interface RequestDetails {
-  tabId: number;
-  method: string;
-  url: string;
-  requestId: string;
-  requestHeaders?: HttpHeaderItem[];
-  responseHeaders?: HttpHeaderItem[];
-}
-
 export type SameSiteStatus = 'no_restriction' | 'lax' | 'strict';
-
-export interface CookieDetails {
-  cause: string;
-  cookie: {
-    domain: string;
-    expirationDate?: number;
-    hostOnly: boolean;
-    httpOnly: boolean;
-    name: string;
-    path: string;
-    sameSite: SameSiteStatus;
-    secure: boolean;
-    session: boolean;
-    value: string;
-  };
-  removed: boolean;
-}
-
-export type RequestMatchResult =
-  import('webextension-polyfill').WebRequest.BlockingResponse & {
-    payload?: {
-      requestHeaders?: {
-        added?: HttpHeaderItem[];
-        removed?: HttpHeaderItem[];
-      };
-      responseHeaders?: {
-        added?: HttpHeaderItem[];
-        removed?: HttpHeaderItem[];
-      };
-    };
-  };
 
 export interface CookieMatchResult {
   sameSite?: SameSiteStatus;
   httpOnly?: boolean;
   secure?: boolean;
   expirationDate?: number;
-}
-
-export interface InterceptionData {
-  requestId: string;
-  method: string;
-  url: string;
-  result?: RequestMatchResult;
-}
-
-export interface SubscriptionData {
-  url: string;
-}
-
-export interface PortMessage<T> {
-  type: string;
-  data: T;
 }
 
 export interface ListsDumpData {
