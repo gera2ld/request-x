@@ -41,6 +41,18 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
+// Show Release Notes on update to v3
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === chrome.runtime.OnInstalledReason.UPDATE) {
+    const major = details.previousVersion?.split('.')[0];
+    if (major && +major < 3) {
+      chrome.tabs.create({
+        url: 'https://github.com/gera2ld/request-x/releases/tag/v3.0.0',
+      });
+    }
+  }
+});
+
 const cookieActions = {
   async update() {
     const lists = await dataLoaded;
