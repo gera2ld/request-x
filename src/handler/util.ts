@@ -1,5 +1,3 @@
-import type { ConfigStorage } from '@/types';
-
 export async function getExactData<T>(key: string): Promise<T> {
   const res = await chrome.storage.local.get(key);
   return res[key];
@@ -71,8 +69,3 @@ export function getUrl(cookie: {
   ].join('');
   return url;
 }
-
-// export const globalStorage = new ObjectStorage<GlobalStorage>('global', {});
-export const configPromise = ObjectStorage.load<ConfigStorage>('config', {
-  badge: '',
-});

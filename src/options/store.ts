@@ -1,10 +1,4 @@
-import type {
-  ConfigStorage,
-  FeatureToggles,
-  ListData,
-  ListGroups,
-  RuleData,
-} from '@/types';
+import type { FeatureToggles, ListData, ListGroups, RuleData } from '@/types';
 import { computed, reactive } from 'vue';
 
 export const listTypes = ['request', 'cookie'] as const;
@@ -18,7 +12,6 @@ export const store = reactive<{
       } & Partial<ListData>)
     | undefined;
   route: string[];
-  config: ConfigStorage | undefined;
   features: FeatureToggles;
   activeArea: 'lists' | 'rules';
 }>({
@@ -29,7 +22,6 @@ export const store = reactive<{
   ruleErrors: {},
   editList: undefined,
   route: [],
-  config: undefined,
   features: {},
   activeArea: 'rules',
 });

@@ -1,9 +1,3 @@
-export interface GlobalStorage {}
-
-export interface ConfigStorage {
-  badge: '' | 'page' | 'tab' | 'total';
-}
-
 export interface FeatureToggles {}
 
 export interface LogItem {
