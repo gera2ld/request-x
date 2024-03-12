@@ -1,30 +1,3 @@
-export async function sendMessage<T = void>(cmd: string, payload?: any) {
-  const res = (await chrome.runtime.sendMessage({ cmd, payload })) as {
-    data: T;
-    error?: string;
-  };
-  if (import.meta.env.DEV) console.log('message', { cmd, payload }, res);
-  if (res.error) throw new Error(res.error);
-  return res.data;
-}
-
-export function handleMessages(
-  handlers: Record<string, (payload: any) => any>,
-) {
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    const cmd = message?.cmd;
-    const handle = handlers[cmd];
-    if (!handle) return;
-    if (import.meta.env.DEV) console.log('message', message);
-    const result = handle(message.payload) ?? null;
-    Promise.resolve(result).then(
-      (data) => sendResponse({ data }),
-      (error) => sendResponse({ error: `${error || 'Unknown error'}` }),
-    );
-    return true;
-  });
-}
-
 export function reorderList<T = any>(
   array: T[],
   selection: number[],

@@ -38,7 +38,7 @@ export interface RuleDataBase {
 }
 
 export interface RequestData extends RuleDataBase {
-  methods: chrome.declarativeNetRequest.RequestMethod[];
+  methods: string[];
   type: 'block' | 'redirect' | 'transform' | 'replace' | 'headers';
   url: string;
   target: string;

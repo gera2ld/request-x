@@ -1,12 +1,8 @@
-import {
-  handleMessages,
-  reorderList,
-  sendMessage,
-  textTester,
-  urlTester,
-} from '@/common/util';
+import { handleMessages, sendMessage } from '@/common';
+import { reorderList, textTester, urlTester } from '@/common/util';
 import { CookieData, CookieMatchResult, ListData } from '@/types';
 import { debounce, pick } from 'lodash-es';
+import browser from 'webextension-polyfill';
 import {
   broadcastUpdates,
   dataLoaded,
@@ -24,29 +20,29 @@ const actions: Array<{
   payload: any;
 }> = [];
 
-chrome.cookies.onChanged.addListener(handleCookieChange);
-chrome.tabs.onCreated.addListener((tab) => {
+browser.cookies.onChanged.addListener(handleCookieChange);
+browser.tabs.onCreated.addListener((tab) => {
   if (!tab.id) return;
   const url = getSubsribeUrl(tab.url || tab.pendingUrl);
   if (url) {
     initiateSubscription(url);
-    chrome.tabs.remove(tab.id);
+    browser.tabs.remove(tab.id);
   }
 });
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   const url = getSubsribeUrl(changeInfo.url);
   if (url) {
     initiateSubscription(url);
-    chrome.tabs.goBack(tabId);
+    browser.tabs.goBack(tabId);
   }
 });
 
 // Show Release Notes on update to v3
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === chrome.runtime.OnInstalledReason.UPDATE) {
+browser.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'update') {
     const major = details.previousVersion?.split('.')[0];
     if (major && +major < 3) {
-      chrome.tabs.create({
+      browser.tabs.create({
         url: 'https://github.com/gera2ld/request-x/releases/tag/v3.0.0',
       });
     }
@@ -138,7 +134,7 @@ main().catch((err) => {
 });
 
 let processing = false;
-const updates = new Map<string, chrome.cookies.SetDetails>();
+const updates = new Map<string, browser.Cookies.SetDetailsType>();
 const updateCookiesLater = debounce(updateCookies, 100);
 
 async function main() {
@@ -146,7 +142,9 @@ async function main() {
   await reloadRules(lists.request);
 }
 
-function handleCookieChange(changeInfo: chrome.cookies.CookieChangeInfo) {
+function handleCookieChange(
+  changeInfo: browser.Cookies.OnChangedChangeInfoType,
+) {
   // if (['expired', 'evicted'].includes(changeInfo.cause)) return;
   if (changeInfo.cause !== 'explicit') return;
   if (processing) return;
@@ -175,13 +173,13 @@ function handleCookieChange(changeInfo: chrome.cookies.CookieChangeInfo) {
   if (update) {
     const { cookie } = changeInfo;
     const hasUpdate = Object.entries(update).some(([key, value]) => {
-      return cookie[key as keyof chrome.cookies.Cookie] !== value;
+      return cookie[key as keyof browser.Cookies.Cookie] !== value;
     });
     if (!hasUpdate) {
       console.info(`[cookie] no update: ${cookie.name} ${getUrl(cookie)}`);
       return;
     }
-    const details: chrome.cookies.SetDetails = {
+    const details: browser.Cookies.SetDetailsType = {
       url: getUrl(pick(cookie, ['domain', 'path', 'secure'])),
       domain: cookie.hostOnly ? undefined : cookie.domain,
       expirationDate: cookie.session ? undefined : cookie.expirationDate,
@@ -213,7 +211,7 @@ async function updateCookies() {
   for (const item of items) {
     console.info(`[cookie] set: ${item.name} ${item.url}`, item);
     try {
-      await chrome.cookies.set(item);
+      await browser.cookies.set(item);
     } catch (err) {
       console.error(err);
     }
@@ -230,7 +228,7 @@ function initiateSubscription(url: string) {
 
 async function createAction(action: { name: string; payload: any }) {
   actions.push(action);
-  await chrome.runtime.openOptionsPage();
+  await browser.runtime.openOptionsPage();
   sendMessage('CheckAction');
 }
 

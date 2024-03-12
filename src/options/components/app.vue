@@ -38,6 +38,7 @@
 </template>
 
 <script lang="ts" setup>
+import browser from 'webextension-polyfill';
 import IconSearch from '~icons/mdi/search';
 import { currentList, listEditable, ruleState } from '../store';
 import MenuBar from './menu-bar.vue';
@@ -45,5 +46,5 @@ import RuleNav from './rule-nav.vue';
 import RuleBody from './rule-body.vue';
 import ModalList from './modal-list.vue';
 
-const { version } = chrome.runtime.getManifest();
+const { version } = browser.runtime.getManifest();
 </script>

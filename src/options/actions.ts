@@ -1,6 +1,7 @@
+import { sendMessage } from '@/common';
 import { keyboardService } from '@/common/keyboard';
 import { getName, normalizeRequestRule } from '@/common/list';
-import { reorderList, sendMessage } from '@/common/util';
+import { reorderList } from '@/common/util';
 import type { ListData, ListsDumpData, RuleData, RulesDumpData } from '@/types';
 import { debounce, pick } from 'lodash-es';
 import { toRaw, watch } from 'vue';

@@ -1,16 +1,18 @@
+import browser from 'webextension-polyfill';
+
 export async function getExactData<T>(key: string): Promise<T> {
-  const res = await chrome.storage.local.get(key);
+  const res = await browser.storage.local.get(key);
   return res[key];
 }
 
 export async function dumpExactData(key: string, value: any) {
-  await chrome.storage.local.set({
+  await browser.storage.local.set({
     [key]: value,
   });
 }
 
 export async function getActiveTab() {
-  const [tab] = await chrome.tabs.query({
+  const [tab] = await browser.tabs.query({
     active: true,
     lastFocusedWindow: true, // also gets incognito windows
   });

@@ -45,18 +45,19 @@
 </template>
 
 <script lang="ts" setup>
+import browser from 'webextension-polyfill';
 import IconOpen from '~icons/mdi/open-in-new';
 import { SECTION_TITLE_MAP } from '@/common/constants';
-import { sendMessage } from '@/common/util';
+import { sendMessage } from '@/common';
 import type { ListData } from '@/types';
 import { mapValues, pick } from 'lodash-es';
 import { computed, ref } from 'vue';
 import { store, trackListToggle } from './store';
 import ListItem from '@/common/components/list-item.vue';
 
-const { version } = chrome.runtime.getManifest();
+const { version } = browser.runtime.getManifest();
 const openDashboard = () => {
-  chrome.runtime.openOptionsPage();
+  browser.runtime.openOptionsPage();
 };
 
 const filter = ref('');

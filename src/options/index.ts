@@ -1,5 +1,5 @@
 import '@/common/style';
-import { handleMessages, sendMessage } from '@/common/util';
+import { handleMessages, sendMessage } from '@/common';
 import { ListGroups } from '@/types';
 import { createApp } from 'vue';
 import App from './components/app.vue';

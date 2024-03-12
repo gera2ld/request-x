@@ -1,10 +1,11 @@
+import { sendMessage } from '@/common';
 import { URL_TRANSFORM_KEYS } from '@/common/constants';
 import {
   fetchListData,
   normalizeCookieRule,
   normalizeRequestRule,
 } from '@/common/list';
-import { b64encodeText, loadRegExp, sendMessage } from '@/common/util';
+import { b64encodeText, loadRegExp } from '@/common/util';
 import type {
   ListData,
   ListGroups,
@@ -13,35 +14,21 @@ import type {
   RuleData,
 } from '@/types';
 import { flatMap, groupBy, isEqual, map, values } from 'lodash-es';
+import browser from 'webextension-polyfill';
 import { dumpExactData, getExactData } from './util';
 
 const LIST_PREFIX = 'list:';
 const KEY_LISTS = 'lists';
 const MAX_RULES_PER_LIST = 100;
-const resourceTypes = [
-  chrome.declarativeNetRequest.ResourceType.CSP_REPORT,
-  chrome.declarativeNetRequest.ResourceType.FONT,
-  chrome.declarativeNetRequest.ResourceType.IMAGE,
-  chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
-  chrome.declarativeNetRequest.ResourceType.MEDIA,
-  chrome.declarativeNetRequest.ResourceType.OBJECT,
-  chrome.declarativeNetRequest.ResourceType.OTHER,
-  chrome.declarativeNetRequest.ResourceType.PING,
-  chrome.declarativeNetRequest.ResourceType.SCRIPT,
-  chrome.declarativeNetRequest.ResourceType.STYLESHEET,
-  chrome.declarativeNetRequest.ResourceType.SUB_FRAME,
-  chrome.declarativeNetRequest.ResourceType.WEBSOCKET,
-  chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
-];
 const requestRuleTypeMap: Record<
   RequestData['type'],
-  chrome.declarativeNetRequest.RuleActionType
+  browser.DeclarativeNetRequest.RuleActionTypeEnum
 > = {
-  block: chrome.declarativeNetRequest.RuleActionType.BLOCK,
-  redirect: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
-  transform: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
-  replace: chrome.declarativeNetRequest.RuleActionType.REDIRECT,
-  headers: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
+  block: 'block',
+  redirect: 'redirect',
+  transform: 'redirect',
+  replace: 'redirect',
+  headers: 'modifyHeaders',
 };
 let lastId = -1;
 const ruleErrors: Record<number, Record<number, string>> = {};
@@ -67,7 +54,7 @@ export async function loadData() {
   let ids = await getExactData<number[]>(KEY_LISTS);
   const lists: ListGroups = { request: [], cookie: [] };
   if (Array.isArray(ids)) {
-    const allData = await chrome.storage.local.get(
+    const allData = await browser.storage.local.get(
       map(ids, (id) => `${LIST_PREFIX}${id}`),
     );
     const allLists = map(ids, (id) => allData[`${LIST_PREFIX}${id}`]).filter(
@@ -76,7 +63,7 @@ export async function loadData() {
     const groups = groupBy(allLists, 'type');
     Object.assign(lists, groups);
   } else {
-    const allData = await chrome.storage.local.get();
+    const allData = await browser.storage.local.get();
     const allLists = Object.keys(allData)
       .filter((key) => key.startsWith(LIST_PREFIX))
       .map((key) => allData[key]) as ListData[];
@@ -151,18 +138,16 @@ export async function saveLists(payload: Partial<ListData>[]) {
 }
 
 function buildListRules(list: RequestListData, base = MAX_RULES_PER_LIST) {
-  const rules: chrome.declarativeNetRequest.Rule[] = list.rules.flatMap(
+  const rules: browser.DeclarativeNetRequest.Rule[] = list.rules.flatMap(
     (item, i) => {
       const type = requestRuleTypeMap[item.type];
       if (!item.enabled) return [];
-      const rule: chrome.declarativeNetRequest.Rule = {
+      const rule: browser.DeclarativeNetRequest.Rule = {
         id: list.id * base + i + 1,
         action: {
           type,
         },
-        condition: {
-          resourceTypes,
-        },
+        condition: {},
       };
       // Do not support match patterns here as they may exceed the 2KB memory limit after conversion to RegExp
       const re = loadRegExp(item.url);
@@ -198,20 +183,20 @@ function buildListRules(list: RequestListData, base = MAX_RULES_PER_LIST) {
             ['requestHeaders', 'responseHeaders'] as const
           ).filter((key) => {
             const headerItems = item[key];
-            const updates: chrome.declarativeNetRequest.ModifyHeaderInfo[] = [];
+            const updates: browser.DeclarativeNetRequest.RuleActionRequestHeadersItemType[] =
+              [];
             headerItems?.forEach((headerItem) => {
               const { name, value } = headerItem;
               if (name[0] === '#') return;
               if (name[0] === '!') {
                 updates.push({
                   header: name.slice(1),
-                  operation:
-                    chrome.declarativeNetRequest.HeaderOperation.REMOVE,
+                  operation: 'remove',
                 });
               } else {
                 updates.push({
                   header: name,
-                  operation: chrome.declarativeNetRequest.HeaderOperation.SET,
+                  operation: 'set',
                   value,
                 });
               }
@@ -233,7 +218,7 @@ function buildListRules(list: RequestListData, base = MAX_RULES_PER_LIST) {
 
 export async function reloadRulesForList(
   list: RequestListData,
-  allRules: chrome.declarativeNetRequest.Rule[],
+  allRules: browser.DeclarativeNetRequest.Rule[],
 ) {
   const currentRules = allRules.filter(
     (rule) => Math.floor(rule.id / MAX_RULES_PER_LIST) === list.id,
@@ -242,8 +227,8 @@ export async function reloadRulesForList(
   const updates: Record<
     string,
     {
-      old?: chrome.declarativeNetRequest.Rule;
-      new?: chrome.declarativeNetRequest.Rule;
+      old?: browser.DeclarativeNetRequest.Rule;
+      new?: browser.DeclarativeNetRequest.Rule;
     }
   > = {};
   currentRules.forEach((rule) => {
@@ -263,7 +248,7 @@ export async function reloadRulesForList(
         'removeRules',
         toRemove.map((id) => updates[id].old),
       );
-    await chrome.declarativeNetRequest.updateSessionRules({
+    await browser.declarativeNetRequest.updateSessionRules({
       removeRuleIds: toRemove,
     });
   }
@@ -273,7 +258,7 @@ export async function reloadRulesForList(
     if (!update.new) continue;
     try {
       if (import.meta.env.DEV) console.log('updateRule', update);
-      await chrome.declarativeNetRequest.updateSessionRules({
+      await browser.declarativeNetRequest.updateSessionRules({
         addRules: [update.new],
         removeRuleIds: update.old ? [update.old.id] : [],
       });
@@ -292,13 +277,13 @@ export async function reloadRules(lists: RequestListData[]) {
     const id = +key;
     if (!listIds.has(id)) delete ruleErrors[id];
   });
-  const allRules = await chrome.declarativeNetRequest.getSessionRules();
+  const allRules = await browser.declarativeNetRequest.getSessionRules();
   const toRemove = allRules.filter(
     (rule) => !listIds.has(Math.floor(rule.id / MAX_RULES_PER_LIST)),
   );
   if (toRemove.length) {
     if (import.meta.env.DEV) console.log('removeRules', toRemove);
-    await chrome.declarativeNetRequest.updateSessionRules({
+    await browser.declarativeNetRequest.updateSessionRules({
       removeRuleIds: toRemove.map((rule) => rule.id),
     });
   }
@@ -346,7 +331,7 @@ export function broadcastUpdates() {
 
 function buildUrlTransform(transform: RequestData['transform']) {
   if (!transform) return;
-  const urlTransform: chrome.declarativeNetRequest.URLTransform = {};
+  const urlTransform: browser.DeclarativeNetRequest.URLTransform = {};
   const query = transform.query;
   if (query) {
     const firstName = query?.[0]?.name;
@@ -355,7 +340,8 @@ function buildUrlTransform(transform: RequestData['transform']) {
     } else if (firstName === '!') {
       urlTransform.query = '';
     } else {
-      const toSet: chrome.declarativeNetRequest.QueryKeyValue[] = [];
+      const toSet: browser.DeclarativeNetRequest.URLTransformQueryTransformAddOrReplaceParamsItemType[] =
+        [];
       const toRemove: string[] = [];
       query?.forEach((transformItem) => {
         const { name, value } = transformItem;

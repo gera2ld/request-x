@@ -342,7 +342,7 @@ const onSubmit = () => {
   const rule: RequestData = {
     enabled: props.rule.enabled ?? true,
     type: input.type,
-    methods: [...input.methods] as chrome.declarativeNetRequest.RequestMethod[],
+    methods: [...input.methods],
     url: input.url || '',
     target: input.target || '',
     contentType: input.contentType,
