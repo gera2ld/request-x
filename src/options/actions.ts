@@ -380,7 +380,11 @@ export const ruleActions = {
   },
   new() {
     const current = currentList.value;
-    if (!current || !listEditable.value) return;
+    if (!current) {
+      store.hintType = 'listRequired';
+      return;
+    }
+    if (!listEditable.value) return;
     ruleState.newRule = {
       enabled: true,
     };
@@ -513,6 +517,7 @@ watch(currentList, (list) => {
         (item) => item.id === list.id,
       )
     : -1;
+  if (list && store.hintType === 'listRequired') store.hintType = undefined;
 });
 watch(() => ruleState.filter, updateListLater);
 watch(currentList, (cur, prev) => {

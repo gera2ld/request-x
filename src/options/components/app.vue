@@ -16,18 +16,7 @@
     </header>
     <div class="flex flex-1 min-h-0">
       <RuleNav />
-      <RuleBody v-if="isRoute('lists')" class="flex-1 min-w-0 px-2" />
-      <div v-else class="subtle flex flex-1 items-center justify-center">
-        <ul class="list-disc leading-8 text-lg">
-          <li>Create or choose a list from side menu to get started</li>
-          <li>
-            Select rules for batch operations, also try
-            <kbd v-text="isMacintosh ? 'Cmd' : 'Ctrl'"></kbd> /
-            <kbd>Shift</kbd> + click
-          </li>
-          <li>Double click or press <kbd>E</kbd> to edit a rule</li>
-        </ul>
-      </div>
+      <RuleBody class="flex-1 min-w-0 px-2" />
     </div>
     <footer class="footer">
       <div>
@@ -49,10 +38,8 @@
 </template>
 
 <script lang="ts" setup>
-import { isMacintosh } from '@/common/keyboard';
 import IconSearch from '~icons/mdi/search';
 import { currentList, listEditable, ruleState } from '../store';
-import { isRoute } from '../util';
 import MenuBar from './menu-bar.vue';
 import RuleNav from './rule-nav.vue';
 import RuleBody from './rule-body.vue';

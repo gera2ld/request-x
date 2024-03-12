@@ -66,7 +66,7 @@ const menus = computed(() => [
     label: 'List',
     items: [
       {
-        label: 'Create new list',
+        label: 'Create a new list',
         handler: listActions.new,
         shortcut: shortcutTextMap.new,
       },
@@ -111,7 +111,7 @@ const menus = computed(() => [
     label: 'Rule',
     items: [
       {
-        label: 'Add new rule',
+        label: 'Add a new rule',
         shortcut: shortcutTextMap.add,
         handler: ruleActions.new,
       },

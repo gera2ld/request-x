@@ -70,6 +70,7 @@
       </div>
     </footer>
   </div>
+  <RuleHint v-else />
 </template>
 
 <script lang="ts" setup>
@@ -83,6 +84,7 @@ import {
 } from '../store';
 import RequestItem from './request-item.vue';
 import CookieItem from './cookie-item.vue';
+import RuleHint from './rule-hint.vue';
 import { ruleActions } from '../actions';
 
 const ruleItemMap = {

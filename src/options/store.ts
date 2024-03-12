@@ -14,6 +14,7 @@ export const store = reactive<{
   route: string[];
   features: FeatureToggles;
   activeArea: 'lists' | 'rules';
+  hintType?: 'listRequired';
 }>({
   lists: {
     request: [],

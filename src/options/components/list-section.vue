@@ -6,7 +6,7 @@
     <div class="list-section-unsupported" v-if="unsupported">
       <slot name="unsupported"></slot>
     </div>
-    <div v-else-if="!lists?.length" class="list-section-empty">Empty</div>
+    <div v-else-if="!lists?.length" class="list-section-empty">None</div>
     <div v-else-if="!visible.count" class="list-section-empty">Not found</div>
     <div v-else>
       <ListItem
