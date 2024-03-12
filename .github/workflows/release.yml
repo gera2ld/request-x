@@ -9,13 +9,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '16'
-      - uses: pnpm/action-setup@v2.0.1
+          node-version: '20'
+      - uses: pnpm/action-setup@v3
         with:
-          version: 7
+          version: 8
       - name: Prepare
         run: |
           VERSION=`node -e 'console.log(require("./package.json").version)'`
