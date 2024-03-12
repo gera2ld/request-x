@@ -1,7 +1,8 @@
-import '@/common/style';
 import { handleMessages, sendMessage } from '@/common';
+import '@/common/style';
 import { ListGroups } from '@/types';
 import { createApp } from 'vue';
+import { listActions } from './actions';
 import App from './components/app.vue';
 import { store } from './store';
 import { editList, isRoute, setRoute, updateRoute } from './util';
@@ -33,9 +34,7 @@ const actionHandlers: Record<string, (payload: any) => void> = {
       isSubscribed: true,
     });
   },
-  OpenList(id: number) {
-    window.location.hash = `#lists/${id}`;
-  },
+  OpenList: listActions.open,
 };
 
 async function checkAction() {

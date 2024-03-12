@@ -141,7 +141,7 @@ const onSelToggle = (index: number, event: MouseEvent) => {
     listSelection.selection[props.index].selected[index]
   ) {
     const list = props.lists[index];
-    window.location.hash = `#lists/${list.id}`;
+    listActions.open(list.id);
   }
 };
 

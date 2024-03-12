@@ -37,6 +37,9 @@ export const listActions = {
       type: 'request',
     };
   },
+  open(id: number) {
+    window.location.hash = `#lists/${id}`;
+  },
   async import() {
     const blob = await loadFile();
     const text = await blob2Text(blob);

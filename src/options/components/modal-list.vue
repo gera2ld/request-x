@@ -117,9 +117,9 @@ const onListCancel = () => {
   store.editList = undefined;
 };
 
-const onListSave = () => {
+const onListSave = async () => {
   if (!canSubmit.value) return;
-  listActions.save([
+  const [list] = await listActions.save([
     store.editList?.isSubscribed
       ? ({
           ...subscribeData.value.data,
@@ -128,6 +128,8 @@ const onListSave = () => {
       : pick(store.editList, ['id', 'name', 'type']),
   ]);
   onListCancel();
+  // Open list after creation
+  if (!store.editList?.id) listActions.open(list.id);
 };
 
 const formatType = (type?: string) =>
