@@ -93,17 +93,7 @@ handleMessages({
       dumpLists(lists);
     }
   },
-  async FetchLists() {
-    const lists = await dataLoaded;
-    await Promise.all(
-      ([...lists.request, ...lists.cookie] as ListData[])
-        .filter((list) => list.subscribeUrl)
-        .map(async (list) => {
-          await fetchList(list);
-          broadcastUpdates();
-        }),
-    );
-  },
+  FetchLists: fetchLists,
   async FetchList(payload: { id: number }) {
     const lists = await dataLoaded;
     const list = ([...lists.request, ...lists.cookie] as ListData[]).find(
@@ -137,9 +127,30 @@ let processing = false;
 const updates = new Map<string, browser.Cookies.SetDetailsType>();
 const updateCookiesLater = debounce(updateCookies, 100);
 
+browser.alarms.create({
+  delayInMinutes: 1,
+  periodInMinutes: 120,
+});
+browser.alarms.onAlarm.addListener(() => {
+  console.info(new Date().toISOString(), 'Fetching lists...');
+  fetchLists();
+});
+
 async function main() {
   const lists = await dataLoaded;
   await reloadRules(lists.request);
+}
+
+async function fetchLists() {
+  const lists = await dataLoaded;
+  await Promise.all(
+    ([...lists.request, ...lists.cookie] as ListData[])
+      .filter((list) => list.subscribeUrl)
+      .map(async (list) => {
+        await fetchList(list);
+        broadcastUpdates();
+      }),
+  );
 }
 
 function handleCookieChange(
