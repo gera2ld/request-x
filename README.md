@@ -49,6 +49,6 @@ Here is an example: [Subscribe](https://gist.github.com/gera2ld/5730305dc9081ec9
 
 ## Screenshots
 
-<img width="313" src="https://user-images.githubusercontent.com/3139113/153006528-ba5162e8-e991-4b3e-869e-b7af81b8c15a.png">
+<img width="311" src="https://github.com/gera2ld/request-x/assets/3139113/9618558b-2223-4392-9248-7f5ff41bee5a">
 
-<img width="1080" src="https://user-images.githubusercontent.com/3139113/155350420-37db70c6-94d0-4d78-a48d-1e78f7247cb2.png">
+<img width="640" src="https://github.com/gera2ld/request-x/assets/3139113/1dcc185d-27d2-4a4c-8c83-9eb444980ff8">
