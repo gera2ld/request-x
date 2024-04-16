@@ -7,6 +7,10 @@ export function getName(list: Partial<ListData>) {
 
 export function normalizeRequestRule(rule: any): RequestData[] {
   const result: RequestData[] = [];
+  const requestHeaders = map<KeyValueItem>(rule.requestHeaders).filter(Boolean);
+  const responseHeaders = map<KeyValueItem>(rule.responseHeaders).filter(
+    Boolean,
+  );
   if (!rule.type) {
     // old data
     const common: RequestData = {
@@ -33,8 +37,6 @@ export function normalizeRequestRule(rule: any): RequestData[] {
       }
       result.push(normalized);
     }
-    const requestHeaders = map<KeyValueItem>(rule.requestHeaders);
-    const responseHeaders = map<KeyValueItem>(rule.responseHeaders);
     if (requestHeaders.length || responseHeaders.length) {
       result.push({
         ...common,
@@ -50,9 +52,9 @@ export function normalizeRequestRule(rule: any): RequestData[] {
       url: rule.url || '',
       target: rule.target || '',
       contentType: rule.contentType,
-      methods: map(rule, 'methods').filter(Boolean),
-      requestHeaders: map(rule, 'requestHeaders').filter(Boolean),
-      responseHeaders: map(rule, 'responseHeaders').filter(Boolean),
+      methods: map(rule.methods as string[]).filter(Boolean),
+      requestHeaders,
+      responseHeaders,
       transform: rule.transform,
     });
   }
