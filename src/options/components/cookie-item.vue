@@ -80,15 +80,38 @@
         TTL in seconds, -1 for removing, 0 for session cookie.
       </div>
     </div>
+    <div class="col-span-3">
+      <textarea
+        v-model="input.comment"
+        placeholder="Comment"
+        :readonly="!editable"
+      />
+      <div class="form-hint">
+        <p>Comment</p>
+      </div>
+    </div>
   </form>
-  <RuleItemView v-else :selected="selected" :badges="badges" @select="onSelect">
+  <RuleItemView v-else :selected="selected" @select="onSelect">
     <Toggle
       class="mr-4"
       :class="{ disabled: listDisabled }"
       :active="!!rule.enabled"
       @toggle="handleToggle"
     />
-    <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
+    <div class="rule-item-content">
+      <div v-text="rule.url"></div>
+      <div
+        class="rule-item-comment"
+        v-if="rule.comment"
+        v-text="rule.comment"
+      ></div>
+    </div>
+    <div
+      class="rule-item-badge"
+      v-for="badge in badges"
+      v-text="badge"
+      :key="badge"
+    ></div>
   </RuleItemView>
 </template>
 
@@ -141,6 +164,7 @@ const sameSiteOptions = [
 const input = reactive<{
   url?: string;
   name?: string;
+  comment?: string;
   sameSite?: '' | SameSiteStatus;
   httpOnly?: '' | 'true' | 'false';
   secure?: '' | 'true' | 'false';
@@ -191,6 +215,7 @@ const onSubmit = () => {
     rule: {
       url: input.url,
       name: input.name,
+      comment: input.comment || '',
       sameSite: input.sameSite || undefined,
       httpOnly: str2bool(input.httpOnly ?? ''),
       secure: str2bool(input.secure ?? ''),

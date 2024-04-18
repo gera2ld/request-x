@@ -201,6 +201,16 @@
         </div>
       </div>
     </template>
+    <div class="col-start-2">
+      <textarea
+        v-model="input.comment"
+        placeholder="Comment"
+        :readonly="!editable"
+      />
+      <div class="form-hint">
+        <p>Comment</p>
+      </div>
+    </div>
     <div class="whitespace-nowrap" style="grid-column-start: 3">
       <button class="mr-1" type="submit" v-if="editable">Save</button>
       <button
@@ -210,18 +220,35 @@
       ></button>
     </div>
   </form>
-  <RuleItemView v-else :selected="selected" :badges="badges" @select="onSelect">
+  <RuleItemView v-else :selected="selected" @select="onSelect">
     <Toggle
       class="mr-4"
       :class="{ disabled: listDisabled }"
       :active="!!rule.enabled"
       @toggle="handleToggle"
     />
-    <div class="w-32 mr-1" v-text="[...rule.methods].join(',') || '*'"></div>
-    <div class="flex-1 min-w-0 break-words" v-text="rule.url"></div>
+    <div
+      class="w-32 h-8 leading-8 mr-1 truncate"
+      v-text="ruleMethods"
+      :title="ruleMethods"
+    ></div>
+    <div class="rule-item-content">
+      <div v-text="rule.url"></div>
+      <div
+        class="rule-item-comment"
+        v-if="rule.comment"
+        v-text="rule.comment"
+      ></div>
+    </div>
     <div class="mx-2 text-error" v-if="ruleError" :title="ruleError">
       <IconError />
     </div>
+    <div
+      class="rule-item-badge"
+      v-for="badge in badges"
+      v-text="badge"
+      :key="badge"
+    ></div>
   </RuleItemView>
 </template>
 
@@ -265,6 +292,7 @@ const input = reactive<{
   resHeaders?: string;
   transformUrl?: string;
   transformQuery?: string;
+  comment?: string;
 }>({
   methods: new Set(),
   type: 'block',
@@ -283,6 +311,7 @@ const ruleError = computed(
   () => store.ruleErrors[currentList.value?.id || 0]?.[props.index + 1],
 );
 
+const ruleMethods = computed(() => props.rule.methods.join(',') || '*');
 const badges = computed(() => {
   const { rule } = props;
   const result = [loadRegExp(rule.url) ? 'regex' : 'url_filter'];
@@ -315,6 +344,7 @@ const reset = () => {
     type: rule.type || 'block',
     contentType: rule.contentType,
     target: rule.target,
+    comment: rule.comment,
     reqHeaders: stringifyKeyValues(rule.requestHeaders),
     resHeaders: stringifyKeyValues(rule.responseHeaders),
     transformQuery: stringifyKeyValues(rule.transform?.query),
@@ -345,6 +375,7 @@ const onSubmit = () => {
     methods: [...input.methods],
     url: input.url || '',
     target: input.target || '',
+    comment: input.comment || '',
     contentType: input.contentType,
     ...(input.type === 'headers' && {
       requestHeaders: parseKeyValues(input.reqHeaders ?? ''),

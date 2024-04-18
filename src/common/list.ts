@@ -19,6 +19,7 @@ export function normalizeRequestRule(rule: any): RequestData[] {
       methods: [],
       url: rule.url,
       target: '',
+      comment: '',
     };
     const { target, method } = rule;
     if (method && method !== '*') common.methods = [method.toLowerCase()];
@@ -51,6 +52,7 @@ export function normalizeRequestRule(rule: any): RequestData[] {
       type: rule.type || 'block',
       url: rule.url || '',
       target: rule.target || '',
+      comment: rule.comment || '',
       contentType: rule.contentType,
       methods: map(rule.methods as string[]).filter(Boolean),
       requestHeaders,
@@ -66,6 +68,7 @@ export function normalizeCookieRule(rule: any): CookieData {
     enabled: true,
     name: rule.name || '',
     url: rule.url || '',
+    comment: rule.comment || '',
     sameSite: rule.sameSite,
     httpOnly: rule.httpOnly,
     secure: rule.secure,

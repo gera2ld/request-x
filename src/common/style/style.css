@@ -131,7 +131,13 @@ ul {
   }
 }
 .rule-item-badge {
-  @apply p-1 text-xs uppercase text-zinc-500 dark:text-zinc-400;
+  @apply ml-1 text-xs leading-8 uppercase text-zinc-500 dark:text-zinc-400;
+}
+.rule-item-content {
+  @apply flex-1 min-w-0 py-1 break-words;
+}
+.rule-item-comment {
+  @apply mt-1 text-sm text-zinc-500 dark:text-zinc-400;
 }
 
 .request-method-item {

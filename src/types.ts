@@ -35,6 +35,7 @@ export interface KeyValueItem {
 
 export interface RuleDataBase {
   enabled: boolean;
+  comment?: string;
 }
 
 export interface RequestData extends RuleDataBase {
