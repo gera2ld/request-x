@@ -16,20 +16,20 @@
         </template>
       </div>
     </div>
-    <div v-else class="flex-1 pt-1 overflow-y-auto" @click="onSelClear">
+    <div
+      v-else
+      class="relative flex-1 pt-1 overflow-y-auto"
+      @click="onSelClear"
+    >
       <Component
         v-for="(rule, index) in currentList.rules"
         :is="RuleItem"
         :key="index"
         :index="index"
         :rule="rule as any"
-        :showDetail="ruleState.editing === index"
-        :editable="listEditable"
         :listDisabled="!currentList.enabled"
         v-show="ruleState.visible[index]"
         :selected="ruleSelection.selected[index]"
-        @submit="onSubmit(index, $event)"
-        @cancel="onCancel"
         @select="onSelToggle(index, $event)"
         @dblclick="onEdit(index)"
         class="rule-item"
@@ -37,16 +37,25 @@
           active: index === ruleSelection.active || index === ruleState.editing,
         }"
       />
-      <Component
-        :is="RuleItem"
-        v-if="ruleState.newRule"
-        :rule="ruleState.newRule as any"
-        :showDetail="true"
-        :editable="true"
-        class="rule-item active"
-        @submit="onSubmit(-1, $event)"
-        @cancel="onCancel"
-      />
+      <div v-if="editingRule" class="absolute inset-[2px_0] bg-primary">
+        <div
+          class="py-1 text-lg font-bold text-center"
+          v-text="
+            !listEditable
+              ? 'View Rule'
+              : ruleState.newRule
+                ? 'Create Rule'
+                : 'Edit Rule'
+          "
+        ></div>
+        <Component
+          :is="EditRuleItem"
+          :rule="editingRule"
+          :editable="listEditable"
+          @submit="onSubmit($event)"
+          @cancel="onCancel"
+        />
+      </div>
     </div>
     <footer class="p-1">
       <div class="mb-1 truncate subtle" v-if="currentList.subscribeUrl">
@@ -86,14 +95,27 @@ import RequestItem from './request-item.vue';
 import CookieItem from './cookie-item.vue';
 import RuleHint from './rule-hint.vue';
 import { ruleActions } from '../actions';
+import EditRequestItem from './edit-request-item.vue';
+import EditCookieItem from './edit-cookie-item.vue';
 
 const ruleItemMap = {
   request: RequestItem,
   cookie: CookieItem,
 };
+const editRuleItemMap = {
+  request: EditRequestItem,
+  cookie: EditCookieItem,
+};
 
 const RuleItem = computed(
   () => currentList.value && ruleItemMap[currentList.value.type],
+);
+const editingRule = computed(() => {
+  if (ruleState.newRule) return ruleState.newRule;
+  return currentList.value?.rules[ruleState.editing];
+});
+const EditRuleItem = computed(
+  () => currentList.value && editRuleItemMap[currentList.value.type],
 );
 const onCancel = ruleActions.cancel;
 const onEdit = ruleActions.edit;

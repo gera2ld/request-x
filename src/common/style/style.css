@@ -1,11 +1,40 @@
 @unocss;
 
+:root {
+  --bg-primary: white;
+  --bg-secondary: #e4e4e7;
+  --bg-input: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #18181b;
+    --bg-secondary: #3f3f46;
+    --bg-input: #27272a;
+  }
+}
+
 html {
   font-size: 12px;
 }
 
 body {
-  @apply text-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 text-base;
+  @apply text-zinc-800 dark:text-zinc-300 text-base;
+}
+
+body,
+.bg-primary {
+  background: var(--bg-primary);
+}
+
+.bg-secondary {
+  background: var(--bg-secondary);
+}
+
+select,
+input,
+textarea {
+  background: var(--bg-input);
 }
 
 .request-x-popup {
@@ -51,7 +80,7 @@ input[type='text'],
 input[type='search'],
 input[type='number'],
 textarea {
-  @apply block w-full outline-none rounded border border-zinc-400 px-2 py-1 bg-white dark:border-zinc-600 dark:bg-zinc-800;
+  @apply block w-full outline-none rounded border border-zinc-400 px-2 py-1 dark:border-zinc-600;
   &:focus {
     @apply border-zinc-500 dark:border-zinc-400;
   }
@@ -92,7 +121,8 @@ ul {
 }
 
 .modal {
-  @apply w-1/2 min-w-[16rem] mx-auto p-2 bg-white dark:bg-zinc-900;
+  @apply w-1/2 min-w-[16rem] mx-auto p-2;
+  background: var(--bg-primary);
 }
 .vl-modal-backdrop {
   @apply dark:bg-black/70;
@@ -106,7 +136,8 @@ ul {
 }
 
 .form-hint {
-  @apply p-1 bg-zinc-200 dark:bg-zinc-700;
+  @apply p-1;
+  background: var(--bg-secondary);
   code {
     @apply px-1 bg-yellow-200 border border-zinc-400 rounded whitespace-nowrap dark:bg-yellow-800;
   }
@@ -177,7 +208,8 @@ ul {
   @apply mb-2;
 }
 .list-section-title {
-  @apply sticky top-0 z-1 py-2 text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900;
+  @apply sticky top-0 z-1 py-2 text-zinc-600 dark:text-zinc-400;
+  background: var(--bg-primary);
 }
 .list-section-empty {
   @apply py-1 px-8 italic text-zinc-400 dark:text-zinc-600;
@@ -210,7 +242,8 @@ ul {
   @apply flex flex-1;
 }
 .menu-group {
-  @apply uppercase text-xs px-4 py-1 bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400 border-t border-zinc-300 dark:border-zinc-600 text-center;
+  @apply uppercase text-xs px-4 py-1 text-zinc-500 dark:text-zinc-400 border-t border-zinc-300 dark:border-zinc-600 text-center;
+  background: var(--bg-secondary);
 }
 .menu-toggle {
   @apply px-2 py-1 cursor-pointer rounded;
@@ -235,7 +268,8 @@ ul {
   @apply ml-4 text-zinc-400 dark:text-zinc-600;
 }
 .menu-dropdown {
-  @apply select-none bg-white rounded border border-zinc-400 dark:bg-zinc-900 dark:border-zinc-600;
+  @apply select-none rounded border border-zinc-400 dark:border-zinc-600;
+  background: var(--bg-primary);
 }
 
 .dragging {

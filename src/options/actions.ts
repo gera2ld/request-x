@@ -405,15 +405,13 @@ export const ruleActions = {
     ruleActions.edit();
     ruleSelection.active = active;
   },
-  submit(index: number, { rule }: { rule: RuleData }) {
+  submit({ rule }: { rule: RuleData }) {
     const rules = currentList.value?.rules as RuleData[];
     if (!rules) return;
+    const index = ruleState.editing;
+    if (index < 0) return;
     rule = toRaw(rule);
-    if (index < 0) {
-      rules.push(rule);
-    } else {
-      rules[index] = rule;
-    }
+    rules[index] = rule;
     ruleActions.save();
     ruleActions.cancel();
   },
