@@ -69,7 +69,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch, watchEffect } from 'vue';
 import { debounce, pick } from 'lodash-es';
-import VlModal from 'vueleton/lib/modal';
+import VlModal from './modal.vue';
 import type { ListData } from '@/types';
 import { fetchListData } from '@/common/list';
 import { store } from '../store';

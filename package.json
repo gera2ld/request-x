@@ -47,12 +47,18 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
+    "@codemirror/commands": "^6.5.0",
+    "@codemirror/lang-html": "^6.4.9",
+    "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.26.3",
     "@unocss/reset": "^0.58.5",
     "@violentmonkey/shortcut": "^1.4.3",
+    "codemirror": "^6.0.1",
     "core-js": "^3.36.0",
     "lodash-es": "^4.17.21",
     "vue": "^3.4.21",
-    "vueleton": "^2.0.2",
     "webextension-polyfill": "^0.10.0"
   },
   "lint-staged": {

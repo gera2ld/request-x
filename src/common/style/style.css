@@ -4,6 +4,8 @@
   --bg-primary: white;
   --bg-secondary: #e4e4e7;
   --bg-input: white;
+  --border-input: #a1a1aa;
+  --border-input-focus: #71717a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -11,6 +13,8 @@
     --bg-primary: #18181b;
     --bg-secondary: #3f3f46;
     --bg-input: #27272a;
+    --border-input: #71717a;
+    --border-input-focus: #a1a1aa;
   }
 }
 
@@ -80,9 +84,10 @@ input[type='text'],
 input[type='search'],
 input[type='number'],
 textarea {
-  @apply block w-full outline-none rounded border border-zinc-400 px-2 py-1 dark:border-zinc-600;
+  @apply block w-full outline-none rounded border px-2 py-1;
+  border-color: var(--border-input);
   &:focus {
-    @apply border-zinc-500 dark:border-zinc-400;
+    border-color: var(--border-input-focus);
   }
   &[readonly] {
     color: text-zinc-600;
@@ -90,6 +95,14 @@ textarea {
   &.error,
   .error > & {
     @apply bg-red-200 border-red-600 dark:bg-red-600 dark:bg-opacity-40 dark:border-red-700;
+  }
+}
+.cm-editor {
+  @apply h-full border rounded;
+  border-color: var(--border-input);
+  &.cm-focused {
+    @apply outline-none;
+    border-color: var(--border-input-focus);
   }
 }
 

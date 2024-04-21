@@ -42,9 +42,9 @@
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, ref } from 'vue';
-import VlDropdown from 'vueleton/lib/dropdown';
+<script lang="ts" setup>
+import { computed, ref } from 'vue';
+import VlDropdown from './dropdown.vue';
 import { shortcutTextMap } from '../shortcut';
 import {
   currentList,
@@ -206,33 +206,19 @@ const menus = computed(() => [
   },
 ]);
 
-export default defineComponent({
-  components: {
-    VlDropdown,
-  },
-  setup() {
-    const active = ref<number>(-1);
+const active = ref(-1);
 
-    const onToggle = (index: number, value: boolean) => {
-      if (value) {
-        active.value = index;
-      } else if (active.value === index) {
-        active.value = -1;
-      }
-    };
+const onToggle = (index: number, value: boolean) => {
+  if (value) {
+    active.value = index;
+  } else if (active.value === index) {
+    active.value = -1;
+  }
+};
 
-    const onHover = (index: number) => {
-      if (active.value >= 0 && active.value !== index) {
-        active.value = index;
-      }
-    };
-
-    return {
-      menus,
-      active,
-      onToggle,
-      onHover,
-    };
-  },
-});
+const onHover = (index: number) => {
+  if (active.value >= 0 && active.value !== index) {
+    active.value = index;
+  }
+};
 </script>

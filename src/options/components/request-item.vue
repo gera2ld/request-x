@@ -62,6 +62,14 @@ const badges = computed(() => {
   const { rule } = props;
   const result = [loadRegExp(rule.url) ? 'regex' : 'url_filter'];
   switch (rule.type) {
+    case 'block': {
+      result.push('block');
+      break;
+    }
+    case 'redirect': {
+      result.push('redirect');
+      break;
+    }
     case 'headers': {
       if (rule.requestHeaders?.length) result.push('req_headers');
       if (rule.responseHeaders?.length) result.push('res_headers');

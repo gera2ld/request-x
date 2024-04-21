@@ -1,6 +1,6 @@
 <template>
   <form
-    class="grid grid-cols-[8rem_auto_9rem] children:m-1"
+    class="grid grid-cols-[8rem_auto_12rem] children:m-1"
     @submit.prevent="onSubmit"
     ref="refForm"
   >
@@ -64,49 +64,62 @@
       </select>
       <div class="form-hint">Action type</div>
     </div>
-    <div
-      :class="{ error: errors.target }"
-      v-if="input.type === 'redirect' || input.type === 'replace'"
-    >
+    <div :class="{ error: errors.target }" v-if="input.type === 'redirect'">
       <textarea
-        :value="noTarget ? '' : input.target"
-        @input="
-          !noTarget &&
-            (input.target = ($event.target as HTMLInputElement).value)
-        "
-        :placeholder="noTarget ? 'No target' : 'Set target here'"
+        v-model="input.target"
+        placeholder="Set target here"
         :readonly="!editable"
-        :disabled="noTarget"
       />
       <div class="form-hint">
-        <template v-if="input.type === 'redirect'">
-          <p>If the original URL is matched by</p>
-          <ul>
-            <li>
-              a
-              <a
-                target="_blank"
-                href="https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/RuleCondition#urlfilter"
-              >
-                URL filter</a
-              >, it will be redirected to the target.
-            </li>
-            <li>
-              a regular expression, the matched part will be replaced with the
-              target.
-            </li>
-          </ul>
-        </template>
-        <p v-else-if="input.type === 'replace'">
-          Any text content is allowed and will replace the response content by
-          redirecting it to a dataURL.
-        </p>
+        <p>If the original URL is matched by</p>
+        <ul>
+          <li>
+            a
+            <a
+              target="_blank"
+              href="https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/RuleCondition#urlfilter"
+            >
+              URL filter</a
+            >, it will be redirected to the target.
+          </li>
+          <li>
+            a regular expression, the matched part will be replaced with the
+            target.
+          </li>
+        </ul>
       </div>
     </div>
-    <div v-if="input.type === 'replace'">
-      <input type="text" v-model="input.contentType" />
-      <div class="form-hint">Content type</div>
-    </div>
+    <template v-if="input.type === 'replace'">
+      <div :class="{ error: errors.target }">
+        <CodeEditor
+          class="h-[50vh]"
+          v-model="input.target"
+          :lang="guessLang"
+          :readonly="!editable"
+          :content-type="input.contentType"
+        />
+        <div class="form-hint">
+          <p>
+            Any text content is allowed and will replace the response content by
+            redirecting it to a dataURL.
+          </p>
+          <a v-if="formatters[guessLang]" @click.prevent="handleFormat">
+            Format
+          </a>
+        </div>
+      </div>
+      <div>
+        <input type="text" v-model="input.contentType" />
+        <div class="form-hint">
+          Content type, e.g.
+          <template v-for="(type, i) in contentTypes" :key="i">
+            <span v-if="i > 0">, </span>
+            <code v-text="type"></code
+            ><a @click.prevent="input.contentType = type">^</a>
+          </template>
+        </div>
+      </div>
+    </template>
     <template v-if="input.type === 'transform'">
       <div>
         <textarea
@@ -227,6 +240,7 @@ import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import IconCheck from '~icons/mdi/check';
 import { focusInput } from '../util';
 import { URL_TRANSFORM_KEYS } from '@/common/constants';
+import CodeEditor from './code-editor.vue';
 
 const props = defineProps<{
   rule: RequestData;
@@ -241,6 +255,7 @@ const emit = defineEmits<{
 }>();
 
 const methodList = ['get', 'post', 'head', 'put', 'patch', 'delete', 'connect'];
+const contentTypes = ['application/json', 'text/html', 'text/plain'];
 
 const input = reactive<{
   methods: Set<string>;
@@ -260,13 +275,32 @@ const input = reactive<{
 });
 const refForm = ref<HTMLFormElement | undefined>(undefined);
 
-const noTarget = computed(() => ['', 'block'].includes(input.type));
 const errors = computed(() => {
   return {
     url: !input.url,
-    target: !noTarget.value && input.type === 'redirect' && !input.target,
+    target: input.type === 'redirect' && !input.target,
   };
 });
+
+const guessLang = computed(() => {
+  const type = input.contentType || '';
+  if (/json/.test(type)) return 'json';
+  if (/html/.test(type)) return 'html';
+  return '';
+});
+
+const formatters: Record<string, (input: string) => string> = {
+  json(input) {
+    return JSON.stringify(JSON.parse(input), null, 2);
+  },
+};
+
+const handleFormat = () => {
+  const format = formatters[guessLang.value];
+  if (!format || !input.target) return;
+  const value = format(input.target);
+  input.target = value;
+};
 
 const reset = () => {
   const { rule } = props;
