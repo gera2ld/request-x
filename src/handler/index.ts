@@ -108,6 +108,7 @@ handleMessages({
       const i = group.findIndex(({ id }) => id === payload.id);
       if (i >= 0) group.splice(i, 1);
     });
+    dumpLists(lists);
     reloadRules(lists.request);
     broadcastUpdates();
   },
