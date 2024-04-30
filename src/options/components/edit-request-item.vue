@@ -28,8 +28,9 @@
         <span class="flex-1" v-text="method.toUpperCase()"></span>
       </div>
     </div>
-    <div :class="{ error: errors.url }">
+    <div>
       <input
+        :class="{ 'input-error': errors.url }"
         type="text"
         v-model="input.url"
         placeholder="URL"
@@ -64,8 +65,9 @@
       </select>
       <div class="form-hint">Action type</div>
     </div>
-    <div :class="{ error: errors.target }" v-if="input.type === 'redirect'">
+    <div v-if="input.type === 'redirect'">
       <textarea
+        :class="{ 'input-error': errors.target }"
         v-model="input.target"
         placeholder="Set target here"
         :readonly="!editable"
@@ -90,7 +92,7 @@
       </div>
     </div>
     <template v-if="input.type === 'replace'">
-      <div class="min-w-0" :class="{ error: errors.target }">
+      <div class="min-w-0">
         <CodeEditor
           class="h-[50vh]"
           v-model="input.target"

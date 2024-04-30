@@ -1,15 +1,15 @@
 <template>
-  <div ref="refCode"></div>
+  <div ref="refCode" :class="{ 'child-error': hasError }"></div>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import { EditorView, basicSetup } from 'codemirror';
-import { json } from '@codemirror/lang-json';
+import { linter, lintGutter, diagnosticCount } from '@codemirror/lint';
+import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { html } from '@codemirror/lang-html';
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, Extension } from '@codemirror/state';
 import { indentWithTab } from '@codemirror/commands';
-import type { LanguageSupport } from '@codemirror/language';
 import { keymap } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';
 
@@ -20,9 +20,9 @@ const props = defineProps<{
   contentType?: string;
 }>();
 
-const langExtMap: Record<string, () => LanguageSupport> = {
-  json,
-  html,
+const langExtMap: Record<string, () => Extension[]> = {
+  json: () => [json(), linter(jsonParseLinter()), lintGutter()],
+  html: () => [html()],
 };
 
 const refCode = ref<HTMLElement>();
@@ -33,6 +33,7 @@ let lastState: EditorState | undefined;
 const langExtComp = new Compartment();
 const themeComp = new Compartment();
 
+const hasError = ref(false);
 const langExt = computed(() => langExtMap[props.lang || '']?.() || []);
 
 const result = window.matchMedia('(prefers-color-scheme: dark');
@@ -74,9 +75,10 @@ onMounted(() => {
       langExtComp.of(langExt.value),
       themeComp.of(isDark.value ? oneDark : []),
       EditorView.updateListener.of((update) => {
-        if (!update.docChanged || update.view !== view) return;
-        lastState = view.state;
-        model.value = view.state.doc.toString();
+        hasError.value = diagnosticCount(update.view.state) > 0;
+        if (!update.docChanged) return;
+        lastState = update.view.state;
+        model.value = update.view.state.doc.toString();
       }),
     ],
     parent: refCode.value,

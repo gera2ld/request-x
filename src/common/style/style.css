@@ -92,10 +92,6 @@ textarea {
   &[readonly] {
     color: text-zinc-600;
   }
-  &.error,
-  .error > & {
-    @apply bg-red-200 border-red-600 dark:bg-red-600 dark:bg-opacity-40 dark:border-red-700;
-  }
 }
 .cm-editor {
   @apply h-full border rounded;
@@ -104,6 +100,12 @@ textarea {
     @apply outline-none;
     border-color: var(--border-input-focus);
   }
+}
+.input-error,
+.child-error > * {
+  @apply bg-red-200 border-red-600 dark:bg-red-600 dark:bg-opacity-20 dark:border-red-700;
+  --border-input: #b91c1c;
+  --border-input-focus: #b91c1c;
 }
 
 ul {
