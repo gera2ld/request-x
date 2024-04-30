@@ -90,7 +90,7 @@
       </div>
     </div>
     <template v-if="input.type === 'replace'">
-      <div :class="{ error: errors.target }">
+      <div class="min-w-0" :class="{ error: errors.target }">
         <CodeEditor
           class="h-[50vh]"
           v-model="input.target"
