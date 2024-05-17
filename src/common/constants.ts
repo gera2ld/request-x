@@ -10,3 +10,6 @@ export const URL_TRANSFORM_KEYS = [
   'password',
   'path',
 ] as const;
+
+export const EVENT_MAIN = 'RequestXMainEvent';
+export const EVENT_CONTENT = 'RequestXContentEvent';

@@ -1,0 +1,21 @@
+{
+  "name": "@gera2ld/request-x",
+  "version": "0.1.0",
+  "description": "Request X Connector",
+  "author": "Gerald <gera2ld@live.com>",
+  "license": "ISC",
+  "type": "module",
+  "module": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gera2ld/request-x.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gera2ld/request-x/issues"
+  },
+  "homepage": "https://github.com/gera2ld/request-x#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

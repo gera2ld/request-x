@@ -32,6 +32,8 @@ const requestRuleTypeMap: Record<
 };
 let lastId = -1;
 const ruleErrors: Record<number, Record<number, string>> = {};
+const excludedReplaceTabIds: number[] = [];
+let replaceRules: RequestData[] = [];
 
 export const dataLoaded = loadData();
 
@@ -176,6 +178,7 @@ function buildListRules(list: RequestListData, base = MAX_RULES_PER_LIST) {
               item.target,
             )}`,
           };
+          rule.condition.excludedTabIds = excludedReplaceTabIds;
           break;
         }
         case 'headers': {
@@ -288,6 +291,9 @@ export async function reloadRules(lists: RequestListData[]) {
     });
   }
   await Promise.all(lists.map((list) => reloadRulesForList(list, allRules)));
+  replaceRules = lists.flatMap((list) =>
+    list.rules.filter((rule) => rule.enabled && rule.type === 'replace'),
+  );
   if (import.meta.env.DEV) console.log('reloadRules done', ruleErrors);
 }
 
@@ -371,4 +377,36 @@ function buildUrlTransform(transform: RequestData['transform']) {
     if (value) urlTransform[key] = value;
   });
   return urlTransform;
+}
+
+export async function setReplaceResponse(tabId: number, enabled: boolean) {
+  const lists = await dataLoaded;
+  const i = excludedReplaceTabIds.indexOf(tabId);
+  if (!enabled && i < 0) {
+    excludedReplaceTabIds.push(tabId);
+  } else if (enabled && i >= 0) {
+    excludedReplaceTabIds.splice(i, 1);
+  } else {
+    return;
+  }
+  reloadRules(lists.request);
+}
+
+export function queryReplaceResponse(method: string, url: string) {
+  const rule = replaceRules.find((item) => {
+    if (item.methods.length && !item.methods.includes(method)) return false;
+    const re = loadRegExp(item.url);
+    if (re) {
+      if (!new RegExp(re).test(url)) return false;
+    } else {
+      // TODO: support URL filters
+      if (!url.includes(item.url)) return false;
+    }
+    return true;
+  });
+  if (rule)
+    return {
+      contentType: rule.contentType,
+      target: rule.target,
+    };
 }

@@ -5,26 +5,30 @@ export async function sendMessage<T = void>(cmd: string, payload?: any) {
     data: T;
     error?: string;
   };
-  if (import.meta.env.DEV) console.log('message', { cmd, payload }, res);
+  if (import.meta.env.DEV) console.log('sendMessage', { cmd, payload }, res);
   if (res.error) throw new Error(res.error);
   return res.data;
 }
 
-export function handleMessages(
-  handlers: Record<string, (payload: any) => any>,
-) {
-  browser.runtime.onMessage.addListener(
-    async (message, _sender, _sendResponse) => {
-      const cmd = message?.cmd;
-      const handle = handlers[cmd];
-      if (!handle) return;
-      if (import.meta.env.DEV) console.log('message', message);
-      try {
-        const data = (await handle(message.payload)) ?? null;
-        return { data };
-      } catch (error) {
-        return { error: `${error || 'Unknown error'}` };
-      }
-    },
-  );
+type IHandler = (payload: any, sender: browser.Runtime.MessageSender) => any;
+
+export function handleMessages(handlers: Record<string, IHandler>) {
+  const handleAsync = async (
+    handle: IHandler,
+    message: any,
+    sender: browser.Runtime.MessageSender,
+  ) => {
+    if (import.meta.env.DEV) console.log('onMessage', message);
+    try {
+      const data = (await handle(message.payload, sender)) ?? null;
+      return { data: data };
+    } catch (error) {
+      return { error: `${error || 'Unknown error'}` };
+    }
+  };
+  browser.runtime.onMessage.addListener((message, sender, _sendResponse) => {
+    const cmd = message?.cmd;
+    const handle = handlers[cmd];
+    if (handle) return handleAsync(handle, message, sender);
+  });
 }

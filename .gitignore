@@ -2,6 +2,7 @@ node_modules
 *.log
 /.idea
 /dist
+/lib
 /.nyc_output
 /coverage
 /types

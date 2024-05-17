@@ -12,8 +12,13 @@
     "lint:js": "eslint --ext .ts,.vue .",
     "lint": "run-s lint:ts lint:js",
     "format": "prettier -w src",
-    "dev": "gulp copyAssets && NODE_ENV=development vite build --watch",
-    "build": "run-s lint 'test --run' && gulp clean && vite build && gulp copyAssets",
+    "dev:background": "NODE_ENV=development vite build --watch",
+    "dev:content": "NODE_ENV=development ENTRY=content vite build --watch",
+    "dev": "gulp copyAssets && pnpm run /^dev:/",
+    "build:background": "vite build",
+    "build:content": "ENTRY=content vite build",
+    "build:connector": "ENTRY=connector vite build && tsc src/connector/index.ts -d --emitDeclarationOnly --declarationDir lib --skipLibCheck",
+    "build": "run-s lint 'test --run' && gulp clean && pnpm run /^build:/ && gulp copyAssets",
     "test": "vitest"
   },
   "engines": {

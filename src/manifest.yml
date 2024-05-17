@@ -20,6 +20,12 @@ action:
 background:
   service_worker: handler/index.js
   type: module
+content_scripts:
+  - matches:
+      - '<all_urls>'
+    js:
+      - content/index.js
+    run_at: document_start
 options_page: options/index.html
 permissions:
   - declarativeNetRequest

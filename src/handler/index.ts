@@ -9,8 +9,10 @@ import {
   dumpLists,
   fetchList,
   getErrors,
+  queryReplaceResponse,
   reloadRules,
   saveLists,
+  setReplaceResponse,
 } from './list';
 import { getUrl } from './util';
 
@@ -35,6 +37,9 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
     initiateSubscription(url);
     browser.tabs.goBack(tabId);
   }
+});
+browser.tabs.onRemoved.addListener((tabId) => {
+  setReplaceResponse(tabId, true);
 });
 
 // Show Release Notes on update to v3
@@ -117,6 +122,15 @@ handleMessages({
   },
   CreateAction(payload: { name: string; payload: any }) {
     createAction(payload);
+  },
+  SetReplaceResponse(payload: { enabled: boolean }, sender) {
+    const tabId = sender.tab?.id;
+    if (tabId) {
+      setReplaceResponse(tabId, payload.enabled);
+    }
+  },
+  QueryReplaceResponse(payload: { method: string; url: string }) {
+    return queryReplaceResponse(payload.method, payload.url);
   },
 });
 
