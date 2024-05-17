@@ -24,6 +24,9 @@ const handlers: Record<string, (payload?: any) => Promise<any>> = {
   },
 };
 
+// Reset on page reload
+handlers.SetReplaceResponse({ enabled: true });
+
 async function handleMessage(detail: RequestXContentEventPayload) {
   const payload = await handlers[detail.cmd]?.(detail?.payload);
   dispatchEvent({ id: detail.id, payload });
