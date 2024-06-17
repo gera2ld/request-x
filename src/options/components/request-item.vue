@@ -19,7 +19,7 @@
         v-text="rule.comment"
       ></div>
     </div>
-    <div class="mx-2 text-error" v-if="ruleError" :title="ruleError">
+    <div class="mx-2 mt-1 text-error" v-if="ruleError" :title="ruleError">
       <IconError />
     </div>
     <div

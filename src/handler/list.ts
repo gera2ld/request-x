@@ -20,6 +20,21 @@ import { dumpExactData, getExactData } from './util';
 const LIST_PREFIX = 'list:';
 const KEY_LISTS = 'lists';
 const MAX_RULES_PER_LIST = 100;
+const resourceTypes: browser.DeclarativeNetRequest.ResourceType[] = [
+  'csp_report',
+  'font',
+  'image',
+  'main_frame',
+  'media',
+  'object',
+  'other',
+  'ping',
+  'script',
+  'stylesheet',
+  'sub_frame',
+  'websocket',
+  'xmlhttprequest',
+];
 const requestRuleTypeMap: Record<
   RequestData['type'],
   browser.DeclarativeNetRequest.RuleActionTypeEnum
@@ -149,7 +164,9 @@ function buildListRules(list: RequestListData, base = MAX_RULES_PER_LIST) {
         action: {
           type,
         },
-        condition: {},
+        condition: {
+          resourceTypes,
+        },
       };
       // Do not support match patterns here as they may exceed the 2KB memory limit after conversion to RegExp
       const re = loadRegExp(item.url);
