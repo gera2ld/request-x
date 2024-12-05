@@ -1,7 +1,7 @@
 import { deleteAsync } from 'del';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import gulp from 'gulp';
-import Jimp from 'jimp';
+import { Jimp } from 'jimp';
 import yaml from 'js-yaml';
 import pkg from './package.json' with { type: 'json' };
 
@@ -22,8 +22,8 @@ async function createIcons() {
   await mkdir(dist, { recursive: true });
   const icon = await Jimp.read('src/resources/x.png');
   return Promise.all(
-    [16, 19, 38, 48, 128].map((size) =>
-      icon.clone().resize(size, size).write(`${dist}/icon_${size}.png`),
+    [16, 19, 38, 48, 128].map((w) =>
+      icon.clone().resize({ w }).write(`${dist}/icon_${w}.png`),
     ),
   );
 }
