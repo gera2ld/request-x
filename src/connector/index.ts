@@ -1,14 +1,17 @@
-// @ts-ignore
-import { EVENT_CONTENT, EVENT_MAIN } from '@/common/constants';
+declare const __INJECT__EVENT_CONTENT: string;
+declare const __INJECT__EVENT_MAIN: string;
+
+const EVENT_CONTENT = __INJECT__EVENT_CONTENT;
+const EVENT_MAIN = __INJECT__EVENT_MAIN;
 
 interface RequestXMainEventPayload {
   id: number;
-  payload?: any;
+  payload?: unknown;
 }
 
-interface IDeferred<T = any> {
+interface IDeferred<T = unknown> {
   resolve: (value: T) => void;
-  reject: (reason?: any) => void;
+  reject: (reason?: unknown) => void;
   promise: Promise<T>;
 }
 
@@ -32,7 +35,7 @@ function defer<T>(): IDeferred<T> {
   return { promise, resolve: resolve_, reject: reject_ };
 }
 
-export function sendMessage<T = any, U = any>(cmd: string, payload: U) {
+export function sendMessage<T = unknown, U = unknown>(cmd: string, payload: U) {
   gid += 1;
   const id = gid;
   const deferred = defer<T>();
@@ -40,7 +43,7 @@ export function sendMessage<T = any, U = any>(cmd: string, payload: U) {
     deferredMap.delete(id);
   });
   setTimeout(deferred.reject, 10000);
-  deferredMap.set(id, deferred);
+  deferredMap.set(id, deferred as IDeferred<unknown>);
   const event = new CustomEvent(EVENT_CONTENT, {
     detail: {
       id,

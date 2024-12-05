@@ -1,4 +1,6 @@
-export interface FeatureToggles {}
+export interface FeatureToggles {
+  [key: string]: never;
+}
 
 export interface LogItem {
   count: {

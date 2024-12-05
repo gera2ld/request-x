@@ -2,7 +2,7 @@ import browser from 'webextension-polyfill';
 
 export async function getExactData<T>(key: string): Promise<T> {
   const res = await browser.storage.local.get(key);
-  return res[key];
+  return res[key] as T;
 }
 
 export async function dumpExactData(key: string, value: any) {

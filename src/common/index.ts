@@ -27,7 +27,7 @@ export function handleMessages(handlers: Record<string, IHandler>) {
     }
   };
   browser.runtime.onMessage.addListener((message, sender, _sendResponse) => {
-    const cmd = message?.cmd;
+    const cmd = (message as { cmd: string })?.cmd;
     const handle = handlers[cmd];
     if (handle) return handleAsync(handle, message, sender);
   });

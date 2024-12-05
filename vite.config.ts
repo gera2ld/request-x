@@ -2,6 +2,7 @@ import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 import Icons from 'unplugin-icons/vite';
 import { defineConfig } from 'vitest/config';
+import { EVENT_CONTENT, EVENT_MAIN } from './src/common/constants';
 
 const defaultConfig = defineConfig({
   plugins: [vue(), Icons({ compiler: 'vue3' })],
@@ -60,6 +61,10 @@ const configContent = defineConfig({
 
 const configConnector = defineConfig({
   ...defaultConfig,
+  define: {
+    __INJECT__EVENT_MAIN: JSON.stringify(EVENT_MAIN),
+    __INJECT__EVENT_CONTENT: JSON.stringify(EVENT_CONTENT),
+  },
   build: {
     ...defaultConfig.build,
     outDir: 'lib',

@@ -50,7 +50,7 @@
         ></div>
         <Component
           :is="EditRuleItem"
-          :rule="editingRule"
+          :rule="editingRule as any"
           :editable="listEditable"
           @submit="onSubmit($event)"
           @cancel="onCancel"
