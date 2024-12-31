@@ -28,7 +28,7 @@ const langExtMap: Record<string, () => Extension[]> = {
 const refCode = ref<HTMLElement>();
 
 let view: EditorView | undefined;
-let lastState: EditorState | undefined;
+let lastModel = '';
 
 const langExtComp = new Compartment();
 const themeComp = new Compartment();
@@ -55,7 +55,7 @@ watch(isDark, (dark) => {
 });
 
 watch(model, (value) => {
-  if (!view || view.state === lastState) return;
+  if (!view || value === lastModel) return;
   view.dispatch({
     changes: {
       from: 0,
@@ -77,8 +77,8 @@ onMounted(() => {
       EditorView.updateListener.of((update) => {
         hasError.value = diagnosticCount(update.view.state) > 0;
         if (!update.docChanged) return;
-        lastState = update.view.state;
-        model.value = update.view.state.doc.toString();
+        lastModel = update.view.state.doc.toString();
+        model.value = lastModel;
       }),
     ],
     parent: refCode.value,
