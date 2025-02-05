@@ -58,7 +58,6 @@
     "vue-tsc": "^2.1.10"
   },
   "dependencies": {
-    "@babel/runtime": "^7.26.0",
     "@codemirror/commands": "^6.7.1",
     "@codemirror/lang-html": "^6.4.9",
     "@codemirror/lang-json": "^6.0.1",
@@ -69,7 +68,6 @@
     "@unocss/reset": "^0.65.1",
     "@violentmonkey/shortcut": "^1.4.4",
     "codemirror": "^6.0.1",
-    "core-js": "^3.39.0",
     "lodash-es": "^4.17.21",
     "vue": "^3.5.13",
     "webextension-polyfill": "^0.12.0"
