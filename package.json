@@ -17,7 +17,7 @@
     "dev": "gulp copyAssets && pnpm run /^dev:/",
     "build:background": "vite build",
     "build:content": "ENTRY=content vite build",
-    "build:connector": "ENTRY=connector vite build && tsc src/connector/index.ts -d --emitDeclarationOnly --declarationDir lib --skipLibCheck",
+    "build:connector": "ENTRY=connector vite build && tsc -p src/connector/tsconfig.json",
     "build": "pnpm lint && pnpm test && gulp clean && pnpm /^build:/ && gulp copyAssets",
     "test": "vitest --run"
   },
