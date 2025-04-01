@@ -4,7 +4,7 @@
   "private": true,
   "description": "Request X",
   "author": "Gerald <gera2ld@live.com>",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "prepare": "husky",
