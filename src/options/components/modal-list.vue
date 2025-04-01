@@ -68,7 +68,7 @@
 
 <script lang="ts" setup>
 import { computed, ref, watch, watchEffect } from 'vue';
-import { debounce, pick } from 'lodash-es';
+import { debounce, pick } from 'es-toolkit';
 import VlModal from './modal.vue';
 import type { ListData } from '@/types';
 import { fetchListData } from '@/common/list';
@@ -118,7 +118,7 @@ const onListCancel = () => {
 };
 
 const onListSave = async () => {
-  if (!canSubmit.value) return;
+  if (!canSubmit.value || !store.editList) return;
   const [list] = await listActions.save([
     store.editList?.isSubscribed
       ? ({

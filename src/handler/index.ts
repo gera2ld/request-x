@@ -1,7 +1,7 @@
 import { handleMessages, sendMessage } from '@/common';
 import { reorderList, textTester, urlTester } from '@/common/util';
 import { CookieData, CookieMatchResult, ListData } from '@/types';
-import { debounce, pick } from 'lodash-es';
+import { debounce, pick } from 'es-toolkit';
 import browser from 'webextension-polyfill';
 import {
   broadcastUpdates,

@@ -13,7 +13,7 @@ import type {
   RequestListData,
   RuleData,
 } from '@/types';
-import { flatMap, groupBy, isEqual, map, values } from 'lodash-es';
+import { flatMap, groupBy, isEqual } from 'es-toolkit';
 import browser from 'webextension-polyfill';
 import { dumpExactData, getExactData } from './util';
 
@@ -63,7 +63,9 @@ export async function loadList(id: number) {
 export async function dumpLists(lists: ListGroups) {
   await dumpExactData(
     KEY_LISTS,
-    values(lists).flatMap((group: ListData[]) => map(group, 'id')),
+    Object.values(lists).flatMap((group: ListData[]) =>
+      group.map((group) => group.id),
+    ),
   );
 }
 
@@ -72,23 +74,25 @@ export async function loadData() {
   const lists: ListGroups = { request: [], cookie: [] };
   if (Array.isArray(ids)) {
     const allData = await browser.storage.local.get(
-      map(ids, (id) => `${LIST_PREFIX}${id}`),
+      ids.map((id) => `${LIST_PREFIX}${id}`),
     );
-    const allLists = map(ids, (id) => allData[`${LIST_PREFIX}${id}`]).filter(
-      Boolean,
-    ) as ListData[];
-    const groups = groupBy(allLists, 'type');
+    const allLists = ids
+      .map((id) => allData[`${LIST_PREFIX}${id}`])
+      .filter(Boolean) as ListData[];
+    const groups = groupBy(allLists, (item) => item.type);
     Object.assign(lists, groups);
   } else {
     const allData = await browser.storage.local.get();
     const allLists = Object.keys(allData)
       .filter((key) => key.startsWith(LIST_PREFIX))
       .map((key) => allData[key]) as ListData[];
-    const groups = groupBy(allLists, 'type');
+    const groups = groupBy(allLists, (item) => item.type);
     Object.assign(lists, groups);
   }
   if (import.meta.env.DEV) console.log('loadData:raw', lists);
-  ids = values(lists).flatMap((group: ListData[]) => map(group, 'id'));
+  ids = Object.values(lists).flatMap((group: ListData[]) =>
+    group.map((item) => item.id),
+  );
   lastId = Math.max(0, ...ids);
   lists.request.forEach((list) => {
     list.enabled ??= true;
@@ -130,7 +134,7 @@ export async function saveLists(payload: Partial<ListData>[]) {
     payload.map(async (data) => {
       if (data.id) {
         data = {
-          ...values(lists)
+          ...Object.values(lists)
             .flat()
             .find((list) => list.id === data.id),
           ...data,

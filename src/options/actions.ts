@@ -3,7 +3,7 @@ import { keyboardService } from '@/common/keyboard';
 import { getName, normalizeRequestRule } from '@/common/list';
 import { reorderList } from '@/common/util';
 import type { ListData, ListsDumpData, RuleData, RulesDumpData } from '@/types';
-import { debounce, pick } from 'lodash-es';
+import { debounce, pick } from 'es-toolkit';
 import { toRaw, watch } from 'vue';
 import { shortcutMap } from './shortcut';
 import {
@@ -167,7 +167,7 @@ export const listActions = {
       for (let i = start[0]; i <= end[0]; i += 1) {
         const jStart = i === start[0] ? start[1] : 0;
         const jEnd =
-          i === end[0] ? end[1] : store.lists[listTypes[i]]?.length ?? -1;
+          i === end[0] ? end[1] : (store.lists[listTypes[i]]?.length ?? -1);
         const selection = {
           count: jEnd - jStart + 1,
           selected: [] as boolean[],

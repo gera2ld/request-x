@@ -26,9 +26,11 @@ export function handleMessages(handlers: Record<string, IHandler>) {
       return { error: `${error || 'Unknown error'}` };
     }
   };
-  browser.runtime.onMessage.addListener((message, sender, _sendResponse) => {
-    const cmd = (message as { cmd: string })?.cmd;
-    const handle = handlers[cmd];
-    if (handle) return handleAsync(handle, message, sender);
-  });
+  browser.runtime.onMessage.addListener(
+    (message: unknown, sender: browser.Runtime.MessageSender) => {
+      const cmd = (message as { cmd: string })?.cmd;
+      const handle = handlers[cmd];
+      if (handle) return handleAsync(handle, message, sender);
+    },
+  );
 }

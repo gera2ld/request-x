@@ -50,7 +50,7 @@ import IconOpen from '~icons/mdi/open-in-new';
 import { SECTION_TITLE_MAP } from '@/common/constants';
 import { sendMessage } from '@/common';
 import type { ListData } from '@/types';
-import { mapValues, pick } from 'lodash-es';
+import { mapValues, pick } from 'es-toolkit';
 import { computed, ref } from 'vue';
 import { store, trackListToggle } from './store';
 import ListItem from '@/common/components/list-item.vue';
