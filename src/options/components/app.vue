@@ -33,7 +33,7 @@
         Designed by <a href="https://gera2ld.space" target="_blank">gera2ld</a>
       </div>
     </footer>
-    <modal-list />
+    <ModalList />
   </div>
 </template>
 

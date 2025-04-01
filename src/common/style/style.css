@@ -136,11 +136,14 @@ ul {
 }
 
 .modal {
-  @apply w-1/2 min-w-[16rem] mx-auto p-2;
+  @apply min-w-64 max-w-screen-lg mx-auto p-2;
   background: var(--bg-primary);
 }
+.vl-modal {
+  @apply fixed inset-0 z-10;
+}
 .vl-modal-backdrop {
-  @apply dark:bg-black/70;
+  @apply fixed inset-0 bg-black/40 dark:bg-black/70 -z-1;
 }
 
 .modal-group {
