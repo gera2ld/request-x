@@ -1,28 +1,16 @@
 import { handleMessages, sendMessage } from '@/common';
-import { reorderList, textTester, urlTester } from '@/common/util';
-import { CookieData, CookieMatchResult, ListData } from '@/types';
-import { debounce, pick } from 'es-toolkit';
+import { reorderList } from '@/common/util';
+import { ListData } from '@/types';
 import browser from 'webextension-polyfill';
-import {
-  broadcastUpdates,
-  dataLoaded,
-  dumpLists,
-  fetchList,
-  getErrors,
-  queryReplaceResponse,
-  reloadRules,
-  saveLists,
-  setReplaceResponse,
-} from './list';
-import { getUrl } from './util';
+import { dataLoaded, dumpLists } from './data';
+import { broadcastUpdates, fetchList, reloadRules, updateLists } from './list';
+import { requestActions } from './request';
 
-let cookieRules: CookieData[] = [];
 const actions: Array<{
   name: string;
   payload: any;
 }> = [];
 
-browser.cookies.onChanged.addListener(handleCookieChange);
 browser.tabs.onCreated.addListener((tab) => {
   if (!tab.id) return;
   const url = getSubsribeUrl(tab.url || tab.pendingUrl);
@@ -39,7 +27,7 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 browser.tabs.onRemoved.addListener((tabId) => {
-  setReplaceResponse(tabId, true);
+  requestActions.setReplaceResponse(tabId, true);
 });
 
 // Show Release Notes on update to v3
@@ -54,30 +42,17 @@ browser.runtime.onInstalled.addListener((details) => {
   }
 });
 
-const cookieActions = {
-  async update() {
-    const lists = await dataLoaded;
-    cookieRules = lists.cookie
-      .filter((list) => list.enabled)
-      .flatMap((list) => list.rules.filter((rule) => rule.enabled));
-    return lists;
-  },
-};
-
 handleMessages({
   async GetLists() {
     return dataLoaded;
   },
   async GetErrors() {
-    return getErrors();
+    return requestActions.getRuleErrors();
   },
   async SaveLists(payload: Partial<ListData>[]) {
-    const updatedLists = await saveLists(payload);
+    const updatedLists = await updateLists(payload);
     broadcastUpdates();
     return updatedLists;
-  },
-  async UpdateCookieRules() {
-    cookieActions.update();
   },
   async MoveLists(payload: {
     type: 'request' | 'cookie';
@@ -109,12 +84,13 @@ handleMessages({
   },
   async RemoveList(payload: { id: number }) {
     const lists = await dataLoaded;
+    const removedLists: ListData[] = [];
     Object.values(lists).forEach((group: ListData[]) => {
       const i = group.findIndex(({ id }) => id === payload.id);
-      if (i >= 0) group.splice(i, 1);
+      if (i >= 0) removedLists.push(...group.splice(i, 1));
     });
     dumpLists(lists);
-    reloadRules(lists.request);
+    reloadRules({ removed: removedLists });
     broadcastUpdates();
   },
   GetAction() {
@@ -126,21 +102,13 @@ handleMessages({
   SetReplaceResponse(payload: { enabled: boolean }, sender) {
     const tabId = sender.tab?.id;
     if (tabId) {
-      setReplaceResponse(tabId, payload.enabled);
+      requestActions.setReplaceResponse(tabId, payload.enabled);
     }
   },
   QueryReplaceResponse(payload: { method: string; url: string }) {
-    return queryReplaceResponse(payload.method, payload.url);
+    return requestActions.queryReplaceResponse(payload.method, payload.url);
   },
 });
-
-main().catch((err) => {
-  console.error(err);
-});
-
-let processing = false;
-const updates = new Map<string, browser.Cookies.SetDetailsType>();
-const updateCookiesLater = debounce(updateCookies, 100);
 
 browser.alarms.create({
   delayInMinutes: 1,
@@ -151,9 +119,10 @@ browser.alarms.onAlarm.addListener(() => {
   fetchLists();
 });
 
-async function main() {
-  const lists = await dataLoaded;
-  await reloadRules(lists.request);
+main();
+
+function main() {
+  requestActions.reload();
 }
 
 async function fetchLists() {
@@ -166,83 +135,6 @@ async function fetchLists() {
         broadcastUpdates();
       }),
   );
-}
-
-function handleCookieChange(
-  changeInfo: browser.Cookies.OnChangedChangeInfoType,
-) {
-  // if (['expired', 'evicted'].includes(changeInfo.cause)) return;
-  if (changeInfo.cause !== 'explicit') return;
-  if (processing) return;
-  let update: CookieMatchResult | undefined;
-  for (const rule of cookieRules) {
-    const url = getUrl(changeInfo.cookie);
-    const matches = url.match(urlTester(rule.url));
-    if (!matches) continue;
-    if (rule.name && !changeInfo.cookie.name.match(textTester(rule.name)))
-      continue;
-    const { ttl } = rule;
-    if (changeInfo.removed && !(ttl && ttl > 0)) {
-      // If cookie is removed and no positive ttl, ignore since change will not persist
-      continue;
-    }
-    update = pick(rule, ['sameSite', 'httpOnly', 'secure']);
-    if (ttl != null) {
-      // If ttl is 0, set to undefined to mark the cookie as a session cookie
-      update.expirationDate = ttl
-        ? Math.floor(Date.now() / 1000 + ttl)
-        : undefined;
-    }
-    if (update.sameSite === 'no_restriction') update.secure = true;
-    break;
-  }
-  if (update) {
-    const { cookie } = changeInfo;
-    const hasUpdate = Object.entries(update).some(([key, value]) => {
-      return cookie[key as keyof browser.Cookies.Cookie] !== value;
-    });
-    if (!hasUpdate) {
-      console.info(`[cookie] no update: ${cookie.name} ${getUrl(cookie)}`);
-      return;
-    }
-    const details: browser.Cookies.SetDetailsType = {
-      url: getUrl(pick(cookie, ['domain', 'path', 'secure'])),
-      domain: cookie.hostOnly ? undefined : cookie.domain,
-      expirationDate: cookie.session ? undefined : cookie.expirationDate,
-      ...pick(cookie, [
-        'name',
-        'path',
-        'httpOnly',
-        'sameSite',
-        'secure',
-        'storeId',
-        'value',
-      ]),
-      ...update,
-    };
-    console.info(`[cookie] matched: ${details.name} ${details.url}`, details);
-    updates.set(
-      [details.storeId, details.url, details.name].join('\n'),
-      details,
-    );
-    updateCookiesLater();
-  }
-}
-
-async function updateCookies() {
-  if (processing) return;
-  processing = true;
-  const items = Array.from(updates.values());
-  updates.clear();
-  for (const item of items) {
-    console.info(`[cookie] set: ${item.name} ${item.url}`, item);
-    try {
-      await browser.cookies.set(item);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-  processing = false;
 }
 
 function initiateSubscription(url: string) {

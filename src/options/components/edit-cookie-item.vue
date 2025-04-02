@@ -4,8 +4,9 @@
     @submit.prevent="onSubmit"
     ref="refForm"
   >
-    <div class="col-span-3" :class="{ error: errors.url }">
+    <div class="col-span-3">
       <input
+        :class="{ 'input-error': errors.url }"
         type="text"
         v-model="input.url"
         placeholder="URL"
@@ -171,16 +172,18 @@ const onCancel = () => {
 
 const onSubmit = () => {
   if (Object.values(errors.value).some(Boolean)) return;
+  const rule: CookieData = {
+    enabled: props.rule.enabled ?? true,
+    url: input.url || '',
+    name: input.name || '',
+    comment: input.comment || '',
+    sameSite: input.sameSite || undefined,
+    httpOnly: str2bool(input.httpOnly ?? ''),
+    secure: str2bool(input.secure ?? ''),
+    ttl: str2num(input.ttl ?? ''),
+  };
   emit('submit', {
-    rule: {
-      url: input.url,
-      name: input.name,
-      comment: input.comment || '',
-      sameSite: input.sameSite || undefined,
-      httpOnly: str2bool(input.httpOnly ?? ''),
-      secure: str2bool(input.secure ?? ''),
-      ttl: str2num(input.ttl ?? ''),
-    } as CookieData,
+    rule,
   });
 };
 

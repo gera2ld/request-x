@@ -15,7 +15,7 @@
         :is="EditRuleItem"
         :rule="editingRule as any"
         :editable="listEditable"
-        @submit="onSubmit($event)"
+        @submit="onSubmit"
         @cancel="onCancel"
       />
     </div>

@@ -39,8 +39,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (event: 'cancel'): void;
-  (event: 'submit', data: { rule: CookieData }): void;
   (event: 'select', data: { cmdCtrl: boolean; shift: boolean }): void;
 }>();
 
