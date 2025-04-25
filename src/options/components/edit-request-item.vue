@@ -1,6 +1,6 @@
 <template>
   <form
-    class="grid grid-cols-[8rem_auto_12rem] children:m-1"
+    class="grid grid-cols-[8rem_auto_12rem] gap-2 m-2"
     @submit.prevent="onSubmit"
     ref="refForm"
   >

@@ -1,6 +1,6 @@
 <template>
   <form
-    class="grid grid-cols-[auto_auto_auto_min-content] gap-2"
+    class="grid grid-cols-[auto_auto_auto_min-content] gap-2 m-2"
     @submit.prevent="onSubmit"
     ref="refForm"
   >

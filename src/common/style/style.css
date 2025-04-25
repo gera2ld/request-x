@@ -136,8 +136,9 @@ ul {
 }
 
 .modal {
-  @apply min-w-64 max-w-screen-lg mx-auto p-2;
+  @apply min-w-64 max-w-screen-lg mx-auto p-2 border border-t-none rounded;
   background: var(--bg-primary);
+  border-color: var(--border-input);
 }
 .vl-modal {
   @apply fixed inset-0 z-10;
