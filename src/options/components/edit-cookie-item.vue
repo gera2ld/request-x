@@ -8,7 +8,7 @@
       <input
         :class="{ 'input-error': errors.url }"
         type="text"
-        v-model="input.url"
+        v-model.trim="input.url"
         placeholder="URL"
         :readonly="!editable"
       />
@@ -33,7 +33,7 @@
     <div class="col-span-3">
       <input
         type="text"
-        v-model="input.name"
+        v-model.trim="input.name"
         placeholder="Name"
         :readonly="!editable"
       />
