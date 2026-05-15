@@ -36,7 +36,7 @@
       </div>
       <div class="modal-group" v-if="!store.editList.isSubscribed">
         <div>Name:</div>
-        <input type="text" v-model="store.editList.name" />
+        <input type="text" v-model.trim="store.editList.name" />
       </div>
       <div class="modal-group" v-else>
         <div>
