@@ -4,14 +4,13 @@
 
 ![Request X](./src/resources/x.png)
 
-This is a web extension to block or redirect undesired requests.
+This is a [Manifest V3](https://developer.chrome.com/docs/extensions/develop/concepts/mv3-overview) web extension to block or redirect undesired requests.
 
 Supported browsers:
 
 - Chrome
 - Brave
 - Edge
-- Firefox (not officially released)
 - Kiwi Browser (not all features)
 - Other Chromium-based browsers
 
