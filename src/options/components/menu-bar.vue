@@ -17,11 +17,7 @@
         <div class="menu-dropdown">
           <template v-for="(item, _j) in menu.items" :key="_j">
             <div v-if="item.type === 'sep'" class="menu-sep"></div>
-            <div
-              v-else-if="item.type === 'group'"
-              class="menu-group"
-              v-text="item.label"
-            ></div>
+            <div v-else-if="item.type === 'group'" class="menu-group" v-text="item.label"></div>
             <div
               v-else
               class="menu-item"
@@ -29,11 +25,7 @@
               @click="() => !item.disabled && item.handler?.()"
             >
               <div class="flex-1 mr-4" v-text="item.label"></div>
-              <div
-                class="menu-shortcut"
-                v-if="item.shortcut"
-                v-text="item.shortcut"
-              ></div>
+              <div class="menu-shortcut" v-if="item.shortcut" v-text="item.shortcut"></div>
             </div>
           </template>
         </div>
@@ -46,20 +38,8 @@
 import { computed, ref } from 'vue';
 import VlDropdown from './dropdown.vue';
 import { shortcutTextMap } from '../shortcut';
-import {
-  currentList,
-  listEditable,
-  ruleSelection,
-  selectedLists,
-  store,
-} from '../store';
-import {
-  listActions,
-  ruleActions,
-  selPaste,
-  selectAll,
-  selEdit,
-} from '../actions';
+import { currentList, listEditable, ruleSelection, selectedLists, store } from '../store';
+import { listActions, ruleActions, selPaste, selectAll, selEdit } from '../actions';
 
 const menus = computed(() => [
   {
@@ -145,10 +125,7 @@ const menus = computed(() => [
       {
         label: 'Cut',
         shortcut: shortcutTextMap.cut,
-        handler:
-          store.activeArea === 'lists'
-            ? listActions.selCut
-            : ruleActions.selCut,
+        handler: store.activeArea === 'lists' ? listActions.selCut : ruleActions.selCut,
         disabled:
           store.activeArea === 'lists'
             ? !selectedLists.value.length
@@ -157,14 +134,8 @@ const menus = computed(() => [
       {
         label: 'Copy',
         shortcut: shortcutTextMap.copy,
-        handler:
-          store.activeArea === 'lists'
-            ? listActions.selCopy
-            : ruleActions.selCopy,
-        disabled:
-          store.activeArea === 'lists'
-            ? !selectedLists.value.length
-            : !ruleSelection.count,
+        handler: store.activeArea === 'lists' ? listActions.selCopy : ruleActions.selCopy,
+        disabled: store.activeArea === 'lists' ? !selectedLists.value.length : !ruleSelection.count,
       },
       {
         label: 'Paste',
@@ -193,10 +164,7 @@ const menus = computed(() => [
       {
         label: 'Remove',
         shortcut: shortcutTextMap.remove,
-        handler:
-          store.activeArea === 'lists'
-            ? listActions.selRemove
-            : ruleActions.selRemove,
+        handler: store.activeArea === 'lists' ? listActions.selRemove : ruleActions.selRemove,
         disabled:
           store.activeArea === 'lists'
             ? !selectedLists.value.length

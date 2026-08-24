@@ -33,9 +33,7 @@ function loadRecentlyDisabledListIds(): number[] {
 function dumpRecentlyDisabledListIds() {
   localStorage.setItem(
     RECENTLY_DISABLED_KEY,
-    JSON.stringify(
-      store.recentlyDisabledListIds.slice(-RECENTLY_DISABLED_MAX_RECORD),
-    ),
+    JSON.stringify(store.recentlyDisabledListIds.slice(-RECENTLY_DISABLED_MAX_RECORD)),
   );
 }
 

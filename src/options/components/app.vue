@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="max-w-screen-xl mx-auto min-w-[768px] flex flex-col h-screen px-4"
-  >
+  <div class="max-w-screen-xl mx-auto min-w-[768px] flex flex-col h-screen px-4">
     <header class="header">
       <a href="#" class="text-xl">Request X</a>
       <div class="ml-4 mr-8 subtle" v-text="`v${version}`"></div>
@@ -21,17 +19,11 @@
     <footer class="footer">
       <div>
         Links:
-        <a href="https://github.com/gera2ld/request-x" target="_blank">
-          GitHub
-        </a>
+        <a href="https://github.com/gera2ld/request-x" target="_blank"> GitHub </a>
         |
-        <a href="https://github.com/gera2ld/request-x/issues" target="_blank">
-          Feedback
-        </a>
+        <a href="https://github.com/gera2ld/request-x/issues" target="_blank"> Feedback </a>
       </div>
-      <div>
-        Designed by <a href="https://gera2ld.space" target="_blank">gera2ld</a>
-      </div>
+      <div>Designed by <a href="https://gera2ld.space" target="_blank">gera2ld</a></div>
     </footer>
     <ModalList />
   </div>

@@ -26,8 +26,7 @@ function buildUrlTransform(transform: RequestData['transform']) {
         }
       });
       if (addOrReplaceParams.length || removeParams.length) {
-        const queryTransform: browser.DeclarativeNetRequest.URLTransformQueryTransformType =
-          {};
+        const queryTransform: browser.DeclarativeNetRequest.URLTransformQueryTransformType = {};
         if (addOrReplaceParams.length) {
           queryTransform.addOrReplaceParams = addOrReplaceParams;
         }

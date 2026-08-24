@@ -22,8 +22,7 @@ handleMessages({
 
 async function loadData() {
   store.lists = await sendMessage<ListGroups>('GetLists');
-  store.ruleErrors =
-    await sendMessage<Record<number, Record<number, string>>>('GetErrors');
+  store.ruleErrors = await sendMessage<Record<number, Record<number, string>>>('GetErrors');
   checkAction();
 }
 
@@ -38,9 +37,7 @@ const actionHandlers: Record<string, (payload: any) => void> = {
 };
 
 async function checkAction() {
-  const action = await sendMessage<{ name: string; payload: any } | null>(
-    'GetAction',
-  );
+  const action = await sendMessage<{ name: string; payload: any } | null>('GetAction');
   if (action) {
     const handler = actionHandlers[action.name];
     handler?.(action.payload);

@@ -18,8 +18,7 @@
           enabled: item.enabled,
           dragging: dragging.start >= 0 && isSelected(itemIndex),
           'dragging-over': dragging.over === itemIndex,
-          'dragging-below':
-            dragging.over === itemIndex && dragging.over > dragging.start,
+          'dragging-below': dragging.over === itemIndex && dragging.over > dragging.start,
         }"
         :item="item"
         :errors="store.ruleErrors[item.id]"
@@ -63,15 +62,12 @@ const dragging = reactive<{
 
 const isActive = (index: number) =>
   listSelection.groupIndex === props.index && listSelection.itemIndex === index;
-const isSelected = (index: number) =>
-  listSelection.selection[props.index]?.selected[index];
+const isSelected = (index: number) => listSelection.selection[props.index]?.selected[index];
 
 const visible = computed(() => {
   let count = 0;
   const data = props.lists.map((list) => {
-    const visible =
-      !props.filter ||
-      list.name.toLowerCase().includes(props.filter.toLowerCase());
+    const visible = !props.filter || list.name.toLowerCase().includes(props.filter.toLowerCase());
     count += +visible;
     return visible;
   });
@@ -104,18 +100,10 @@ const onDragLeave = (event: DragEvent, index: number) => {
 
 const onDragEnd = async () => {
   const selection = listSelection.selection[props.index];
-  const selected = selection.selected
-    .map((value, i) => (value ? i : -1))
-    .filter((i) => i >= 0);
-  listActions.move(
-    props.type,
-    selected,
-    dragging.over,
-    dragging.over > dragging.start,
-  );
+  const selected = selection.selected.map((value, i) => (value ? i : -1)).filter((i) => i >= 0);
+  listActions.move(props.type, selected, dragging.over, dragging.over > dragging.start);
   const offset =
-    selected.filter((i) => i < dragging.over).length -
-    +(dragging.over > dragging.start);
+    selected.filter((i) => i < dragging.over).length - +(dragging.over > dragging.start);
   const newSelected: boolean[] = [];
   selected.forEach((_, i) => {
     newSelected[dragging.over - offset + i] = true;
@@ -127,19 +115,9 @@ const onDragEnd = async () => {
 };
 
 const onSelToggle = (index: number, event: MouseEvent) => {
-  listActions.selToggle(
-    listTypes.indexOf(props.type),
-    index,
-    getModifiers(event),
-  );
-  const selectedCount = listSelection.selection.reduce(
-    (res, item) => res + item.count,
-    0,
-  );
-  if (
-    selectedCount === 1 &&
-    listSelection.selection[props.index].selected[index]
-  ) {
+  listActions.selToggle(listTypes.indexOf(props.type), index, getModifiers(event));
+  const selectedCount = listSelection.selection.reduce((res, item) => res + item.count, 0);
+  if (selectedCount === 1 && listSelection.selection[props.index].selected[index]) {
     const list = props.lists[index];
     listActions.open(list.id);
   }

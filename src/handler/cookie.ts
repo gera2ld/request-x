@@ -27,9 +27,7 @@ async function reloadRules() {
   console.info(`[cookie] rules reloaded (${cookieRules.length})`);
 }
 
-async function handleCookieChange(
-  changeInfo: browser.Cookies.OnChangedChangeInfoType,
-) {
+async function handleCookieChange(changeInfo: browser.Cookies.OnChangedChangeInfoType) {
   // if (['expired', 'evicted'].includes(changeInfo.cause)) return;
   if (changeInfo.cause !== 'explicit') return;
   if (processing) return;
@@ -39,8 +37,7 @@ async function handleCookieChange(
     const url = getUrl(changeInfo.cookie);
     const matches = url.match(urlTester(rule.url));
     if (!matches) continue;
-    if (rule.name && !changeInfo.cookie.name.match(textTester(rule.name)))
-      continue;
+    if (rule.name && !changeInfo.cookie.name.match(textTester(rule.name))) continue;
     const { ttl } = rule;
     if (changeInfo.removed && !(ttl && ttl > 0)) {
       // If cookie is removed and no positive ttl, ignore since change will not persist
@@ -49,9 +46,7 @@ async function handleCookieChange(
     update = pick(rule, ['sameSite', 'httpOnly', 'secure']);
     if (ttl != null) {
       // If ttl is 0, set to undefined to mark the cookie as a session cookie
-      update.expirationDate = ttl
-        ? Math.floor(Date.now() / 1000 + ttl)
-        : undefined;
+      update.expirationDate = ttl ? Math.floor(Date.now() / 1000 + ttl) : undefined;
     }
     if (update.sameSite === 'no_restriction') update.secure = true;
     break;
@@ -69,22 +64,11 @@ async function handleCookieChange(
       url: getUrl(pick(cookie, ['domain', 'path', 'secure'])),
       domain: cookie.hostOnly ? undefined : cookie.domain,
       expirationDate: cookie.session ? undefined : cookie.expirationDate,
-      ...pick(cookie, [
-        'name',
-        'path',
-        'httpOnly',
-        'sameSite',
-        'secure',
-        'storeId',
-        'value',
-      ]),
+      ...pick(cookie, ['name', 'path', 'httpOnly', 'sameSite', 'secure', 'storeId', 'value']),
       ...update,
     };
     console.info(`[cookie] matched: ${details.name} ${details.url}`, details);
-    updates.set(
-      [details.storeId, details.url, details.name].join('\n'),
-      details,
-    );
+    updates.set([details.storeId, details.url, details.name].join('\n'), details);
     updateCookiesLater();
   }
 }

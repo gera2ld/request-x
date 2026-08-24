@@ -1,29 +1,12 @@
 <template>
   <VlModal :show="!!store.editList" @close="onListCancel" transition="fade">
-    <form
-      class="modal"
-      v-if="store.editList"
-      @submit.prevent="onListSave"
-      ref="el"
-    >
+    <form class="modal" v-if="store.editList" @submit.prevent="onListSave" ref="el">
       <h3 class="font-bold mb-2" v-text="modalTitle" />
-      <div
-        class="modal-group"
-        v-if="!store.editList.id && !store.editList.isSubscribed"
-      >
+      <div class="modal-group" v-if="!store.editList.id && !store.editList.isSubscribed">
         <div>Type:</div>
         <div class="flex">
-          <label
-            class="flex mr-4 items-center"
-            v-for="type in ['request', 'cookie']"
-            :key="type"
-          >
-            <input
-              class="mr-1"
-              type="radio"
-              :value="type"
-              v-model="store.editList.type"
-            />
+          <label class="flex mr-4 items-center" v-for="type in ['request', 'cookie']" :key="type">
+            <input class="mr-1" type="radio" :value="type" v-model="store.editList.type" />
             {{ formatType(type) }}
           </label>
         </div>
@@ -98,17 +81,12 @@ const errors = computed(() => {
   const { editList } = store;
   return {
     subscribeUrl:
-      editList?.isSubscribed &&
-      editList.subscribeUrl &&
-      !isValidURL(editList.subscribeUrl),
+      editList?.isSubscribed && editList.subscribeUrl && !isValidURL(editList.subscribeUrl),
   };
 });
 
 const canSubmit = computed(() => {
-  if (
-    store.editList?.isSubscribed &&
-    (subscribeData.value.error || !subscribeData.value.data)
-  )
+  if (store.editList?.isSubscribed && (subscribeData.value.error || !subscribeData.value.data))
     return false;
   return !Object.values(errors.value).some(Boolean);
 });
@@ -132,8 +110,7 @@ const onListSave = async () => {
   if (!store.editList?.id) listActions.open(list.id);
 };
 
-const formatType = (type?: string) =>
-  type && type[0].toUpperCase() + type.slice(1);
+const formatType = (type?: string) => type && type[0].toUpperCase() + type.slice(1);
 
 const resetSubscribedData = () => {
   const { value } = subscribeData;
@@ -142,11 +119,7 @@ const resetSubscribedData = () => {
 };
 
 const fetchData = debounce(async () => {
-  if (
-    !store.editList?.isSubscribed ||
-    errors.value.subscribeUrl ||
-    !store.editList.subscribeUrl
-  )
+  if (!store.editList?.isSubscribed || errors.value.subscribeUrl || !store.editList.subscribeUrl)
     return;
   const { value } = subscribeData;
   const session = value.session + 1;
@@ -178,9 +151,7 @@ watch(
 watchEffect(
   () => {
     if (store.editList && el.value) {
-      const input = el.value.querySelector(
-        'input[type=text]',
-      ) as HTMLInputElement;
+      const input = el.value.querySelector('input[type=text]') as HTMLInputElement;
       input.focus();
     }
   },

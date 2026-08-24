@@ -3,13 +3,7 @@
     <div class="modal">
       <div
         class="py-1 text-lg font-bold text-center"
-        v-text="
-          !listEditable
-            ? 'View Rule'
-            : ruleState.newRule
-              ? 'Create Rule'
-              : 'Edit Rule'
-        "
+        v-text="!listEditable ? 'View Rule' : ruleState.newRule ? 'Create Rule' : 'Edit Rule'"
       ></div>
       <Component
         :is="EditRuleItem"
@@ -39,9 +33,7 @@ const editingRule = computed(() => {
   if (ruleState.newRule) return ruleState.newRule;
   return currentList.value?.rules[ruleState.editing];
 });
-const EditRuleItem = computed(
-  () => currentList.value && editRuleItemMap[currentList.value.type],
-);
+const EditRuleItem = computed(() => currentList.value && editRuleItemMap[currentList.value.type]);
 const onCancel = ruleActions.cancel;
 const onSubmit = ruleActions.submit;
 </script>

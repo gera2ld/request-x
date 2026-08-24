@@ -6,28 +6,15 @@
       :active="!!rule.enabled"
       @toggle="handleToggle"
     />
-    <div
-      class="w-32 h-8 leading-8 mr-1 truncate"
-      v-text="ruleMethods"
-      :title="ruleMethods"
-    ></div>
+    <div class="w-32 h-8 leading-8 mr-1 truncate" v-text="ruleMethods" :title="ruleMethods"></div>
     <div class="rule-item-content">
       <div v-text="rule.url"></div>
-      <div
-        class="rule-item-comment"
-        v-if="rule.comment"
-        v-text="rule.comment"
-      ></div>
+      <div class="rule-item-comment" v-if="rule.comment" v-text="rule.comment"></div>
     </div>
     <div class="mx-2 mt-1 text-error" v-if="ruleError" :title="ruleError">
       <IconError />
     </div>
-    <div
-      class="rule-item-badge"
-      v-for="badge in badges"
-      v-text="badge"
-      :key="badge"
-    ></div>
+    <div class="rule-item-badge" v-for="badge in badges" v-text="badge" :key="badge"></div>
   </RuleItemView>
 </template>
 
@@ -53,9 +40,7 @@ const emit = defineEmits<{
   (event: 'select', data: { cmdCtrl: boolean; shift: boolean }): void;
 }>();
 
-const ruleError = computed(
-  () => store.ruleErrors[currentList.value?.id || 0]?.[props.index + 1],
-);
+const ruleError = computed(() => store.ruleErrors[currentList.value?.id || 0]?.[props.index + 1]);
 
 const ruleMethods = computed(() => props.rule.methods.join(',') || '*');
 const badges = computed(() => {
@@ -79,8 +64,7 @@ const badges = computed(() => {
       const { transform } = rule;
       if (
         transform &&
-        (URL_TRANSFORM_KEYS.some((key) => transform[key] != null) ||
-          transform.query?.length)
+        (URL_TRANSFORM_KEYS.some((key) => transform[key] != null) || transform.query?.length)
       )
         result.push('url_transform');
       break;

@@ -1,18 +1,8 @@
 <template>
   <div class="list-item" :title="name">
     <Toggle :active="item.enabled" @toggle="emit('toggle', $event)" />
-    <span
-      class="mx-1 flex-1 truncate"
-      v-text="name"
-      @click="emit('nameClick', $event)"
-    ></span>
-    <span
-      class="list-section-badge"
-      v-if="item.subscribeUrl"
-      title="Subscribed"
-    >
-      s
-    </span>
+    <span class="mx-1 flex-1 truncate" v-text="name" @click="emit('nameClick', $event)"></span>
+    <span class="list-section-badge" v-if="item.subscribeUrl" title="Subscribed"> s </span>
     <slot name="suffix">
       <div
         class="ml-1 text-error"
@@ -44,7 +34,5 @@ const emit = defineEmits<{
 }>();
 
 const name = computed(() => getName(props.item));
-const errorCount = computed(() =>
-  props.errors ? Object.keys(props.errors).length : 0,
-);
+const errorCount = computed(() => (props.errors ? Object.keys(props.errors).length : 0));
 </script>

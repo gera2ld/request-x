@@ -12,16 +12,10 @@
       <input type="search" v-model="filter" placeholder="Filter by name" />
     </div>
     <div class="popup-enabled-lists" v-if="hasLists">
-      <div
-        v-for="(lists, group) in listGroups"
-        :key="group"
-        class="list-section"
-      >
+      <div v-for="(lists, group) in listGroups" :key="group" class="list-section">
         <div
           class="list-section-title"
-          v-text="
-            `${SECTION_TITLE_MAP[group]} (${lists.filter((item) => item.enabled).length})`
-          "
+          v-text="`${SECTION_TITLE_MAP[group]} (${lists.filter((item) => item.enabled).length})`"
         ></div>
         <div>
           <ListItem
@@ -66,8 +60,7 @@ const listGroups = computed(() => {
   const lowerValue = filter.value.toLowerCase();
   const predicate = lowerValue
     ? (list: ListData) => list.name.toLowerCase().includes(lowerValue)
-    : (list: ListData) =>
-        list.enabled || store.recentlyDisabledListIds.includes(list.id);
+    : (list: ListData) => list.enabled || store.recentlyDisabledListIds.includes(list.id);
   return mapValues(store.lists, (group) => group.filter(predicate));
 });
 

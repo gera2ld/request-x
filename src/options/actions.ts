@@ -96,24 +96,14 @@ export const listActions = {
     item ||= currentList.value;
     if (item) sendMessage('RemoveList', pick(item, ['id']));
   },
-  async move(
-    type: 'request' | 'cookie',
-    selection: number[],
-    target: number,
-    downward: boolean,
-  ) {
+  async move(type: 'request' | 'cookie', selection: number[], target: number, downward: boolean) {
     await sendMessage('MoveLists', {
       type,
       selection,
       target,
       downward,
     });
-    const reordered = reorderList(
-      store.lists[type] as ListData[],
-      selection,
-      target,
-      downward,
-    );
+    const reordered = reorderList(store.lists[type] as ListData[], selection, target, downward);
     if (reordered) {
       store.lists[type] = reordered as any;
     }
@@ -148,11 +138,7 @@ export const listActions = {
       selection.count = lists.length;
     });
   },
-  selToggle(
-    groupIndex: number,
-    itemIndex: number,
-    event: { cmdCtrl: boolean; shift: boolean },
-  ) {
+  selToggle(groupIndex: number, itemIndex: number, event: { cmdCtrl: boolean; shift: boolean }) {
     const lastGroupIndex = listSelection.groupIndex;
     const lastItemIndex = listSelection.itemIndex;
     listSelection.groupIndex = groupIndex;
@@ -166,8 +152,7 @@ export const listActions = {
       }
       for (let i = start[0]; i <= end[0]; i += 1) {
         const jStart = i === start[0] ? start[1] : 0;
-        const jEnd =
-          i === end[0] ? end[1] : (store.lists[listTypes[i]]?.length ?? -1);
+        const jEnd = i === end[0] ? end[1] : (store.lists[listTypes[i]]?.length ?? -1);
         const selection = {
           count: jEnd - jStart + 1,
           selected: [] as boolean[],
@@ -228,15 +213,8 @@ export const listActions = {
   async selPaste({ data }: ListsDumpData) {
     await listActions.save(
       data.map((list) => {
-        const data = pick(list, [
-          'name',
-          'type',
-          'enabled',
-          'rules',
-          'subscribeUrl',
-        ]);
-        if (data.type === 'request' && data.rules)
-          data.rules = data.rules.flatMap(fixRequestRule);
+        const data = pick(list, ['name', 'type', 'enabled', 'rules', 'subscribeUrl']);
+        if (data.type === 'request' && data.rules) data.rules = data.rules.flatMap(fixRequestRule);
         return data;
       }),
     );
@@ -248,12 +226,9 @@ export const listActions = {
       lists.length === 1
         ? getName(lists[0]).replace(/\s+/g, '-').toLowerCase()
         : `request-x-export-${Date.now()}`;
-    const blob = new Blob(
-      [JSON.stringify(lists.length === 1 ? lists[0] : lists)],
-      {
-        type: 'application/json',
-      },
-    );
+    const blob = new Blob([JSON.stringify(lists.length === 1 ? lists[0] : lists)], {
+      type: 'application/json',
+    });
     downloadBlob(blob, `${basename}.json`);
   },
   selToggleStatus() {
@@ -366,17 +341,12 @@ export const ruleActions = {
   async selPaste({ data }: RulesDumpData) {
     const current = currentList.value;
     if (!current || !listEditable.value) return;
-    if (!data.type || !data.rules?.length)
-      throw new Error('Invalid clipboard data');
+    if (!data.type || !data.rules?.length) throw new Error('Invalid clipboard data');
     if (data.type !== current.type) throw new Error('Incompatible rule type');
     const rules = current.rules as RuleData[];
     let newRules = data.rules as RuleData[];
     if (data.type === 'request') newRules = newRules.flatMap(fixRequestRule);
-    rules.splice(
-      ruleSelection.active < 0 ? rules.length : ruleSelection.active,
-      0,
-      ...newRules,
-    );
+    rules.splice(ruleSelection.active < 0 ? rules.length : ruleSelection.active, 0, ...newRules);
     ruleActions.save();
   },
   selEdit() {
@@ -422,8 +392,7 @@ export const ruleActions = {
     ruleSelection.count = 0;
     ruleSelection.selected.length = rules.length;
     ruleState.visible = rules.map((rule, index) => {
-      const filtered =
-        !ruleState.filter || rule.url?.includes(ruleState.filter);
+      const filtered = !ruleState.filter || rule.url?.includes(ruleState.filter);
       if (!filtered) ruleSelection.selected[index] = false;
       if (ruleSelection.selected[index]) ruleSelection.count += 1;
       return filtered;
@@ -454,10 +423,7 @@ export const ruleKeys = {
   down() {
     const current = currentList.value;
     if (!current) return;
-    ruleSelection.active = Math.min(
-      current.rules.length - 1,
-      ruleSelection.active + 1,
-    );
+    ruleSelection.active = Math.min(current.rules.length - 1, ruleSelection.active + 1);
   },
   space() {
     ruleActions.selToggle(ruleSelection.active, {
@@ -501,9 +467,7 @@ export function selectAll() {
 
 function fixRequestRule(rule: any) {
   if (!rule.type) {
-    console.warn(
-      'The support for the old data structure is deprecated and will be removed soon.',
-    );
+    console.warn('The support for the old data structure is deprecated and will be removed soon.');
   }
   return normalizeRequestRule(rule);
 }
@@ -511,13 +475,9 @@ function fixRequestRule(rule: any) {
 const updateListLater = debounce(ruleActions.update, 200);
 
 watch(currentList, (list) => {
-  listSelection.groupIndex = list
-    ? ['request', 'cookie'].indexOf(list.type)
-    : -1;
+  listSelection.groupIndex = list ? ['request', 'cookie'].indexOf(list.type) : -1;
   listSelection.itemIndex = list
-    ? (store.lists[list.type] as ListData[]).findIndex(
-        (item) => item.id === list.id,
-      )
+    ? (store.lists[list.type] as ListData[]).findIndex((item) => item.id === list.id)
     : -1;
   if (list && store.hintType === 'listRequired') store.hintType = undefined;
 });
@@ -538,10 +498,7 @@ watch(
     if (isRoute('lists')) {
       const current = currentList.value;
       if (!current) return;
-      const index =
-        (store.lists[current.type] as ListData[] | undefined)?.indexOf(
-          current,
-        ) ?? -1;
+      const index = (store.lists[current.type] as ListData[] | undefined)?.indexOf(current) ?? -1;
       if (index >= 0) {
         listActions.selToggle(listTypes.indexOf(current.type), index, {
           cmdCtrl: false,
@@ -581,11 +538,7 @@ keyboardService.register(shortcutMap.copy, ruleActions.selCopy, rulesRealm);
 keyboardService.register(shortcutMap.cut, listActions.selCut, listsRealm);
 keyboardService.register(shortcutMap.cut, ruleActions.selCut, rulesRealm);
 keyboardService.register(shortcutMap.paste, selPaste, noEdit);
-keyboardService.register(
-  shortcutMap.duplicate,
-  ruleActions.selDuplicate,
-  rulesRealm,
-);
+keyboardService.register(shortcutMap.duplicate, ruleActions.selDuplicate, rulesRealm);
 keyboardService.register(shortcutMap.remove, listActions.selRemove, listsRealm);
 keyboardService.register(shortcutMap.remove, ruleActions.selRemove, rulesRealm);
 keyboardService.register(shortcutMap.add, ruleActions.new, noEdit);

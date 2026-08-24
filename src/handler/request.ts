@@ -1,5 +1,5 @@
-import { URL_TRANSFORM_KEYS } from '@/common/constants';
 import { b64encodeText, loadRegExp } from '@/common/util';
+import { buildUrlTransform } from '@/common/url-transform';
 import type { RequestData, RequestListData } from '@/types';
 import { debounce, isEqual } from 'es-toolkit';
 import browser from 'webextension-polyfill';
@@ -159,83 +159,76 @@ function queryReplaceResponse(method: string, url: string) {
 }
 
 function buildListRules(list: RequestListData, base = MAX_RULES_PER_LIST) {
-  const rules: browser.DeclarativeNetRequest.Rule[] = list.rules.flatMap(
-    (item, i) => {
-      const type = requestRuleTypeMap[item.type];
-      if (!item.enabled) return [];
-      const rule: browser.DeclarativeNetRequest.Rule = {
-        id: list.id * base + i + 1,
-        action: {
-          type,
-        },
-        condition: {
-          resourceTypes,
-        },
-      };
-      // Do not support match patterns here as they may exceed the 2KB memory limit after conversion to RegExp
-      const re = loadRegExp(item.url);
-      if (re) {
-        rule.condition.regexFilter = re;
-      } else {
-        rule.condition.urlFilter = item.url;
+  const rules: browser.DeclarativeNetRequest.Rule[] = list.rules.flatMap((item, i) => {
+    const type = requestRuleTypeMap[item.type];
+    if (!item.enabled) return [];
+    const rule: browser.DeclarativeNetRequest.Rule = {
+      id: list.id * base + i + 1,
+      action: {
+        type,
+      },
+      condition: {
+        resourceTypes,
+      },
+    };
+    // Do not support match patterns here as they may exceed the 2KB memory limit after conversion to RegExp
+    const re = loadRegExp(item.url);
+    if (re) {
+      rule.condition.regexFilter = re;
+    } else {
+      rule.condition.urlFilter = item.url;
+    }
+    if (item.methods.length) rule.condition.requestMethods = item.methods;
+    switch (item.type) {
+      case 'redirect': {
+        rule.action.redirect = {
+          [re ? 'regexSubstitution' : 'url']: item.target,
+        };
+        break;
       }
-      if (item.methods.length) rule.condition.requestMethods = item.methods;
-      switch (item.type) {
-        case 'redirect': {
-          rule.action.redirect = {
-            [re ? 'regexSubstitution' : 'url']: item.target,
-          };
-          break;
-        }
-        case 'transform': {
-          rule.action.redirect = {
-            transform: buildUrlTransform(item.transform),
-          };
-          break;
-        }
-        case 'replace': {
-          rule.action.redirect = {
-            url: `data:${item.contentType || ''};base64,${b64encodeText(
-              item.target,
-            )}`,
-          };
-          rule.condition.excludedTabIds = excludedReplaceTabIds;
-          break;
-        }
-        case 'headers': {
-          const validKeys = (
-            ['requestHeaders', 'responseHeaders'] as const
-          ).filter((key) => {
-            const headerItems = item[key];
-            const updates: browser.DeclarativeNetRequest.RuleActionRequestHeadersItemType[] =
-              [];
-            headerItems?.forEach((headerItem) => {
-              const { name, value } = headerItem;
-              if (name[0] === '#') return;
-              if (name[0] === '!') {
-                updates.push({
-                  header: name.slice(1),
-                  operation: 'remove',
-                });
-              } else {
-                updates.push({
-                  header: name,
-                  operation: 'set',
-                  value,
-                });
-              }
-            });
-            if (updates.length) {
-              rule.action[key] = updates;
-              return true;
+      case 'transform': {
+        rule.action.redirect = {
+          transform: buildUrlTransform(item.transform),
+        };
+        break;
+      }
+      case 'replace': {
+        rule.action.redirect = {
+          url: `data:${item.contentType || ''};base64,${b64encodeText(item.target)}`,
+        };
+        rule.condition.excludedTabIds = excludedReplaceTabIds;
+        break;
+      }
+      case 'headers': {
+        const validKeys = (['requestHeaders', 'responseHeaders'] as const).filter((key) => {
+          const headerItems = item[key];
+          const updates: browser.DeclarativeNetRequest.RuleActionRequestHeadersItemType[] = [];
+          headerItems?.forEach((headerItem) => {
+            const { name, value } = headerItem;
+            if (name[0] === '#') return;
+            if (name[0] === '!') {
+              updates.push({
+                header: name.slice(1),
+                operation: 'remove',
+              });
+            } else {
+              updates.push({
+                header: name,
+                operation: 'set',
+                value,
+              });
             }
           });
-          if (!validKeys.length) return [];
-          break;
-        }
+          if (updates.length) {
+            rule.action[key] = updates;
+            return true;
+          }
+        });
+        if (!validKeys.length) return [];
+        break;
       }
-      return rule;
-    },
-  );
+    }
+    return rule;
+  });
   return rules;
 }

@@ -8,20 +8,10 @@
       <input type="search" v-model="filter" placeholder="Filter by name" />
     </div>
     <div class="flex-1 overflow-y-auto" @click="onSelCancel">
-      <ListSection
-        type="request"
-        :lists="store.lists.request"
-        :index="0"
-        :filter="filter"
-      >
+      <ListSection type="request" :lists="store.lists.request" :index="0" :filter="filter">
         <template #title>{{ SECTION_TITLE_MAP.request }}</template>
       </ListSection>
-      <ListSection
-        type="cookie"
-        :lists="store.lists.cookie"
-        :index="1"
-        :filter="filter"
-      >
+      <ListSection type="cookie" :lists="store.lists.cookie" :index="1" :filter="filter">
         <template #title>{{ SECTION_TITLE_MAP.cookie }}</template>
         <template #unsupported>
           <div class="subtle">Not supported in this browser.</div>

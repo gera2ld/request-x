@@ -1,9 +1,5 @@
 <template>
-  <form
-    class="grid grid-cols-[8rem_auto_12rem] gap-2 m-2"
-    @submit.prevent="onSubmit"
-    ref="refForm"
-  >
+  <form class="grid grid-cols-[8rem_auto_12rem] gap-2 m-2" @submit.prevent="onSubmit" ref="refForm">
     <div class="row-span-4">
       <div
         class="request-method-item"
@@ -49,8 +45,8 @@
             </a>
           </li>
           <li>
-            a regular expression, e.g. <code>/^https://www\./</code>, note that
-            <code>/</code> does not have to be escaped
+            a regular expression, e.g. <code>/^https://www\./</code>, note that <code>/</code> does
+            not have to be escaped
           </li>
         </ul>
       </div>
@@ -84,10 +80,7 @@
               URL filter</a
             >, it will be redirected to the target.
           </li>
-          <li>
-            a regular expression, the matched part will be replaced with the
-            target.
-          </li>
+          <li>a regular expression, the matched part will be replaced with the target.</li>
         </ul>
       </div>
     </div>
@@ -102,12 +95,10 @@
         />
         <div class="form-hint">
           <p>
-            Any text content is allowed and will replace the response content by
-            redirecting it to a dataURL.
+            Any text content is allowed and will replace the response content by redirecting it to a
+            dataURL.
           </p>
-          <a v-if="formatters[guessLang]" @click.prevent="handleFormat">
-            Format
-          </a>
+          <a v-if="formatters[guessLang]" @click.prevent="handleFormat"> Format </a>
         </div>
       </div>
       <div>
@@ -116,8 +107,7 @@
           Content type, e.g.
           <template v-for="(type, i) in contentTypes" :key="i">
             <span v-if="i > 0">, </span>
-            <code v-text="type"></code
-            ><a @click.prevent="input.contentType = type">^</a>
+            <code v-text="type"></code><a @click.prevent="input.contentType = type">^</a>
           </template>
         </div>
       </div>
@@ -146,9 +136,7 @@
               Prefix with <code>!</code> to remove a key, e.g.
               <code>!key_to_remove</code>
             </li>
-            <li>
-              To add or replace a key, e.g. <code>some_key: some_value</code>
-            </li>
+            <li>To add or replace a key, e.g. <code>some_key: some_value</code></li>
           </ul>
         </div>
       </div>
@@ -216,22 +204,14 @@
       </div>
     </template>
     <div class="col-start-2">
-      <textarea
-        v-model="input.comment"
-        placeholder="Comment"
-        :readonly="!editable"
-      />
+      <textarea v-model="input.comment" placeholder="Comment" :readonly="!editable" />
       <div class="form-hint">
         <p>Comment</p>
       </div>
     </div>
     <div class="whitespace-nowrap" style="grid-column-start: 3">
       <button class="mr-1" type="submit" v-if="editable">Save</button>
-      <button
-        type="reset"
-        @click="onCancel"
-        v-text="editable ? 'Cancel' : 'Close'"
-      ></button>
+      <button type="reset" @click="onCancel" v-text="editable ? 'Cancel' : 'Close'"></button>
     </div>
   </form>
 </template>
@@ -354,9 +334,7 @@ const onSubmit = () => {
         query: parseKeyValues(input.transformQuery ?? ''),
         ...Object.fromEntries(
           parseKeyValues(input.transformUrl ?? '')
-            .filter(({ name }) =>
-              (URL_TRANSFORM_KEYS as readonly string[]).includes(name),
-            )
+            .filter(({ name }) => (URL_TRANSFORM_KEYS as readonly string[]).includes(name))
             .map(({ name, value }) => [name, value]),
         ),
       },

@@ -24,19 +24,10 @@
     </div>
     <div class="row-span-3 whitespace-nowrap">
       <button class="mr-1" type="submit" v-if="editable">Save</button>
-      <button
-        type="reset"
-        @click="onCancel"
-        v-text="editable ? 'Cancel' : 'Close'"
-      ></button>
+      <button type="reset" @click="onCancel" v-text="editable ? 'Cancel' : 'Close'"></button>
     </div>
     <div class="col-span-3">
-      <input
-        type="text"
-        v-model.trim="input.name"
-        placeholder="Name"
-        :readonly="!editable"
-      />
+      <input type="text" v-model.trim="input.name" placeholder="Name" :readonly="!editable" />
       <div class="form-hint">
         Name of cookie, a string for exact match or a RegExp like
         <code>/^mycookie/</code>.
@@ -70,22 +61,11 @@
       <div class="form-hint">Secure</div>
     </div>
     <div class="col-span-3">
-      <input
-        type="number"
-        v-model="input.ttl"
-        placeholder="TTL"
-        :readonly="!editable"
-      />
-      <div class="form-hint">
-        TTL in seconds, -1 for removing, 0 for session cookie.
-      </div>
+      <input type="number" v-model="input.ttl" placeholder="TTL" :readonly="!editable" />
+      <div class="form-hint">TTL in seconds, -1 for removing, 0 for session cookie.</div>
     </div>
     <div class="col-span-3">
-      <textarea
-        v-model="input.comment"
-        placeholder="Comment"
-        :readonly="!editable"
-      />
+      <textarea v-model="input.comment" placeholder="Comment" :readonly="!editable" />
       <div class="form-hint">
         <p>Comment</p>
       </div>

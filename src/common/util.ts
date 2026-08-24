@@ -61,8 +61,7 @@ export function buildUrlRe(pattern: string) {
   if (!scheme) return '^:NEVER_MATCH';
   if (scheme === '*') scheme = '[^:]+';
   if (host === '*') host = '[^/]+';
-  else if (host.startsWith('*.'))
-    host = `(?:[^/]*?\\.)?${str2re(host.slice(2))}`;
+  else if (host.startsWith('*.')) host = `(?:[^/]*?\\.)?${str2re(host.slice(2))}`;
   else host = str2re(host);
   path = str2re(path);
   return `^${scheme}:\\/\\/${host}${path}$`;

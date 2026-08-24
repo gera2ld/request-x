@@ -15,12 +15,8 @@ export async function loadData() {
   let ids = await getExactData<number[]>(KEY_LISTS);
   const lists: ListGroups = { request: [], cookie: [] };
   if (Array.isArray(ids)) {
-    const allData = await browser.storage.local.get(
-      ids.map((id) => `${LIST_PREFIX}${id}`),
-    );
-    const allLists = ids
-      .map((id) => allData[`${LIST_PREFIX}${id}`])
-      .filter(Boolean) as ListData[];
+    const allData = await browser.storage.local.get(ids.map((id) => `${LIST_PREFIX}${id}`));
+    const allLists = ids.map((id) => allData[`${LIST_PREFIX}${id}`]).filter(Boolean) as ListData[];
     const groups = groupBy(allLists, (item) => item.type);
     Object.assign(lists, groups);
   } else {
@@ -32,9 +28,7 @@ export async function loadData() {
     Object.assign(lists, groups);
   }
   if (import.meta.env.DEV) console.log('loadData:raw', lists);
-  ids = Object.values(lists).flatMap((group: ListData[]) =>
-    group.map((item) => item.id),
-  );
+  ids = Object.values(lists).flatMap((group: ListData[]) => group.map((item) => item.id));
   lastId = Math.max(0, ...ids);
   lists.request.forEach((list) => {
     list.enabled ??= true;
@@ -55,9 +49,7 @@ export function getKey(id: number) {
 export async function dumpLists(lists: ListGroups) {
   await dumpExactData(
     KEY_LISTS,
-    Object.values(lists).flatMap((group: ListData[]) =>
-      group.map((group) => group.id),
-    ),
+    Object.values(lists).flatMap((group: ListData[]) => group.map((group) => group.id)),
   );
 }
 

@@ -2,10 +2,7 @@
   <teleport to="body">
     <transition :name="transition" @after-leave="onAfterLeave" appear>
       <div :class="`vl-modal ${modalClass}`" v-if="show">
-        <div
-          :class="`vl-modal-backdrop ${backdropClass}`"
-          @click="onBackdropClick"
-        />
+        <div :class="`vl-modal-backdrop ${backdropClass}`" @click="onBackdropClick" />
         <slot></slot>
       </div>
     </transition>

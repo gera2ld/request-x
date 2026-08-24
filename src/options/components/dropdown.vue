@@ -5,12 +5,7 @@
     :class="`vl-dropdown-${align} vl-dropdown-${direction}`"
     @mouseup="onMouseUp"
   >
-    <div
-      class="vl-dropdown-toggle"
-      @click="onToggle"
-      @focus="onFocus"
-      @blur="onBlur"
-    >
+    <div class="vl-dropdown-toggle" @click="onToggle" @focus="onFocus" @blur="onBlur">
       <slot></slot>
     </div>
     <div class="vl-dropdown-menu" v-show="model" @mousedown.stop>
@@ -77,10 +72,7 @@ function onFocus() {
 }
 function onBlur() {
   const { activeElement } = document;
-  if (
-    activeElement !== document.body &&
-    !refEl.value?.contains(activeElement)
-  ) {
+  if (activeElement !== document.body && !refEl.value?.contains(activeElement)) {
     onClose();
   }
 }

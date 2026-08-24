@@ -15,6 +15,5 @@ handleMessages({
 
 async function loadData() {
   store.lists = await sendMessage<ListGroups>('GetLists');
-  store.ruleErrors =
-    await sendMessage<Record<number, Record<number, string>>>('GetErrors');
+  store.ruleErrors = await sendMessage<Record<number, Record<number, string>>>('GetErrors');
 }

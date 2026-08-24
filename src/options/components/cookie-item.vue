@@ -8,18 +8,9 @@
     />
     <div class="rule-item-content">
       <div v-text="rule.url"></div>
-      <div
-        class="rule-item-comment"
-        v-if="rule.comment"
-        v-text="rule.comment"
-      ></div>
+      <div class="rule-item-comment" v-if="rule.comment" v-text="rule.comment"></div>
     </div>
-    <div
-      class="rule-item-badge"
-      v-for="badge in badges"
-      v-text="badge"
-      :key="badge"
-    ></div>
+    <div class="rule-item-badge" v-for="badge in badges" v-text="badge" :key="badge"></div>
   </RuleItemView>
 </template>
 

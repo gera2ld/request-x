@@ -6,11 +6,7 @@ import { store } from './store';
 window.addEventListener('hashchange', updateRoute);
 
 export function updateRoute() {
-  store.route = window.location.hash
-    .slice(1)
-    .split('/')
-    .filter(Boolean)
-    .map(decodeURIComponent);
+  store.route = window.location.hash.slice(1).split('/').filter(Boolean).map(decodeURIComponent);
 }
 
 export function setRoute(value = '') {
@@ -26,10 +22,7 @@ export function isRoute(...args: (string | number)[]) {
 }
 
 export function isValidPattern(url: string) {
-  return (
-    (url.startsWith('/') && url.endsWith('/')) ||
-    /^[^:/]+:\/\/[^/]+\//.test(url)
-  );
+  return (url.startsWith('/') && url.endsWith('/')) || /^[^:/]+:\/\/[^/]+\//.test(url);
 }
 
 export function isValidURL(url: string) {
@@ -112,10 +105,5 @@ export function compareNumberArray(a: number[], b: number[]) {
 }
 
 export function focusInput(form: HTMLFormElement | undefined) {
-  (
-    form?.querySelector('input,select') as
-      | HTMLInputElement
-      | HTMLSelectElement
-      | null
-  )?.focus();
+  (form?.querySelector('input,select') as HTMLInputElement | HTMLSelectElement | null)?.focus();
 }

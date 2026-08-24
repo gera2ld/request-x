@@ -16,11 +16,7 @@
         </template>
       </div>
     </div>
-    <div
-      v-else
-      class="relative flex-1 pt-1 overflow-y-auto"
-      @click="onSelClear"
-    >
+    <div v-else class="relative flex-1 pt-1 overflow-y-auto" @click="onSelClear">
       <Component
         v-for="(rule, index) in currentList.rules"
         :is="RuleItem"
@@ -44,20 +40,13 @@
         Subscribed from:
         <span v-text="currentList.subscribeUrl"></span>
       </div>
-      <div
-        class="mb-1 subtle"
-        v-if="currentList.subscribeUrl && currentList.lastUpdated"
-      >
+      <div class="mb-1 subtle" v-if="currentList.subscribeUrl && currentList.lastUpdated">
         Last updated at:
-        <span
-          v-text="new Date(currentList.lastUpdated).toLocaleString()"
-        ></span>
+        <span v-text="new Date(currentList.lastUpdated).toLocaleString()"></span>
       </div>
       <div>
         <div class="rule-label" v-if="currentList.subscribeUrl">Subscribed</div>
-        <div class="rule-label disabled" v-if="!currentList.enabled">
-          Disabled
-        </div>
+        <div class="rule-label disabled" v-if="!currentList.enabled">Disabled</div>
       </div>
     </footer>
   </div>
@@ -66,13 +55,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted } from 'vue';
-import {
-  currentList,
-  ruleSelection,
-  ruleState,
-  listEditable,
-  store,
-} from '../store';
+import { currentList, ruleSelection, ruleState, listEditable, store } from '../store';
 import RequestItem from './request-item.vue';
 import CookieItem from './cookie-item.vue';
 import RuleHint from './rule-hint.vue';
@@ -84,9 +67,7 @@ const ruleItemMap = {
   cookie: CookieItem,
 };
 
-const RuleItem = computed(
-  () => currentList.value && ruleItemMap[currentList.value.type],
-);
+const RuleItem = computed(() => currentList.value && ruleItemMap[currentList.value.type]);
 const onEdit = ruleActions.edit;
 const onSelClear = ruleActions.selClear;
 const onSelToggle = ruleActions.selToggle;

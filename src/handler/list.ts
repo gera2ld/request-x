@@ -1,23 +1,14 @@
 import { sendMessage } from '@/common';
-import {
-  fetchListData,
-  normalizeCookieRule,
-  normalizeRequestRule,
-} from '@/common/list';
+import { fetchListData, normalizeCookieRule, normalizeRequestRule } from '@/common/list';
 import type { ListData, RuleData } from '@/types';
 import { cookieActions } from './cookie';
 import { dataLoaded, dumpLists, saveList } from './data';
 import { requestActions } from './request';
 
-export function reloadRules(data: {
-  updated?: ListData[];
-  removed?: ListData[];
-}) {
+export function reloadRules(data: { updated?: ListData[]; removed?: ListData[] }) {
   const updatedLists = [...(data.updated || []), ...(data.removed || [])];
-  if (updatedLists.some((list) => list.type === 'request'))
-    requestActions.reload();
-  if (updatedLists.some((list) => list.type === 'cookie'))
-    cookieActions.reload();
+  if (updatedLists.some((list) => list.type === 'request')) requestActions.reload();
+  if (updatedLists.some((list) => list.type === 'cookie')) cookieActions.reload();
 }
 
 export async function updateList(data: Partial<ListData>) {

@@ -62,12 +62,7 @@ handleMessages({
   }) {
     const lists = await dataLoaded;
     const { type, selection, target, downward } = payload;
-    const reordered = reorderList(
-      lists[type] as ListData[],
-      selection,
-      target,
-      downward,
-    );
+    const reordered = reorderList(lists[type] as ListData[], selection, target, downward);
     if (reordered) {
       lists[type] = reordered as any;
       dumpLists(lists);

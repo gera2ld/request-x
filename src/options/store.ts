@@ -66,15 +66,11 @@ export const currentList = computed<ListData | undefined>(() => {
   const [page, sid] = store.route;
   if (page !== 'lists') return;
   const id = +sid;
-  const list = [...store.lists.request, ...store.lists.cookie].find(
-    (item) => item.id === id,
-  );
+  const list = [...store.lists.request, ...store.lists.cookie].find((item) => item.id === id);
   return list as ListData | undefined;
 });
 
-export const listEditable = computed(
-  () => currentList.value && !currentList.value.subscribeUrl,
-);
+export const listEditable = computed(() => currentList.value && !currentList.value.subscribeUrl);
 
 export function ensureGroupSelection(index: number) {
   let selection = listSelection.selection[index];
@@ -91,9 +87,7 @@ export function ensureGroupSelection(index: number) {
 export const selectedLists = computed(() => {
   const lists = listSelection.selection.flatMap((selection, i) =>
     selection.count
-      ? store.lists[listTypes[i]].filter(
-          (_, index) => selection.selected[index],
-        )
+      ? store.lists[listTypes[i]].filter((_, index) => selection.selected[index])
       : [],
   );
   return lists;

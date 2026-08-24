@@ -22,10 +22,7 @@ export async function getActiveTab() {
 export class ObjectStorage<T extends { [key: string]: any }> {
   ready: Promise<void> | undefined;
 
-  static async load<T extends { [key: string]: any }>(
-    key: string,
-    defaults: T,
-  ) {
+  static async load<T extends { [key: string]: any }>(key: string, defaults: T) {
     const data = await getExactData<T>(key);
     return new ObjectStorage<T>(key, data || defaults);
   }
@@ -57,11 +54,7 @@ export class ObjectStorage<T extends { [key: string]: any }> {
   }
 }
 
-export function getUrl(cookie: {
-  secure: boolean;
-  domain: string;
-  path: string;
-}) {
+export function getUrl(cookie: { secure: boolean; domain: string; path: string }) {
   const url = [
     cookie.secure ? 'https:' : 'http:',
     '//',

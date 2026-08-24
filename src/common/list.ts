@@ -55,9 +55,7 @@ export function normalizeRequestRule(rule: any): RequestData[] {
       target: rule.target || '',
       comment: rule.comment || '',
       contentType: rule.contentType,
-      methods: Array.from<string>(
-        Array.isArray(rule.methods) ? rule.methods : [],
-      ).filter(Boolean),
+      methods: Array.from<string>(Array.isArray(rule.methods) ? rule.methods : []).filter(Boolean),
       requestHeaders,
       responseHeaders,
       transform: rule.transform,

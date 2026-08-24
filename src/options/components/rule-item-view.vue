@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="flex items-start select-none"
-    :class="{ selected }"
-    @click="onSelect"
-  >
+  <div class="flex items-start select-none" :class="{ selected }" @click="onSelect">
     <slot></slot>
   </div>
 </template>
