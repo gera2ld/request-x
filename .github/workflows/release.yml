@@ -29,12 +29,12 @@ jobs:
           mkdir -p $ASSETS_DIR
           cd dist && zip -r ../$ASSETS_DIR/$ASSET_ZIP . && cd ..
       - name: Publish to CWS
-        continue-on-error: true
         run: |
           set -x
-          npx chrome-webstore-upload-cli@1 upload --extension-id $EXTENSION_ID --source $ASSETS_DIR/$ASSET_ZIP --auto-publish
+          npx chrome-webstore-upload-cli@4 --extension-id $EXTENSION_ID --source $ASSETS_DIR/$ASSET_ZIP
         env:
           EXTENSION_ID: cblonkdlnemhdeefhmaoiijjaedcphbf
+          PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
           CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
